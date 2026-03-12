@@ -12,3 +12,7 @@ wheels/
 # Environment variables
 .env
 .env.*
+
+# ADK
+**/.adk/
+kafka_health_agent/.adk/
