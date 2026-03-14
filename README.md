@@ -13,19 +13,42 @@ ai-agents/
 │   └── ai_agents_core/
 │       ├── __init__.py
 │       └── base.py             # create_agent(), load_agent_env()
-
 └── agents/
-    └── kafka-health/           # Kafka monitoring agent
+    ├── kafka-health/           # Kafka monitoring agent
+    │   ├── pyproject.toml
+    │   └── kafka_health_agent/
+    │       ├── __init__.py
+    │       ├── agent.py
+    │       └── tools.py
+    └── devops-assistant/       # Multi-agent orchestrator
         ├── pyproject.toml
-        └── kafka_health_agent/
+        └── devops_assistant/
             ├── __init__.py
-            ├── agent.py        # root_agent definition
-            └── tools.py        # Kafka admin tools
+            ├── agent.py        # root orchestrator + docker sub-agent
+            └── docker_tools.py
 ```
+
+## Agents
+
+### kafka-health-agent
+
+A single agent with tools for monitoring and managing a Kafka cluster: cluster health, topic CRUD, consumer group inspection, and lag calculation.
+
+### devops-assistant (multi-agent)
+
+An orchestrator that delegates to specialized sub-agents. It has no tools of its own — it routes user requests to the right specialist:
+
+- **kafka_health_agent** — Kafka cluster operations (reused from the standalone agent above)
+- **docker_agent** — Docker container listing, inspection, logs, stats, and Compose status
+
+![DevOps Assistant — agent graph and container inspection](assets/devops-assistant-graph.png)
+
+*The ADK Dev UI showing the agent graph: `devops_assistant` delegates to `kafka_health_agent` and `docker_agent`, each with their own tools. Here the docker agent inspects the Kafka container's configuration.*
 
 ## Prerequisites
 
 - [uv](https://docs.astral.sh/uv/) for Python package management
+- [Docker](https://docs.docker.com/get-docker/) for running infrastructure and the docker agent
 - A Google Cloud Project with the Vertex AI API enabled (or an AI Studio API key)
 
 ## Getting Started
@@ -73,6 +96,13 @@ uv run adk run kafka_health_agent
 uv run adk api_server
 ```
 
+For the devops-assistant:
+
+```bash
+cd agents/devops-assistant
+uv run adk web
+```
+
 ## Adding a New Agent
 
 1. Create a directory under `agents/`:
@@ -111,4 +141,4 @@ uv run adk api_server
    )
    ```
 
-5. Run `uv sync` from the repo root to install.
+5. Register in the root `pyproject.toml` and run `uv sync`.
