@@ -9,7 +9,6 @@ from ai_agents_core.guardrails import (
     is_guarded,
     require_confirmation,
 )
-from conftest import FakeTool, FakeToolContext
 
 
 # ── @destructive decorator ─────────────────────────────────────────────
@@ -42,13 +41,13 @@ def test_destructive_with_empty_reason():
     assert get_destructive_reason(my_tool) == ""
 
 
-def test_is_destructive_checks_func_attr():
+def test_is_destructive_checks_func_attr(fake_tool):
     """ADK wraps functions in BaseTool objects with a .func attribute."""
     @destructive("reason")
     def my_func():
         pass
 
-    tool = FakeTool(name="my_func", func=my_func)
+    tool = fake_tool(name="my_func", func=my_func)
     assert is_destructive(tool) is True
 
 
@@ -75,26 +74,26 @@ def test_confirm_stores_reason():
 # ── require_confirmation() ─────────────────────────────────────────────
 
 
-def test_require_confirmation_allows_safe_tools():
+def test_require_confirmation_allows_safe_tools(fake_tool, fake_ctx):
     def safe_tool():
         pass
 
     callback = require_confirmation()
-    tool = FakeTool(name="safe_tool", func=safe_tool)
-    ctx = FakeToolContext()
+    tool = fake_tool(name="safe_tool", func=safe_tool)
+    ctx = fake_ctx()
 
     result = callback(tool=tool, args={}, tool_context=ctx)
     assert result is None  # proceed
 
 
-def test_require_confirmation_blocks_destructive_tool():
+def test_require_confirmation_blocks_destructive_tool(fake_tool, fake_ctx):
     @destructive("destroys data")
     def danger_tool():
         pass
 
     callback = require_confirmation()
-    tool = FakeTool(name="danger_tool", func=danger_tool)
-    ctx = FakeToolContext()
+    tool = fake_tool(name="danger_tool", func=danger_tool)
+    ctx = fake_ctx()
 
     result = callback(tool=tool, args={"name": "test"}, tool_context=ctx)
     assert result is not None
@@ -103,14 +102,14 @@ def test_require_confirmation_blocks_destructive_tool():
     assert "destroys data" in result["message"]
 
 
-def test_require_confirmation_blocks_confirm_tool_with_neutral_message():
+def test_require_confirmation_blocks_confirm_tool_with_neutral_message(fake_tool, fake_ctx):
     @confirm("creates a new topic on the cluster")
     def create_tool():
         pass
 
     callback = require_confirmation()
-    tool = FakeTool(name="create_tool", func=create_tool)
-    ctx = FakeToolContext()
+    tool = fake_tool(name="create_tool", func=create_tool)
+    ctx = fake_ctx()
 
     result = callback(tool=tool, args={"name": "test"}, tool_context=ctx)
     assert result is not None
@@ -120,14 +119,14 @@ def test_require_confirmation_blocks_confirm_tool_with_neutral_message():
     assert "creates a new topic" in result["message"]
 
 
-def test_require_confirmation_allows_after_pending():
+def test_require_confirmation_allows_after_pending(fake_tool, fake_ctx):
     @destructive("destroys data")
     def danger_tool():
         pass
 
     callback = require_confirmation()
-    tool = FakeTool(name="danger_tool", func=danger_tool)
-    ctx = FakeToolContext()
+    tool = fake_tool(name="danger_tool", func=danger_tool)
+    ctx = fake_ctx()
 
     # First call: blocked
     result = callback(tool=tool, args={}, tool_context=ctx)
@@ -141,14 +140,14 @@ def test_require_confirmation_allows_after_pending():
     assert ctx.state["_guardrail_pending_danger_tool"] is False
 
 
-def test_require_confirmation_allows_confirm_tool_after_pending():
+def test_require_confirmation_allows_confirm_tool_after_pending(fake_tool, fake_ctx):
     @confirm("creates a resource")
     def create_tool():
         pass
 
     callback = require_confirmation()
-    tool = FakeTool(name="create_tool", func=create_tool)
-    ctx = FakeToolContext()
+    tool = fake_tool(name="create_tool", func=create_tool)
+    ctx = fake_ctx()
 
     # First call: blocked
     result = callback(tool=tool, args={}, tool_context=ctx)
@@ -159,11 +158,11 @@ def test_require_confirmation_allows_confirm_tool_after_pending():
     assert result is None
 
 
-def test_require_confirmation_blocks_when_no_func():
+def test_require_confirmation_blocks_when_no_func(fake_tool, fake_ctx):
     """If tool has no .func attribute, treat as safe."""
     callback = require_confirmation()
-    tool = FakeTool(name="mystery", func=None)
-    ctx = FakeToolContext()
+    tool = fake_tool(name="mystery", func=None)
+    ctx = fake_ctx()
 
     result = callback(tool=tool, args={}, tool_context=ctx)
     assert result is None
@@ -172,26 +171,26 @@ def test_require_confirmation_blocks_when_no_func():
 # ── dry_run() ──────────────────────────────────────────────────────────
 
 
-def test_dry_run_allows_safe_tools():
+def test_dry_run_allows_safe_tools(fake_tool, fake_ctx):
     def safe_tool():
         pass
 
     callback = dry_run()
-    tool = FakeTool(name="safe_tool", func=safe_tool)
-    ctx = FakeToolContext()
+    tool = fake_tool(name="safe_tool", func=safe_tool)
+    ctx = fake_ctx()
 
     result = callback(tool=tool, args={}, tool_context=ctx)
     assert result is None
 
 
-def test_dry_run_blocks_destructive_tool():
+def test_dry_run_blocks_destructive_tool(fake_tool, fake_ctx):
     @destructive("deletes data")
     def danger_tool():
         pass
 
     callback = dry_run()
-    tool = FakeTool(name="danger_tool", func=danger_tool)
-    ctx = FakeToolContext()
+    tool = fake_tool(name="danger_tool", func=danger_tool)
+    ctx = fake_ctx()
 
     result = callback(tool=tool, args={"id": 42}, tool_context=ctx)
     assert result is not None
@@ -199,28 +198,28 @@ def test_dry_run_blocks_destructive_tool():
     assert "DRY RUN" in result["message"]
 
 
-def test_dry_run_blocks_confirm_tool():
+def test_dry_run_blocks_confirm_tool(fake_tool, fake_ctx):
     @confirm("creates a resource")
     def create_tool():
         pass
 
     callback = dry_run()
-    tool = FakeTool(name="create_tool", func=create_tool)
-    ctx = FakeToolContext()
+    tool = fake_tool(name="create_tool", func=create_tool)
+    ctx = fake_ctx()
 
     result = callback(tool=tool, args={}, tool_context=ctx)
     assert result is not None
     assert result["status"] == "dry_run"
 
 
-def test_dry_run_always_blocks_even_on_retry():
+def test_dry_run_always_blocks_even_on_retry(fake_tool, fake_ctx):
     @destructive("deletes data")
     def danger_tool():
         pass
 
     callback = dry_run()
-    tool = FakeTool(name="danger_tool", func=danger_tool)
-    ctx = FakeToolContext()
+    tool = fake_tool(name="danger_tool", func=danger_tool)
+    ctx = fake_ctx()
 
     result1 = callback(tool=tool, args={}, tool_context=ctx)
     result2 = callback(tool=tool, args={}, tool_context=ctx)

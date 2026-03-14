@@ -4,15 +4,14 @@ import json
 from pathlib import Path
 
 from ai_agents_core.audit import _sanitize_args, audit_logger
-from conftest import FakeTool, FakeToolContext
 
 
-def test_audit_logger_writes_jsonl(tmp_path: Path):
+def test_audit_logger_writes_jsonl(tmp_path: Path, fake_tool, fake_ctx):
     log_file = tmp_path / "audit.jsonl"
     callback = audit_logger(log_file)
 
-    tool = FakeTool(name="list_topics")
-    ctx = FakeToolContext()
+    tool = fake_tool(name="list_topics")
+    ctx = fake_ctx()
     response = {"status": "success", "topics": ["test"]}
 
     result = callback(
@@ -35,12 +34,12 @@ def test_audit_logger_writes_jsonl(tmp_path: Path):
     assert "timestamp" in entry
 
 
-def test_audit_logger_appends_multiple_entries(tmp_path: Path):
+def test_audit_logger_appends_multiple_entries(tmp_path: Path, fake_tool, fake_ctx):
     log_file = tmp_path / "audit.jsonl"
     callback = audit_logger(log_file)
 
-    tool = FakeTool(name="my_tool")
-    ctx = FakeToolContext()
+    tool = fake_tool(name="my_tool")
+    ctx = fake_ctx()
 
     callback(tool=tool, args={}, tool_context=ctx, tool_response={"status": "success"})
     callback(tool=tool, args={}, tool_context=ctx, tool_response={"status": "error"})
@@ -51,12 +50,12 @@ def test_audit_logger_appends_multiple_entries(tmp_path: Path):
     assert json.loads(lines[1])["status"] == "error"
 
 
-def test_audit_logger_creates_parent_dirs(tmp_path: Path):
+def test_audit_logger_creates_parent_dirs(tmp_path: Path, fake_tool, fake_ctx):
     log_file = tmp_path / "nested" / "dir" / "audit.jsonl"
     callback = audit_logger(log_file)
 
-    tool = FakeTool(name="my_tool")
-    ctx = FakeToolContext()
+    tool = fake_tool(name="my_tool")
+    ctx = fake_ctx()
     callback(tool=tool, args={}, tool_context=ctx, tool_response={"status": "ok"})
 
     assert log_file.exists()
@@ -82,12 +81,12 @@ def test_sanitize_args_empty():
     assert _sanitize_args({}) == {}
 
 
-def test_audit_logger_handles_non_dict_response(tmp_path: Path):
+def test_audit_logger_handles_non_dict_response(tmp_path: Path, fake_tool, fake_ctx):
     log_file = tmp_path / "audit.jsonl"
     callback = audit_logger(log_file)
 
-    tool = FakeTool(name="my_tool")
-    ctx = FakeToolContext()
+    tool = fake_tool(name="my_tool")
+    ctx = fake_ctx()
 
     callback(tool=tool, args={}, tool_context=ctx, tool_response="plain string")
 

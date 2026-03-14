@@ -1,15 +1,14 @@
-# AI Agents
+# AI Agents for DevOps & SRE
 
 An open-source platform for building autonomous DevOps and SRE agents. Built with [Google ADK](https://google.github.io/adk-docs/) and managed as a [uv workspace](https://docs.astral.sh/uv/concepts/workspaces/).
 
-Agents can monitor infrastructure, diagnose issues, and take action — with built-in safety guardrails that require human confirmation before any destructive operation.
+Agents can monitor infrastructure, diagnose issues, and take action with built-in safety guardrails that require human confirmation before any destructive operation.
 
 ## Key Features
 
 - **Multi-agent orchestration** — a root agent delegates to specialized sub-agents based on user intent
 - **Safety guardrails** — destructive tools (`@destructive`) require explicit confirmation; mutating tools (`@confirm`) prompt before executing
 - **Audit logging** — every tool call is logged with timestamp, agent, arguments, and result
-- **Typed configuration** — pydantic-settings base class replaces raw `os.getenv()` calls
 - **Persistent memory** — session state, user-scoped notes, and app-wide shared data with SQLite backing
 - **Composable architecture** — each agent is a standalone package that can run independently or plug into an orchestrator
 
@@ -19,7 +18,8 @@ Agents can monitor infrastructure, diagnose issues, and take action — with bui
 |-------|------|-------------|------|
 | **core** | Library | Agent factory, guardrails, audit logging, typed config | [docs/core.md](docs/core.md) |
 | **kafka-health-agent** | Single agent | Kafka cluster health, topics, consumer groups, lag | [docs/kafka-health-agent.md](docs/kafka-health-agent.md) |
-| **devops-assistant** | Multi-agent | Orchestrator that delegates to kafka, docker, and journal sub-agents | [docs/devops-assistant.md](docs/devops-assistant.md) |
+| **k8s-health-agent** | Single agent | Kubernetes cluster health, nodes, pods, deployments, logs, events | [docs/k8s-health-agent.md](docs/k8s-health-agent.md) |
+| **devops-assistant** | Multi-agent | Orchestrator that delegates to kafka, k8s, docker, and journal sub-agents | [docs/devops-assistant.md](docs/devops-assistant.md) |
 | **ops-journal** | Memory/state | Notes, preferences, and session tracking with persistent storage | [docs/ops-journal.md](docs/ops-journal.md) |
 
 ## Quick Start
@@ -53,6 +53,32 @@ GEMINI_MODEL_VERSION=gemini-2.0-flash
 GOOGLE_GENAI_USE_VERTEXAI=FALSE
 GOOGLE_API_KEY=your-api-key
 ```
+
+## Testing
+
+Tests live next to each package they cover:
+
+```
+core/tests/                    # guardrails, audit, config
+agents/kafka-health/tests/     # Kafka tools
+agents/k8s-health/tests/       # Kubernetes tools
+agents/devops-assistant/tests/ # Docker tools
+agents/ops-journal/tests/      # journal & state tools
+```
+
+Run the full suite (127 tests):
+
+```bash
+make test
+```
+
+Run tests for a single package:
+
+```bash
+uv run pytest agents/kafka-health/tests/ -v
+```
+
+All external dependencies (Kafka, Kubernetes, Docker) are mocked — no running infrastructure needed.
 
 ## Adding a New Agent
 

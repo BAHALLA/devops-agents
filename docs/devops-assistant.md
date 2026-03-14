@@ -7,6 +7,7 @@ A multi-agent orchestrator that delegates to specialized sub-agents. It has no t
 ```text
 devops_assistant (orchestrator)
 ├── kafka_health_agent   — Kafka cluster operations
+├── k8s_health_agent     — Kubernetes cluster operations
 ├── docker_agent         — Docker container operations
 └── ops_journal_agent    — Notes, preferences, and session tracking
 ```
@@ -20,6 +21,10 @@ devops_assistant (orchestrator)
 ### kafka_health_agent
 
 Reused from the standalone [kafka-health-agent](kafka-health-agent.md). Handles all Kafka cluster operations.
+
+### k8s_health_agent
+
+Reused from the standalone [k8s-health-agent](k8s-health-agent.md). Handles Kubernetes cluster health, nodes, pods, deployments, logs, events, scaling, and restarts. Includes guardrails for destructive operations (scale, restart).
 
 ### docker_agent
 
@@ -42,6 +47,7 @@ After a significant investigation, the orchestrator will proactively suggest sav
 The root `devops_assistant` agent has no tools. When a user sends a message, the LLM reads the sub-agent descriptions and decides which specialist to hand off to:
 
 - *"what's the consumer lag?"* → `kafka_health_agent`
+- *"list all pods in staging"* → `k8s_health_agent`
 - *"show me kafka container logs"* → `docker_agent`
 - *"save a note about this incident"* → `ops_journal_agent`
 - *"is everything healthy?"* → delegates to multiple agents, then synthesizes

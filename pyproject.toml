@@ -8,6 +8,7 @@ requires-python = ">=3.11"
 dependencies = [
     "ai-agents-core",
     "kafka-health-agent",
+    "k8s-health-agent",
     "devops-assistant",
     "ops-journal",
 ]
@@ -15,6 +16,7 @@ dependencies = [
 [tool.uv.sources]
 ai-agents-core = { workspace = true }
 kafka-health-agent = { workspace = true }
+k8s-health-agent = { workspace = true }
 devops-assistant = { workspace = true }
 ops-journal = { workspace = true }
 
@@ -28,4 +30,10 @@ dev = [
 members = ["core", "agents/*"]
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = [
+    "core/tests",
+    "agents/kafka-health/tests",
+    "agents/k8s-health/tests",
+    "agents/devops-assistant/tests",
+    "agents/ops-journal/tests",
+]

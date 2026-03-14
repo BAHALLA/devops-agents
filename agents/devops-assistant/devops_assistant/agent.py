@@ -1,4 +1,5 @@
 from ai_agents_core import create_agent, load_agent_env
+from k8s_health_agent.agent import root_agent as k8s_agent
 from kafka_health_agent.agent import root_agent as kafka_agent
 from ops_journal_agent.agent import root_agent as journal_agent
 
@@ -43,6 +44,8 @@ root_agent = create_agent(
         "You do NOT have tools of your own — instead, delegate to the right sub-agent:\n\n"
         "- **kafka_health_agent**: For anything Kafka-related — cluster health, topics, "
         "consumer groups, lag monitoring.\n"
+        "- **k8s_health_agent**: For anything Kubernetes-related — cluster info, nodes, "
+        "pods, deployments, logs, events, scaling, and restarts.\n"
         "- **docker_agent**: For anything Docker-related — containers, logs, stats, "
         "compose status, resource usage.\n"
         "- **ops_journal_agent**: For saving notes, recalling past findings, tracking "
@@ -55,5 +58,5 @@ root_agent = create_agent(
         "the findings as a note via the journal agent."
     ),
     tools=[],
-    sub_agents=[kafka_agent, docker_agent, journal_agent],
+    sub_agents=[kafka_agent, k8s_agent, docker_agent, journal_agent],
 )

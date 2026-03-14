@@ -1,5 +1,6 @@
 .PHONY: help install test infra-up infra-down infra-reset \
        run-kafka-health run-kafka-health-cli \
+       run-k8s run-k8s-cli \
        run-devops run-devops-cli run-devops-persistent \
        run-journal run-journal-cli run-journal-persistent
 
@@ -12,7 +13,7 @@ install: ## Install all workspace packages
 	uv sync
 
 test: ## Run all tests
-	uv run pytest tests/ -v
+	uv run pytest -v
 
 infra-up: ## Start shared infrastructure (Kafka, Zookeeper, Kafka UI)
 	docker compose up -d
@@ -30,6 +31,14 @@ run-kafka-health: ## Launch kafka-health-agent in ADK Dev UI
 
 run-kafka-health-cli: ## Run kafka-health-agent in terminal
 	cd agents/kafka-health && uv run adk run kafka_health_agent
+
+# ── k8s-health-agent ──────────────────────────────────
+
+run-k8s: ## Launch k8s-health-agent in ADK Dev UI
+	cd agents/k8s-health && uv run adk web
+
+run-k8s-cli: ## Run k8s-health-agent in terminal
+	cd agents/k8s-health && uv run adk run k8s_health_agent
 
 # ── devops-assistant ───────────────────────────────────
 

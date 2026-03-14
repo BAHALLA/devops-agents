@@ -23,10 +23,16 @@ Thanks for your interest in contributing! This project aims to build a collectio
 ```
 ai-agents/
 ├── core/                  # Shared library (ai-agents-core)
+│   └── tests/             # Core tests (guardrails, audit, config)
 ├── agents/                # Each agent is a separate workspace package
 │   ├── kafka-health/
+│   │   └── tests/         # Kafka tools tests
+│   ├── k8s-health/
+│   │   └── tests/         # Kubernetes tools tests
 │   ├── devops-assistant/
+│   │   └── tests/         # Docker tools tests
 │   └── ops-journal/
+│       └── tests/         # Journal & state tools tests
 └── docs/                  # Per-agent and core documentation
 ```
 
@@ -42,6 +48,7 @@ This is the most impactful way to contribute. See the [Adding a New Agent](READM
 - Use `create_agent()` from `ai_agents_core` — don't reinvent the factory
 - Mark destructive tools with `@destructive("reason")`
 - Separate tools (`tools.py`) from agent wiring (`agent.py`)
+- Add tests in `agents/your-agent/tests/`
 - Add documentation in `docs/`
 - Add Makefile targets for running the agent
 
@@ -67,19 +74,35 @@ This is the most impactful way to contribute. See the [Adding a New Agent](READM
 
 2. **Make your changes** following the patterns in existing agents
 
-3. **Test your changes**:
+3. **Add tests** for your tools in `agents/your-agent/tests/`:
    ```bash
-   # Verify the workspace resolves
-   make install
+   # Run all tests
+   make test
 
-   # Run your agent
+   # Run tests for your agent only
+   uv run pytest agents/your-agent/tests/ -v
+   ```
+
+4. **Test your changes manually**:
+   ```bash
+   make install
    cd agents/your-agent && uv run adk web
    ```
 
-4. **Submit a pull request** with:
+5. **Submit a pull request** with:
    - A clear description of what the agent/feature does
    - Screenshots from the ADK Dev UI if applicable
+   - Tests for new tools
    - Updated docs and Makefile targets
+
+## Testing Guidelines
+
+- **Tests live next to each package** — add a `tests/` directory inside your agent package
+- **Mock external dependencies** — no test should require a running Kafka broker, Kubernetes cluster, or Docker daemon
+- **Use `@patch`** to mock API clients at the tool level (e.g., `@patch("my_agent.tools._get_client")`)
+- **Test both success and error paths** — every tool should have at least one success test and one error/exception test
+- **Verify guardrails** — if your tool uses `@confirm` or `@destructive`, add a test asserting the `_guardrail_level` attribute
+- **Use conftest fixtures** — if your tools need ADK's `ToolContext`, add a `conftest.py` with a `FakeToolContext` class (see `core/tests/conftest.py` or `agents/ops-journal/tests/conftest.py` for examples)
 
 ## Code Style
 
