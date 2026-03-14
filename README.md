@@ -38,20 +38,82 @@ Run `make help` to see all available commands.
 - [Docker](https://docs.docker.com/get-docker/) for infrastructure and the docker agent
 - A Google Cloud Project with Vertex AI API enabled (or an AI Studio API key)
 
-## Environment Configuration
+## Configuration
 
-Each agent expects a `.env` file in its package directory (e.g., `agents/kafka-health/kafka_health_agent/.env`):
+The platform uses a layered configuration system built on [pydantic-settings](https://docs.pydantic.dev/latest/concepts/pydantic_settings/). Each agent defines its own config class that inherits from `AgentConfig`, and values are loaded from `.env` files and environment variables.
+
+### How it works
+
+1. **`AgentConfig`** (in `core`) defines settings shared by all agents (AI provider, model version)
+2. Each agent **extends** `AgentConfig` with its own settings (e.g., `KafkaConfig` adds `kafka_bootstrap_servers`)
+3. Settings are loaded from the `.env` file next to each agent's module, with environment variables taking precedence
+
+```
+agents/kafka-health/kafka_health_agent/.env   ← loaded by kafka-health-agent
+agents/k8s-health/k8s_health_agent/.env       ← loaded by k8s-health-agent
+agents/devops-assistant/devops_assistant/.env  ← loaded by devops-assistant
+agents/ops-journal/ops_journal_agent/.env      ← loaded by ops-journal
+```
+
+### Shared settings (all agents)
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `GOOGLE_GENAI_USE_VERTEXAI` | `TRUE` | Use Vertex AI (`TRUE`) or AI Studio (`FALSE`) |
+| `GOOGLE_CLOUD_PROJECT` | — | GCP project ID (required for Vertex AI) |
+| `GOOGLE_CLOUD_LOCATION` | — | GCP region, e.g. `us-central1` (required for Vertex AI) |
+| `GOOGLE_API_KEY` | — | API key (required for AI Studio) |
+| `GEMINI_MODEL_VERSION` | `gemini-2.0-flash` | Gemini model to use |
+
+### Agent-specific settings
+
+**kafka-health-agent**
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `KAFKA_BOOTSTRAP_SERVERS` | `localhost:9092` | Kafka broker address(es) |
+
+**k8s-health-agent**
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `KUBECONFIG_PATH` | — | Path to kubeconfig file (uses default kubeconfig if unset) |
+
+### Example `.env` file
 
 ```bash
-# Using Vertex AI (Recommended)
+# AI provider — choose one:
+
+# Option 1: Vertex AI (recommended)
 GOOGLE_GENAI_USE_VERTEXAI=TRUE
-GOOGLE_CLOUD_PROJECT=your-project-id
-GOOGLE_CLOUD_LOCATION=your-region
+GOOGLE_CLOUD_PROJECT=my-gcp-project
+GOOGLE_CLOUD_LOCATION=us-central1
+
+# Option 2: Google AI Studio
+# GOOGLE_GENAI_USE_VERTEXAI=FALSE
+# GOOGLE_API_KEY=your-api-key
+
+# Model
 GEMINI_MODEL_VERSION=gemini-2.0-flash
 
-# OR using Google AI Studio
-GOOGLE_GENAI_USE_VERTEXAI=FALSE
-GOOGLE_API_KEY=your-api-key
+# Agent-specific (kafka-health-agent)
+KAFKA_BOOTSTRAP_SERVERS=localhost:9092
+```
+
+### Infrastructure
+
+The included `docker-compose.yml` starts the local infrastructure needed by the kafka-health-agent:
+
+| Service | Port | Description |
+|---------|------|-------------|
+| Kafka | `9092` | Kafka broker |
+| Zookeeper | `2181` | Zookeeper for Kafka |
+| Kafka UI | `8080` | Web UI for browsing topics and consumer groups |
+
+```bash
+make infra-up     # start all services
+make infra-down   # stop all services
+make infra-reset  # stop and wipe volumes (useful for cluster.id mismatches)
 ```
 
 ## Testing
