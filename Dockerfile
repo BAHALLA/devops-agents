@@ -1,0 +1,44 @@
+# ── Build stage ───────────────────────────────────────────────────────
+FROM ghcr.io/astral-sh/uv:python3.11-bookworm-slim AS builder
+
+WORKDIR /app
+
+# Install workspace dependencies (cached layer)
+COPY pyproject.toml uv.lock ./
+COPY core/pyproject.toml core/pyproject.toml
+COPY agents/kafka-health/pyproject.toml agents/kafka-health/pyproject.toml
+COPY agents/k8s-health/pyproject.toml agents/k8s-health/pyproject.toml
+COPY agents/devops-assistant/pyproject.toml agents/devops-assistant/pyproject.toml
+COPY agents/ops-journal/pyproject.toml agents/ops-journal/pyproject.toml
+
+# Placeholder packages so uv sync can resolve the workspace
+RUN mkdir -p core/ai_agents_core && touch core/ai_agents_core/__init__.py && \
+    mkdir -p agents/kafka-health/kafka_health_agent && touch agents/kafka-health/kafka_health_agent/__init__.py && \
+    mkdir -p agents/k8s-health/k8s_health_agent && touch agents/k8s-health/k8s_health_agent/__init__.py && \
+    mkdir -p agents/devops-assistant/devops_assistant && touch agents/devops-assistant/devops_assistant/__init__.py && \
+    mkdir -p agents/ops-journal/ops_journal_agent && touch agents/ops-journal/ops_journal_agent/__init__.py
+
+RUN uv sync --no-dev --frozen
+
+# Copy actual source code
+COPY core/ core/
+COPY agents/ agents/
+
+# Reinstall workspace packages with real source
+RUN uv sync --no-dev --frozen
+
+# ── Runtime stage ─────────────────────────────────────────────────────
+FROM python:3.11-slim-bookworm
+
+WORKDIR /app
+
+# Copy the virtual environment and source from builder
+COPY --from=builder /app/.venv /app/.venv
+COPY --from=builder /app/core/ /app/core/
+COPY --from=builder /app/agents/ /app/agents/
+
+ENV PATH="/app/.venv/bin:$PATH"
+
+# Default: run the devops-assistant orchestrator with web UI
+EXPOSE 8000
+CMD ["adk", "web", "--host", "0.0.0.0", "--port", "8000", "agents/devops-assistant"]

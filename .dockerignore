@@ -1,0 +1,17 @@
+.git
+.github
+.venv
+__pycache__
+*.pyc
+*.egg-info
+.pytest_cache
+.ruff_cache
+*.db
+.env
+agents/*/.env
+agents/*/kafka_health_agent/.env
+agents/*/k8s_health_agent/.env
+agents/*/devops_assistant/.env
+agents/*/ops_journal_agent/.env
+**/tests/
+**/assets/

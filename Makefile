@@ -1,4 +1,5 @@
-.PHONY: help install test lint format infra-up infra-down infra-reset \
+.PHONY: help install test lint fmt infra-up infra-down infra-reset \
+       docker-build docker-demo docker-down \
        run-kafka-health run-kafka-health-cli \
        run-k8s run-k8s-cli \
        run-devops run-devops-cli run-devops-persistent \
@@ -31,6 +32,17 @@ infra-down: ## Stop shared infrastructure
 
 infra-reset: ## Stop infrastructure and wipe volumes (fixes cluster.id mismatch)
 	docker compose down -v
+
+# ── Docker ────────────────────────────────────────────
+
+docker-build: ## Build the agent Docker image
+	docker compose build devops-assistant
+
+docker-demo: ## Start full demo (infra + devops-assistant web UI on :8000)
+	docker compose --profile demo up -d --build
+
+docker-down: ## Stop all services (infra + agents)
+	docker compose --profile demo down
 
 # ── kafka-health-agent ─────────────────────────────────
 

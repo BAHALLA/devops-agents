@@ -24,6 +24,22 @@ Agents can monitor infrastructure, diagnose issues, and take action with built-i
 
 ## Quick Start
 
+### Try it with Docker (no install required)
+
+The only prerequisite is [Docker](https://docs.docker.com/get-docker/) and a [Google AI Studio API key](https://aistudio.google.com/apikey).
+
+```bash
+# Clone and start everything — infra + agent web UI
+GOOGLE_API_KEY=your-api-key docker compose --profile demo up -d
+
+# Open the web UI
+open http://localhost:8000
+```
+
+This starts Kafka, Zookeeper, Kafka UI, and the devops-assistant agent with a chat interface.
+
+### Local development
+
 ```bash
 make install      # install all workspace packages
 make infra-up     # start Kafka, Zookeeper, Kafka UI
@@ -32,11 +48,10 @@ make run-devops   # launch the devops-assistant in ADK Dev UI
 
 Run `make help` to see all available commands.
 
-## Prerequisites
+### Prerequisites
 
-- [uv](https://docs.astral.sh/uv/) for Python package management
-- [Docker](https://docs.docker.com/get-docker/) for infrastructure and the docker agent
-- A Google Cloud Project with Vertex AI API enabled (or an AI Studio API key)
+- **Docker only** for the quick start above
+- For local development: [uv](https://docs.astral.sh/uv/), [Docker](https://docs.docker.com/get-docker/), and a Google AI Studio API key or Vertex AI project
 
 ## Configuration
 
@@ -115,6 +130,28 @@ make infra-up     # start all services
 make infra-down   # stop all services
 make infra-reset  # stop and wipe volumes (useful for cluster.id mismatches)
 ```
+
+### Docker
+
+The platform ships as a single Docker image containing all agents. Docker Compose profiles control which services start.
+
+| Command | What it starts |
+|---------|---------------|
+| `docker compose up -d` | Infrastructure only (Kafka, Zookeeper, Kafka UI) |
+| `docker compose --profile demo up -d` | Infrastructure + devops-assistant web UI on `:8000` |
+
+```bash
+# Build the image
+make docker-build
+
+# Start the full demo
+GOOGLE_API_KEY=your-key make docker-demo
+
+# Stop everything
+make docker-down
+```
+
+The devops-assistant container mounts the Docker socket (read-only) so it can inspect containers on the host.
 
 ## Testing
 

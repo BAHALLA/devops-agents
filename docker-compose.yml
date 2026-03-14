@@ -80,6 +80,38 @@ services:
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:19092
       DYNAMIC_CONFIG_ENABLED: 'true'
 
+  # ── Agent services (use: docker compose --profile demo up) ─────────
+
+  devops-assistant:
+    build: .
+    container_name: devops-assistant
+    profiles: [demo]
+    restart: unless-stopped
+    depends_on:
+      kafka:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    environment:
+      # AI provider — set ONE of these:
+      # Option 1: Google AI Studio (easiest to get started)
+      GOOGLE_GENAI_USE_VERTEXAI: "FALSE"
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+      # Option 2: Vertex AI (uncomment and set these instead)
+      # GOOGLE_GENAI_USE_VERTEXAI: "TRUE"
+      # GOOGLE_CLOUD_PROJECT: ${GOOGLE_CLOUD_PROJECT:-}
+      # GOOGLE_CLOUD_LOCATION: ${GOOGLE_CLOUD_LOCATION:-us-central1}
+
+      GEMINI_MODEL_VERSION: ${GEMINI_MODEL_VERSION:-gemini-2.0-flash}
+
+      # Agent-specific
+      KAFKA_BOOTSTRAP_SERVERS: kafka:19092
+    volumes:
+      - devops-data:/app/data
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    command: ["adk", "web", "--host", "0.0.0.0", "--port", "8000", "agents/devops-assistant"]
+
 volumes:
   zk-data:
   kafka-data:
+  devops-data:
