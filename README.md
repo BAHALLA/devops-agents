@@ -25,8 +25,6 @@ ai-agents/
 | **kafka-health-agent** | Single agent | Kafka cluster health, topics, consumer groups, lag | [docs/kafka-health-agent.md](docs/kafka-health-agent.md) |
 | **devops-assistant** | Multi-agent | Orchestrator that delegates to kafka + docker sub-agents | [docs/devops-assistant.md](docs/devops-assistant.md) |
 
-![DevOps Assistant](docs/assets/devops-assistant-graph.png)
-
 ## Quick Start
 
 ```bash
