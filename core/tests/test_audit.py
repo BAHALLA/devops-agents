@@ -3,7 +3,7 @@
 import json
 from pathlib import Path
 
-from ai_agents_core.audit import _sanitize_args, audit_logger
+from ai_agents_core.audit import _sanitize, _sanitize_args, audit_logger
 
 
 def test_audit_logger_writes_jsonl(tmp_path: Path, fake_tool, fake_ctx):
@@ -90,3 +90,45 @@ def test_audit_logger_handles_non_dict_response(tmp_path: Path, fake_tool, fake_
 
     entry = json.loads(log_file.read_text().strip())
     assert entry["status"] == "ok"
+    assert entry["response"] is None
+
+
+def test_audit_logger_sanitizes_response(tmp_path: Path, fake_tool, fake_ctx):
+    log_file = tmp_path / "audit.jsonl"
+    callback = audit_logger(log_file)
+
+    tool = fake_tool(name="describe_pod")
+    ctx = fake_ctx()
+    response = {
+        "status": "success",
+        "pod": "my-pod",
+        "env": {"DB_PASSWORD": "hunter2", "APP_TOKEN": "sk-123", "LOG_LEVEL": "debug"},
+    }
+
+    callback(tool=tool, args={}, tool_context=ctx, tool_response=response)
+
+    entry = json.loads(log_file.read_text().strip())
+    assert entry["response"]["status"] == "success"
+    assert entry["response"]["pod"] == "my-pod"
+    assert entry["response"]["env"]["DB_PASSWORD"] == "***"
+    assert entry["response"]["env"]["APP_TOKEN"] == "***"
+    assert entry["response"]["env"]["LOG_LEVEL"] == "debug"
+
+
+def test_sanitize_nested_dicts():
+    data = {
+        "containers": [
+            {"name": "app", "env": {"SECRET_KEY": "abc", "PORT": "8080"}},
+            {"name": "sidecar", "env": {"API_TOKEN": "xyz"}},
+        ]
+    }
+    result = _sanitize(data)
+    assert result["containers"][0]["env"]["SECRET_KEY"] == "***"
+    assert result["containers"][0]["env"]["PORT"] == "8080"
+    assert result["containers"][1]["env"]["API_TOKEN"] == "***"
+
+
+def test_sanitize_preserves_non_dict_values():
+    assert _sanitize("hello") == "hello"
+    assert _sanitize(42) == 42
+    assert _sanitize([1, 2, 3]) == [1, 2, 3]

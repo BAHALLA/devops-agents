@@ -48,14 +48,17 @@ def audit_logger(log_path: str | Path | None = None) -> Callable:
         tool_context: Context,
         tool_response: dict,
     ) -> dict | None:
+        sanitized_response = _sanitize(tool_response) if isinstance(tool_response, dict) else None
+
         entry = {
             "timestamp": datetime.now(UTC).isoformat(),
             "agent": tool_context.agent_name if hasattr(tool_context, "agent_name") else "unknown",
             "tool": tool.name,
-            "args": _sanitize_args(args),
-            "status": tool_response.get("status", "unknown")
-            if isinstance(tool_response, dict)
+            "args": _sanitize(args),
+            "status": sanitized_response.get("status", "unknown")
+            if sanitized_response is not None
             else "ok",
+            "response": sanitized_response,
             "user_id": tool_context.user_id if hasattr(tool_context, "user_id") else "unknown",
             "session_id": tool_context.session.id
             if hasattr(tool_context, "session") and tool_context.session
@@ -73,7 +76,20 @@ def audit_logger(log_path: str | Path | None = None) -> Callable:
     return callback
 
 
-def _sanitize_args(args: dict[str, Any]) -> dict[str, Any]:
-    """Remove potentially sensitive values from tool arguments."""
-    sensitive_keys = {"password", "secret", "token", "api_key", "credential"}
-    return {k: "***" if any(s in k.lower() for s in sensitive_keys) else v for k, v in args.items()}
+_SENSITIVE_KEYS = {"password", "secret", "token", "api_key", "credential"}
+
+
+def _sanitize(data: Any) -> Any:
+    """Recursively redact sensitive values from dicts and lists."""
+    if isinstance(data, dict):
+        return {
+            k: "***" if any(s in k.lower() for s in _SENSITIVE_KEYS) else _sanitize(v)
+            for k, v in data.items()
+        }
+    if isinstance(data, list):
+        return [_sanitize(item) for item in data]
+    return data
+
+
+# Keep backward-compatible alias
+_sanitize_args = _sanitize
