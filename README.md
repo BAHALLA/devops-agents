@@ -7,7 +7,7 @@ Agents can monitor infrastructure, diagnose issues, and take action with built-i
 ## Key Features
 
 - **Multi-agent orchestration** — a root agent delegates to specialized sub-agents based on user intent
-- **Structured workflows** — `SequentialAgent` and `ParallelAgent` for deterministic multi-step pipelines (e.g., incident triage checks Kafka, K8s, Docker in parallel, then summarizes)
+- **Structured workflows** — `SequentialAgent` and `ParallelAgent` for deterministic multi-step pipelines (e.g., incident triage checks Kafka, K8s, Docker, and observability in parallel, then summarizes)
 - **Safety guardrails** — destructive tools (`@destructive`) require explicit confirmation; mutating tools (`@confirm`) prompt before executing
 - **Graceful error handling** — tool and model failures are caught and returned as structured responses so the LLM can reason about them instead of crashing
 - **Audit logging** — every tool call is logged with timestamp, agent, arguments, and result
@@ -21,7 +21,8 @@ Agents can monitor infrastructure, diagnose issues, and take action with built-i
 | [**core**](core/) | Library | Agent factory, guardrails, error handlers, audit logging, persistent runner, typed config |
 | [**kafka-health-agent**](agents/kafka-health/) | Single agent | Kafka cluster health, topics, consumer groups, lag |
 | [**k8s-health-agent**](agents/k8s-health/) | Single agent | Kubernetes cluster health, nodes, pods, deployments, logs, events |
-| [**devops-assistant**](agents/devops-assistant/) | Multi-agent | Orchestrator that delegates to kafka, k8s, docker, and journal sub-agents |
+| [**observability-agent**](agents/observability/) | Single agent | Prometheus metrics/alerts, Loki log queries, Alertmanager silence management |
+| [**devops-assistant**](agents/devops-assistant/) | Multi-agent | Orchestrator that delegates to kafka, k8s, observability, docker, and journal sub-agents |
 | [**ops-journal**](agents/ops-journal/) | Memory/state | Notes, preferences, and session tracking with persistent storage |
 
 ## Quick Start
@@ -38,13 +39,13 @@ GOOGLE_API_KEY=your-api-key docker compose --profile demo up -d
 open http://localhost:8000
 ```
 
-This starts Kafka, Zookeeper, Kafka UI, and the devops-assistant agent with a chat interface.
+This starts Kafka, Zookeeper, Kafka UI, Prometheus, Loki, Alertmanager, and the devops-assistant agent with a chat interface.
 
 ### Local development
 
 ```bash
 make install      # install all workspace packages
-make infra-up     # start Kafka, Zookeeper, Kafka UI
+make infra-up     # start Kafka, Zookeeper, Prometheus, Loki, Alertmanager
 make run-devops   # launch the devops-assistant in ADK Dev UI
 ```
 
@@ -66,10 +67,11 @@ The platform uses a layered configuration system built on [pydantic-settings](ht
 3. Settings are loaded from the `.env` file next to each agent's module, with environment variables taking precedence
 
 ```
-agents/kafka-health/kafka_health_agent/.env   ← loaded by kafka-health-agent
-agents/k8s-health/k8s_health_agent/.env       ← loaded by k8s-health-agent
-agents/devops-assistant/devops_assistant/.env  ← loaded by devops-assistant
-agents/ops-journal/ops_journal_agent/.env      ← loaded by ops-journal
+agents/kafka-health/kafka_health_agent/.env      ← loaded by kafka-health-agent
+agents/k8s-health/k8s_health_agent/.env          ← loaded by k8s-health-agent
+agents/observability/observability_agent/.env    ← loaded by observability-agent
+agents/devops-assistant/devops_assistant/.env     ← loaded by devops-assistant
+agents/ops-journal/ops_journal_agent/.env         ← loaded by ops-journal
 ```
 
 ### Shared settings (all agents)
@@ -96,6 +98,14 @@ agents/ops-journal/ops_journal_agent/.env      ← loaded by ops-journal
 |----------|---------|-------------|
 | `KUBECONFIG_PATH` | — | Path to kubeconfig file (uses default kubeconfig if unset) |
 
+**observability-agent**
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `PROMETHEUS_URL` | `http://localhost:9090` | Prometheus server URL |
+| `LOKI_URL` | `http://localhost:3100` | Loki server URL |
+| `ALERTMANAGER_URL` | `http://localhost:9093` | Alertmanager server URL |
+
 ### Example `.env` file
 
 ```bash
@@ -119,13 +129,17 @@ KAFKA_BOOTSTRAP_SERVERS=localhost:9092
 
 ### Infrastructure
 
-The included `docker-compose.yml` starts the local infrastructure needed by the kafka-health-agent:
+The included `docker-compose.yml` starts the local infrastructure:
 
 | Service | Port | Description |
 |---------|------|-------------|
 | Kafka | `9092` | Kafka broker |
 | Zookeeper | `2181` | Zookeeper for Kafka |
 | Kafka UI | `8080` | Web UI for browsing topics and consumer groups |
+| Kafka Exporter | `9308` | Prometheus exporter for Kafka metrics |
+| Prometheus | `9090` | Metrics collection and alerting rules |
+| Loki | `3100` | Log aggregation |
+| Alertmanager | `9093` | Alert routing and silence management |
 
 ```bash
 make infra-up     # start all services
@@ -139,7 +153,7 @@ The platform ships as a single Docker image containing all agents. Docker Compos
 
 | Command | What it starts |
 |---------|---------------|
-| `docker compose up -d` | Infrastructure only (Kafka, Zookeeper, Kafka UI) |
+| `docker compose up -d` | Infrastructure only (Kafka, Prometheus, Loki, Alertmanager, etc.) |
 | `docker compose --profile demo up -d` | Infrastructure + devops-assistant web UI on `:8000` |
 
 ```bash
@@ -163,11 +177,12 @@ Tests live next to each package they cover:
 core/tests/                    # guardrails, error handlers, audit, config
 agents/kafka-health/tests/     # Kafka tools
 agents/k8s-health/tests/       # Kubernetes tools
+agents/observability/tests/    # Prometheus, Loki, Alertmanager tools
 agents/devops-assistant/tests/ # Docker tools
 agents/ops-journal/tests/      # journal & state tools
 ```
 
-Run the full suite (132 tests):
+Run the full suite (159 tests):
 
 ```bash
 make test
