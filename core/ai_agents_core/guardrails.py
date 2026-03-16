@@ -73,13 +73,13 @@ def destructive(reason: str = "") -> Callable:
     return decorator
 
 
-def _get_guard_level(tool_or_func: Any) -> str | None:
+def get_guard_level(tool_or_func: Any) -> str | None:
     """Get the guardrail level of a tool or function."""
     func = getattr(tool_or_func, "func", tool_or_func)
     return getattr(func, _GUARD_LEVEL_ATTR, None)
 
 
-def _get_guard_reason(tool_or_func: Any) -> str:
+def get_guard_reason(tool_or_func: Any) -> str:
     """Get the guardrail reason of a tool or function."""
     func = getattr(tool_or_func, "func", tool_or_func)
     return getattr(func, _GUARD_REASON_ATTR, "")
@@ -87,18 +87,18 @@ def _get_guard_reason(tool_or_func: Any) -> str:
 
 def is_destructive(tool_or_func: Any) -> bool:
     """Check if a tool or function is marked as destructive."""
-    return _get_guard_level(tool_or_func) == LEVEL_DESTRUCTIVE
+    return get_guard_level(tool_or_func) == LEVEL_DESTRUCTIVE
 
 
 def is_guarded(tool_or_func: Any) -> bool:
     """Check if a tool or function requires any confirmation."""
-    return _get_guard_level(tool_or_func) is not None
+    return get_guard_level(tool_or_func) is not None
 
 
 # Keep for backward compat
 def get_destructive_reason(tool_or_func: Any) -> str:
     """Get the reason a tool is marked destructive."""
-    return _get_guard_reason(tool_or_func)
+    return get_guard_reason(tool_or_func)
 
 
 # ── Callback factories ─────────────────────────────────────────────────
@@ -123,7 +123,7 @@ def require_confirmation() -> Callable:
         if func is None:
             return None
 
-        level = _get_guard_level(func)
+        level = get_guard_level(func)
         if level is None:
             return None  # not guarded, proceed
 
@@ -137,7 +137,7 @@ def require_confirmation() -> Callable:
         # Block and mark as pending confirmation
         tool_context.state[pending_key] = True
 
-        reason = _get_guard_reason(func)
+        reason = get_guard_reason(func)
 
         if level == LEVEL_DESTRUCTIVE:
             reason_msg = f" This action {reason}." if reason else ""
@@ -176,7 +176,7 @@ def dry_run() -> Callable:
         if func is None or not is_guarded(func):
             return None
 
-        reason = _get_guard_reason(func)
+        reason = get_guard_reason(func)
         return {
             "status": "dry_run",
             "message": (

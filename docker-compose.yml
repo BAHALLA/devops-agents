@@ -178,9 +178,39 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     command: ["adk", "web", "--host", "0.0.0.0", "--port", "8000", "agents/devops-assistant"]
 
+  # ── Slack bot (use: docker compose --profile slack up) ────────────
+
+  slack-bot:
+    build: .
+    container_name: slack-bot
+    profiles: [slack]
+    restart: unless-stopped
+    depends_on:
+      kafka:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    environment:
+      SLACK_BOT_TOKEN: ${SLACK_BOT_TOKEN:-}
+      SLACK_SIGNING_SECRET: ${SLACK_SIGNING_SECRET:-}
+
+      GOOGLE_GENAI_USE_VERTEXAI: "FALSE"
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+      GEMINI_MODEL_VERSION: ${GEMINI_MODEL_VERSION:-gemini-2.0-flash}
+
+      KAFKA_BOOTSTRAP_SERVERS: kafka:19092
+      PROMETHEUS_URL: http://prometheus:9090
+      LOKI_URL: http://loki:3100
+      ALERTMANAGER_URL: http://alertmanager:9093
+    volumes:
+      - slack-data:/app/data
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    command: ["uvicorn", "slack_bot.app:api", "--host", "0.0.0.0", "--port", "3000"]
+
 volumes:
   zk-data:
   kafka-data:
   prometheus-data:
   loki-data:
   devops-data:
+  slack-data:

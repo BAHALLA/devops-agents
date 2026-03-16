@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```bash
 make install          # Install all workspace packages (uv sync)
-make test             # Run all 132 tests across all packages
+make test             # Run all 197 tests across all packages
 make lint             # ruff check + format check
 make fmt              # Auto-fix linting and formatting
 ```

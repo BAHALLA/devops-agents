@@ -4,7 +4,8 @@
        run-k8s run-k8s-cli \
        run-observability run-observability-cli \
        run-devops run-devops-cli run-devops-persistent \
-       run-journal run-journal-cli run-journal-persistent
+       run-journal run-journal-cli run-journal-persistent \
+       run-slack-bot run-slack-bot-socket
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-24s\033[0m %s\n", $$1, $$2}'
@@ -90,3 +91,11 @@ run-journal-cli: ## Run ops-journal in terminal (in-memory state)
 
 run-journal-persistent: ## Run ops-journal with SQLite persistence
 	cd agents/ops-journal && uv run python run_persistent.py
+
+# ── slack-bot ─────────────────────────────────────────
+
+run-slack-bot: ## Run the Slack bot (FastAPI + slack-bolt on :3000)
+	cd agents/slack-bot && uv run uvicorn slack_bot.app:api --host 0.0.0.0 --port 3000
+
+run-slack-bot-socket: ## Run the Slack bot in Socket Mode (no public URL needed)
+	cd agents/slack-bot && uv run python -m slack_bot
