@@ -8,6 +8,7 @@ buttons. The user's button click is handled in app.py.
 from __future__ import annotations
 
 import contextlib
+import threading
 import uuid
 from collections.abc import Callable
 from dataclasses import dataclass, field
@@ -42,15 +43,19 @@ class ConfirmationStore:
     """Thread-safe store for pending confirmations."""
 
     _pending: dict[str, PendingConfirmation] = field(default_factory=dict)
+    _lock: threading.Lock = field(default_factory=threading.Lock)
 
     def add(self, confirmation: PendingConfirmation) -> None:
-        self._pending[confirmation.action_id] = confirmation
+        with self._lock:
+            self._pending[confirmation.action_id] = confirmation
 
     def pop(self, action_id: str) -> PendingConfirmation | None:
-        return self._pending.pop(action_id, None)
+        with self._lock:
+            return self._pending.pop(action_id, None)
 
     def get(self, action_id: str) -> PendingConfirmation | None:
-        return self._pending.get(action_id)
+        with self._lock:
+            return self._pending.get(action_id)
 
 
 def build_confirmation_blocks(

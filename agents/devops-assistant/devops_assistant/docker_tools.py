@@ -1,8 +1,11 @@
 """Docker tools exposed to the docker sub-agent."""
 
 import json
+import logging
 import subprocess
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 
 def _run_docker(args: list[str], timeout: int = 15) -> tuple[bool, str]:
@@ -18,8 +21,10 @@ def _run_docker(args: list[str], timeout: int = 15) -> tuple[bool, str]:
             return False, result.stderr.strip()
         return True, result.stdout.strip()
     except FileNotFoundError:
+        logger.exception("Docker CLI not found")
         return False, "Docker CLI not found. Is Docker installed?"
     except subprocess.TimeoutExpired:
+        logger.exception("Docker command timed out after %ds", timeout)
         return False, f"Command timed out after {timeout}s"
 
 

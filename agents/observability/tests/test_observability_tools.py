@@ -5,8 +5,10 @@ All HTTP calls are mocked — no real Prometheus, Loki, or Alertmanager needed.
 
 from unittest.mock import MagicMock, patch
 
+import pytest
 import requests
 
+import observability_agent.tools as _tools_mod
 from observability_agent.tools import (
     create_silence,
     delete_silence,
@@ -21,6 +23,15 @@ from observability_agent.tools import (
     query_prometheus,
     query_prometheus_range,
 )
+
+
+@pytest.fixture(autouse=True)
+def _reset_session():
+    """Reset cached HTTP session between tests."""
+    _tools_mod._session = None
+    yield
+    _tools_mod._session = None
+
 
 # ── Helpers ───────────────────────────────────────────────────────────
 

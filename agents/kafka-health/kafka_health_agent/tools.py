@@ -1,11 +1,14 @@
 """Kafka admin tools exposed to the agent."""
 
+import logging
 from typing import Any
 
 from confluent_kafka import ConsumerGroupTopicPartitions, KafkaException, TopicPartition
 from confluent_kafka.admin import AdminClient, NewTopic, OffsetSpec
 
 from ai_agents_core import AgentConfig, confirm, destructive
+
+logger = logging.getLogger(__name__)
 
 
 class KafkaConfig(AgentConfig):
@@ -17,9 +20,14 @@ class KafkaConfig(AgentConfig):
 # Loaded once at import time; agent.py calls load_agent_env() first.
 _config = KafkaConfig()
 
+_admin_client: AdminClient | None = None
+
 
 def _get_admin_client() -> AdminClient:
-    return AdminClient({"bootstrap.servers": _config.kafka_bootstrap_servers})
+    global _admin_client
+    if _admin_client is None:
+        _admin_client = AdminClient({"bootstrap.servers": _config.kafka_bootstrap_servers})
+    return _admin_client
 
 
 def get_kafka_cluster_health() -> dict[str, Any]:
@@ -42,6 +50,7 @@ def get_kafka_cluster_health() -> dict[str, Any]:
             "message": f"Cluster is {health_status} with {num_brokers} brokers online.",
         }
     except KafkaException as e:
+        logger.exception("Failed to connect to Kafka")
         return {"status": "error", "message": f"Failed to connect to Kafka: {str(e)}"}
 
 
@@ -57,6 +66,7 @@ def list_kafka_topics() -> dict[str, Any]:
         topics = list(metadata.topics.keys())
         return {"status": "success", "topics": topics, "count": len(topics)}
     except KafkaException as e:
+        logger.exception("Failed to list topics")
         return {"status": "error", "message": f"Failed to list topics: {str(e)}"}
 
 
@@ -88,11 +98,13 @@ def create_kafka_topic(
                     "message": f"Topic '{topic_name}' created successfully.",
                 }
             except Exception as e:
+                logger.exception("Failed to create topic '%s'", topic_name)
                 return {
                     "status": "error",
                     "message": f"Failed to create topic '{topic_name}': {str(e)}",
                 }
     except Exception as e:
+        logger.exception("Unexpected error while creating topic '%s'", topic_name)
         return {
             "status": "error",
             "message": f"Unexpected error while creating topic: {str(e)}",
@@ -120,11 +132,13 @@ def delete_kafka_topic(topic_name: str) -> dict[str, Any]:
                     "message": f"Topic '{topic_name}' deleted successfully.",
                 }
             except Exception as e:
+                logger.exception("Failed to delete topic '%s'", topic_name)
                 return {
                     "status": "error",
                     "message": f"Failed to delete topic '{topic_name}': {str(e)}",
                 }
     except Exception as e:
+        logger.exception("Unexpected error while deleting topic '%s'", topic_name)
         return {
             "status": "error",
             "message": f"Unexpected error while deleting topic: {str(e)}",
@@ -165,6 +179,7 @@ def get_topic_metadata(topic_name: str) -> dict[str, Any]:
             "num_partitions": len(partitions),
         }
     except KafkaException as e:
+        logger.exception("Failed to get metadata for topic '%s'", topic_name)
         return {
             "status": "error",
             "message": f"Failed to get metadata for topic '{topic_name}': {str(e)}",
@@ -183,6 +198,7 @@ def list_consumer_groups() -> dict[str, Any]:
         groups = [g.group_id for g in result.result().valid]
         return {"status": "success", "groups": groups, "count": len(groups)}
     except Exception as e:
+        logger.exception("Failed to list consumer groups")
         return {"status": "error", "message": f"Failed to list consumer groups: {str(e)}"}
 
 
@@ -227,10 +243,12 @@ def describe_consumer_groups(group_ids: list[str]) -> dict[str, Any]:
                     }
                 )
             except Exception as e:
+                logger.exception("Failed to describe consumer group '%s'", group_id)
                 results.append({"group_id": group_id, "error": str(e)})
 
         return {"status": "success", "groups": results}
     except Exception as e:
+        logger.exception("Failed to describe consumer groups")
         return {"status": "error", "message": f"Failed to describe consumer groups: {str(e)}"}
 
 
@@ -307,6 +325,7 @@ def get_consumer_lag(group_id: str, topic_name: str | None = None) -> dict[str, 
                         }
                     )
             except Exception as e:
+                logger.exception("Failed to get offset for %s[%s]", tp.topic, tp.partition)
                 lag_info.append(
                     {
                         "topic": tp.topic,
@@ -322,4 +341,5 @@ def get_consumer_lag(group_id: str, topic_name: str | None = None) -> dict[str, 
             "lag_details": lag_info,
         }
     except Exception as e:
+        logger.exception("Failed to calculate lag for group '%s'", group_id)
         return {"status": "error", "message": f"Failed to calculate lag: {str(e)}"}

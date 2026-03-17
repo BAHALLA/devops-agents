@@ -1,5 +1,6 @@
 """Kubernetes tools exposed to the k8s health agent."""
 
+import logging
 from datetime import UTC
 from typing import Any
 
@@ -7,6 +8,8 @@ from kubernetes import client, config
 from kubernetes.client.rest import ApiException
 
 from ai_agents_core import AgentConfig, confirm, destructive
+
+logger = logging.getLogger(__name__)
 
 
 class K8sConfig(AgentConfig):
@@ -17,9 +20,16 @@ class K8sConfig(AgentConfig):
 
 _config = K8sConfig()
 
+_kube_config_loaded = False
+_core_api_client: client.CoreV1Api | None = None
+_apps_api_client: client.AppsV1Api | None = None
+
 
 def _load_kube_config() -> None:
-    """Load kubeconfig from file or in-cluster config."""
+    """Load kubeconfig from file or in-cluster config (once)."""
+    global _kube_config_loaded
+    if _kube_config_loaded:
+        return
     try:
         if _config.kubeconfig_path:
             config.load_kube_config(config_file=_config.kubeconfig_path)
@@ -27,16 +37,23 @@ def _load_kube_config() -> None:
             config.load_kube_config()
     except config.ConfigException:
         config.load_incluster_config()
+    _kube_config_loaded = True
 
 
 def _core_api() -> client.CoreV1Api:
-    _load_kube_config()
-    return client.CoreV1Api()
+    global _core_api_client
+    if _core_api_client is None:
+        _load_kube_config()
+        _core_api_client = client.CoreV1Api()
+    return _core_api_client
 
 
 def _apps_api() -> client.AppsV1Api:
-    _load_kube_config()
-    return client.AppsV1Api()
+    global _apps_api_client
+    if _apps_api_client is None:
+        _load_kube_config()
+        _apps_api_client = client.AppsV1Api()
+    return _apps_api_client
 
 
 # ── Cluster Info ───────────────────────────────────────────────────────
@@ -53,7 +70,7 @@ def get_cluster_info() -> dict[str, Any]:
         version_api = client.VersionApi()
         version = version_api.get_code()
 
-        v1 = client.CoreV1Api()
+        v1 = _core_api()
         nodes = v1.list_node()
 
         return {
@@ -64,8 +81,10 @@ def get_cluster_info() -> dict[str, Any]:
             "node_count": len(nodes.items),
         }
     except ApiException as e:
+        logger.exception("Failed to get cluster info")
         return {"status": "error", "message": f"Failed to get cluster info: {e.reason}"}
     except Exception as e:
+        logger.exception("Failed to connect to cluster")
         return {"status": "error", "message": f"Failed to connect to cluster: {str(e)}"}
 
 
@@ -110,6 +129,7 @@ def get_nodes() -> dict[str, Any]:
 
         return {"status": "success", "nodes": node_list, "count": len(node_list)}
     except ApiException as e:
+        logger.exception("Failed to list nodes")
         return {"status": "error", "message": f"Failed to list nodes: {e.reason}"}
 
 
@@ -160,6 +180,7 @@ def list_pods(namespace: str = "default", label_selector: str | None = None) -> 
 
         return {"status": "success", "pods": pod_list, "count": len(pod_list)}
     except ApiException as e:
+        logger.exception("Failed to list pods in namespace '%s'", namespace)
         return {"status": "error", "message": f"Failed to list pods: {e.reason}"}
 
 
@@ -234,6 +255,7 @@ def describe_pod(pod_name: str, namespace: str = "default") -> dict[str, Any]:
             "conditions": conditions,
         }
     except ApiException as e:
+        logger.exception("Failed to describe pod '%s'", pod_name)
         return {"status": "error", "message": f"Failed to describe pod '{pod_name}': {e.reason}"}
 
 
@@ -275,6 +297,7 @@ def get_pod_logs(
             "logs": logs,
         }
     except ApiException as e:
+        logger.exception("Failed to get logs for pod '%s'", pod_name)
         return {"status": "error", "message": f"Failed to get logs for '{pod_name}': {e.reason}"}
 
 
@@ -318,6 +341,7 @@ def list_deployments(namespace: str = "default") -> dict[str, Any]:
 
         return {"status": "success", "deployments": deploy_list, "count": len(deploy_list)}
     except ApiException as e:
+        logger.exception("Failed to list deployments")
         return {"status": "error", "message": f"Failed to list deployments: {e.reason}"}
 
 
@@ -355,6 +379,7 @@ def get_deployment_status(name: str, namespace: str = "default") -> dict[str, An
             "conditions": conditions,
         }
     except ApiException as e:
+        logger.exception("Failed to get deployment '%s'", name)
         return {"status": "error", "message": f"Failed to get deployment '{name}': {e.reason}"}
 
 
@@ -379,6 +404,7 @@ def scale_deployment(name: str, namespace: str = "default", replicas: int = 1) -
             "message": f"Deployment '{name}' scaled to {replicas} replicas.",
         }
     except ApiException as e:
+        logger.exception("Failed to scale deployment '%s'", name)
         return {"status": "error", "message": f"Failed to scale '{name}': {e.reason}"}
 
 
@@ -415,6 +441,7 @@ def restart_deployment(name: str, namespace: str = "default") -> dict[str, Any]:
             "message": f"Rolling restart triggered for deployment '{name}'.",
         }
     except ApiException as e:
+        logger.exception("Failed to restart deployment '%s'", name)
         return {"status": "error", "message": f"Failed to restart '{name}': {e.reason}"}
 
 
@@ -461,6 +488,7 @@ def get_events(
 
         return {"status": "success", "events": event_list, "count": len(event_list)}
     except ApiException as e:
+        logger.exception("Failed to get events")
         return {"status": "error", "message": f"Failed to get events: {e.reason}"}
 
 
@@ -486,4 +514,5 @@ def list_namespaces() -> dict[str, Any]:
         ]
         return {"status": "success", "namespaces": ns_list, "count": len(ns_list)}
     except ApiException as e:
+        logger.exception("Failed to list namespaces")
         return {"status": "error", "message": f"Failed to list namespaces: {e.reason}"}

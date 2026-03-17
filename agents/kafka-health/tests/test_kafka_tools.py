@@ -5,8 +5,10 @@ All Kafka API calls are mocked — no real broker needed.
 
 from unittest.mock import MagicMock, patch
 
+import pytest
 from confluent_kafka import KafkaException
 
+import kafka_health_agent.tools as _tools_mod
 from kafka_health_agent.tools import (
     create_kafka_topic,
     delete_kafka_topic,
@@ -17,6 +19,15 @@ from kafka_health_agent.tools import (
     list_consumer_groups,
     list_kafka_topics,
 )
+
+
+@pytest.fixture(autouse=True)
+def _reset_client_cache():
+    """Reset cached Kafka AdminClient between tests."""
+    _tools_mod._admin_client = None
+    yield
+    _tools_mod._admin_client = None
+
 
 # ── Helpers ───────────────────────────────────────────────────────────
 

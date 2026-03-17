@@ -6,8 +6,10 @@ All Kubernetes API calls are mocked — no real cluster needed.
 from datetime import UTC, datetime
 from unittest.mock import MagicMock, patch
 
+import pytest
 from kubernetes.client.rest import ApiException
 
+import k8s_health_agent.tools as _tools_mod
 from k8s_health_agent.tools import (
     describe_pod,
     get_cluster_info,
@@ -21,6 +23,19 @@ from k8s_health_agent.tools import (
     restart_deployment,
     scale_deployment,
 )
+
+
+@pytest.fixture(autouse=True)
+def _reset_client_cache():
+    """Reset cached K8s clients between tests."""
+    _tools_mod._kube_config_loaded = False
+    _tools_mod._core_api_client = None
+    _tools_mod._apps_api_client = None
+    yield
+    _tools_mod._kube_config_loaded = False
+    _tools_mod._core_api_client = None
+    _tools_mod._apps_api_client = None
+
 
 # ── Helpers ───────────────────────────────────────────────────────────
 
@@ -146,9 +161,10 @@ def _api_exception(reason="Not Found", status=404):
 # ── Cluster Info ──────────────────────────────────────────────────────
 
 
+@patch("k8s_health_agent.tools._core_api")
 @patch("k8s_health_agent.tools._load_kube_config")
 @patch("k8s_health_agent.tools.client")
-def test_get_cluster_info_success(mock_client, mock_config):
+def test_get_cluster_info_success(mock_client, mock_config, mock_core):
     version = MagicMock()
     version.major = "1"
     version.minor = "29"
@@ -158,7 +174,7 @@ def test_get_cluster_info_success(mock_client, mock_config):
 
     nodes = MagicMock()
     nodes.items = [_make_node(), _make_node("node-2")]
-    mock_client.CoreV1Api.return_value.list_node.return_value = nodes
+    mock_core.return_value.list_node.return_value = nodes
 
     result = get_cluster_info()
     assert result["status"] == "success"
@@ -166,9 +182,10 @@ def test_get_cluster_info_success(mock_client, mock_config):
     assert result["node_count"] == 2
 
 
+@patch("k8s_health_agent.tools._core_api")
 @patch("k8s_health_agent.tools._load_kube_config")
 @patch("k8s_health_agent.tools.client")
-def test_get_cluster_info_api_error(mock_client, mock_config):
+def test_get_cluster_info_api_error(mock_client, mock_config, mock_core):
     mock_client.VersionApi.return_value.get_code.side_effect = ApiException(
         status=403, reason="Forbidden"
     )

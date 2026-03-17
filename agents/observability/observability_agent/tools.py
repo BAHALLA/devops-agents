@@ -1,11 +1,14 @@
 """Observability stack tools: Prometheus, Loki, and Alertmanager."""
 
+import logging
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import requests
 
 from ai_agents_core import AgentConfig, confirm, destructive
+
+logger = logging.getLogger(__name__)
 
 
 class ObservabilityConfig(AgentConfig):
@@ -20,20 +23,30 @@ class ObservabilityConfig(AgentConfig):
 # Loaded once at import time; agent.py calls load_agent_env() first.
 _config = ObservabilityConfig()
 
+# Reusable session for HTTP connection pooling (Keep-Alive).
+_session: requests.Session | None = None
+
+
+def _get_session() -> requests.Session:
+    global _session
+    if _session is None:
+        _session = requests.Session()
+    return _session
+
 
 def _http_get(base_url: str, path: str, params: dict | None = None) -> requests.Response:
     """Send a GET request to an observability endpoint."""
-    return requests.get(f"{base_url}{path}", params=params, timeout=_config.http_timeout)
+    return _get_session().get(f"{base_url}{path}", params=params, timeout=_config.http_timeout)
 
 
 def _http_post(base_url: str, path: str, json: dict | list | None = None) -> requests.Response:
     """Send a POST request to an observability endpoint."""
-    return requests.post(f"{base_url}{path}", json=json, timeout=_config.http_timeout)
+    return _get_session().post(f"{base_url}{path}", json=json, timeout=_config.http_timeout)
 
 
 def _http_delete(base_url: str, path: str) -> requests.Response:
     """Send a DELETE request to an observability endpoint."""
-    return requests.delete(f"{base_url}{path}", timeout=_config.http_timeout)
+    return _get_session().delete(f"{base_url}{path}", timeout=_config.http_timeout)
 
 
 # ── Prometheus Tools ──────────────────────────────────────────────────
@@ -66,6 +79,7 @@ def query_prometheus(query: str, time: str | None = None) -> dict[str, Any]:
             "results": data["data"]["result"],
         }
     except requests.RequestException as e:
+        logger.exception("Failed to connect to Prometheus")
         return {"status": "error", "message": f"Failed to connect to Prometheus: {e}"}
 
 
@@ -96,6 +110,7 @@ def query_prometheus_range(query: str, start: str, end: str, step: str = "60s") 
             "results": data["data"]["result"],
         }
     except requests.RequestException as e:
+        logger.exception("Failed to connect to Prometheus")
         return {"status": "error", "message": f"Failed to connect to Prometheus: {e}"}
 
 
@@ -138,6 +153,7 @@ def get_prometheus_alerts() -> dict[str, Any]:
             "alerts": alerts,
         }
     except requests.RequestException as e:
+        logger.exception("Failed to connect to Prometheus")
         return {"status": "error", "message": f"Failed to connect to Prometheus: {e}"}
 
 
@@ -179,6 +195,7 @@ def get_prometheus_targets() -> dict[str, Any]:
             "targets": targets,
         }
     except requests.RequestException as e:
+        logger.exception("Failed to connect to Prometheus")
         return {"status": "error", "message": f"Failed to connect to Prometheus: {e}"}
 
 
@@ -226,6 +243,7 @@ def query_loki_logs(
             "entries": entries[:limit],
         }
     except requests.RequestException as e:
+        logger.exception("Failed to connect to Loki")
         return {"status": "error", "message": f"Failed to connect to Loki: {e}"}
 
 
@@ -242,6 +260,7 @@ def get_loki_labels() -> dict[str, Any]:
             return {"status": "error", "message": "Failed to fetch Loki labels."}
         return {"status": "success", "labels": data.get("data", [])}
     except requests.RequestException as e:
+        logger.exception("Failed to connect to Loki")
         return {"status": "error", "message": f"Failed to connect to Loki: {e}"}
 
 
@@ -264,6 +283,7 @@ def get_loki_label_values(label: str) -> dict[str, Any]:
             }
         return {"status": "success", "label": label, "values": data.get("data", [])}
     except requests.RequestException as e:
+        logger.exception("Failed to connect to Loki")
         return {"status": "error", "message": f"Failed to connect to Loki: {e}"}
 
 
@@ -293,6 +313,7 @@ def get_active_alerts() -> dict[str, Any]:
             )
         return {"status": "success", "active_count": len(results), "alerts": results}
     except requests.RequestException as e:
+        logger.exception("Failed to connect to Alertmanager")
         return {"status": "error", "message": f"Failed to connect to Alertmanager: {e}"}
 
 
@@ -316,6 +337,7 @@ def get_alert_groups() -> dict[str, Any]:
             )
         return {"status": "success", "group_count": len(results), "groups": results}
     except requests.RequestException as e:
+        logger.exception("Failed to connect to Alertmanager")
         return {"status": "error", "message": f"Failed to connect to Alertmanager: {e}"}
 
 
@@ -343,6 +365,7 @@ def get_silences() -> dict[str, Any]:
             )
         return {"status": "success", "active_count": len(results), "silences": results}
     except requests.RequestException as e:
+        logger.exception("Failed to connect to Alertmanager")
         return {"status": "error", "message": f"Failed to connect to Alertmanager: {e}"}
 
 
@@ -385,6 +408,7 @@ def create_silence(
             }
         return {"status": "error", "message": f"Unexpected response: {data}"}
     except requests.RequestException as e:
+        logger.exception("Failed to connect to Alertmanager")
         return {"status": "error", "message": f"Failed to connect to Alertmanager: {e}"}
 
 
@@ -410,4 +434,5 @@ def delete_silence(silence_id: str) -> dict[str, Any]:
             "message": f"Failed to expire silence: HTTP {resp.status_code} - {resp.text}",
         }
     except requests.RequestException as e:
+        logger.exception("Failed to connect to Alertmanager")
         return {"status": "error", "message": f"Failed to connect to Alertmanager: {e}"}
