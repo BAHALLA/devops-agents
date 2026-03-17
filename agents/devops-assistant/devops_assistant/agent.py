@@ -1,4 +1,5 @@
 from ai_agents_core import (
+    activity_tracker,
     create_agent,
     create_parallel_agent,
     create_sequential_agent,
@@ -42,6 +43,8 @@ load_agent_env(__file__)
 
 # ── Sub-agent: Docker operations ──────────────────────────────────────
 
+_track = activity_tracker()
+
 docker_agent = create_agent(
     name="docker_agent",
     description=(
@@ -61,6 +64,7 @@ docker_agent = create_agent(
         get_container_stats,
         docker_compose_status,
     ],
+    after_tool_callback=_track,
     on_tool_error_callback=graceful_tool_error(),
 )
 
@@ -74,6 +78,7 @@ kafka_health_checker = create_agent(
         "Provide a brief status summary of your findings."
     ),
     tools=[get_kafka_cluster_health, list_kafka_topics, list_consumer_groups, get_consumer_lag],
+    after_tool_callback=_track,
     on_tool_error_callback=graceful_tool_error(),
     output_key="kafka_status",
 )
@@ -86,6 +91,7 @@ k8s_health_checker = create_agent(
         "and any failing pods. Provide a brief status summary of your findings."
     ),
     tools=[get_cluster_info, get_nodes, get_events, list_pods],
+    after_tool_callback=_track,
     on_tool_error_callback=graceful_tool_error(),
     output_key="k8s_status",
 )
@@ -98,6 +104,7 @@ docker_health_checker = create_agent(
         "Report any unhealthy or stopped containers. Provide a brief status summary."
     ),
     tools=[list_containers, get_container_stats, docker_compose_status],
+    after_tool_callback=_track,
     on_tool_error_callback=graceful_tool_error(),
     output_key="docker_status",
 )
@@ -110,6 +117,7 @@ observability_health_checker = create_agent(
         "and check active Alertmanager alerts. Provide a brief status summary."
     ),
     tools=[get_prometheus_targets, get_prometheus_alerts, get_active_alerts, query_prometheus],
+    after_tool_callback=_track,
     on_tool_error_callback=graceful_tool_error(),
     output_key="observability_status",
 )
@@ -153,6 +161,7 @@ journal_writer = create_agent(
         "Also log this operation using log_operation."
     ),
     tools=[save_note, log_operation],
+    after_tool_callback=_track,
 )
 
 # Sequential pipeline: parallel checks → summarize → save

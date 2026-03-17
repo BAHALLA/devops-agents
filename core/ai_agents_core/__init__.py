@@ -1,3 +1,4 @@
+from .activity import activity_tracker as activity_tracker
 from .audit import audit_logger as audit_logger
 from .base import create_agent as create_agent
 from .base import create_parallel_agent as create_parallel_agent
