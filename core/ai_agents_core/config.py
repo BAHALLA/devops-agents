@@ -28,12 +28,27 @@ class AgentConfig(BaseSettings):
         extra="ignore",
     )
 
-    # Google AI / Vertex AI settings
+    # ── LLM provider settings ────────────────────────────────────────
+    # MODEL_PROVIDER selects the backend: "gemini" (default), "anthropic",
+    # "openai", or any litellm-supported provider prefix.
+    # MODEL_NAME is the model identifier passed to the provider.
+    #
+    # Examples:
+    #   MODEL_PROVIDER=gemini     MODEL_NAME=gemini-2.5-pro
+    #   MODEL_PROVIDER=anthropic  MODEL_NAME=anthropic/claude-sonnet-4-20250514
+    #   MODEL_PROVIDER=openai     MODEL_NAME=openai/gpt-4o
+    #   MODEL_PROVIDER=ollama     MODEL_NAME=ollama/llama3
+    model_provider: str = "gemini"
+    model_name: str = "gemini-2.0-flash"
+
+    # Google AI / Vertex AI settings (used when model_provider=gemini)
     google_genai_use_vertexai: bool = True
     google_cloud_project: str | None = None
     google_cloud_location: str | None = None
     google_api_key: str | None = None
-    gemini_model_version: str = "gemini-2.0-flash"
+
+    # Kept for backward compatibility — overrides model_name when set.
+    gemini_model_version: str | None = None
 
 
 def load_config(config_cls: type[AgentConfig], agent_file: str) -> AgentConfig:

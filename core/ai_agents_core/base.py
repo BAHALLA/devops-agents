@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+import logging
 import os
 from collections.abc import Callable, Sequence
 from pathlib import Path
@@ -6,8 +9,11 @@ from typing import Any
 from dotenv import load_dotenv
 from google.adk.agents import Agent, ParallelAgent, SequentialAgent
 from google.adk.agents.base_agent import BaseAgent
+from google.adk.models.base_llm import BaseLlm
 
 from .log import setup_logging
+
+logger = logging.getLogger("ai_agents.base")
 
 
 def load_agent_env(agent_file: str) -> None:
@@ -23,13 +29,52 @@ def load_agent_env(agent_file: str) -> None:
     setup_logging()
 
 
+def resolve_model() -> str | BaseLlm:
+    """Resolve the LLM model from environment variables.
+
+    Reads MODEL_PROVIDER and MODEL_NAME to determine which backend to use.
+    For Gemini (the default), returns a plain model string.
+    For other providers (anthropic, openai, ollama, etc.), returns a LiteLlm instance.
+
+    Environment variables:
+        MODEL_PROVIDER: "gemini" (default), "anthropic", "openai", "ollama", etc.
+        MODEL_NAME: Model identifier (e.g., "gemini-2.5-pro", "anthropic/claude-sonnet-4-20250514").
+        GEMINI_MODEL_VERSION: Legacy alias for MODEL_NAME when provider is gemini.
+
+    Returns:
+        A model string for Gemini or a LiteLlm instance for other providers.
+    """
+    provider = os.getenv("MODEL_PROVIDER", "gemini").lower()
+
+    if provider == "gemini":
+        return os.getenv("MODEL_NAME") or os.getenv("GEMINI_MODEL_VERSION") or "gemini-2.0-flash"
+
+    # Non-Gemini provider — use LiteLlm
+    from google.adk.models.lite_llm import LiteLlm
+
+    model_name = os.getenv("MODEL_NAME", "")
+    if not model_name:
+        raise ValueError(
+            f"MODEL_NAME must be set when MODEL_PROVIDER={provider}. "
+            f"Example: MODEL_NAME=anthropic/claude-sonnet-4-20250514"
+        )
+
+    # LiteLlm expects the provider prefix in the model name (e.g., "anthropic/claude-...")
+    # Add it if not already present.
+    if "/" not in model_name:
+        model_name = f"{provider}/{model_name}"
+
+    logger.info("Using LiteLlm with model: %s", model_name)
+    return LiteLlm(model=model_name)
+
+
 def create_agent(
     *,
     name: str,
     description: str,
     instruction: str,
     tools: Sequence[Callable[..., Any]],
-    model: str | None = None,
+    model: str | BaseLlm | None = None,
     sub_agents: Sequence[BaseAgent] | None = None,
     before_tool_callback: Callable | list[Callable] | None = None,
     after_tool_callback: Callable | list[Callable] | None = None,
@@ -39,10 +84,13 @@ def create_agent(
 ) -> Agent:
     """Create an ADK Agent with sensible defaults.
 
-    The model defaults to the GEMINI_MODEL_VERSION env var, falling back
-    to 'gemini-2.0-flash'.
+    The model is resolved from environment variables via resolve_model()
+    unless explicitly passed. Supports Gemini (default), Claude, OpenAI,
+    and any LiteLLM-compatible provider.
 
     Args:
+        model: Explicit model override. Can be a Gemini model string or a
+            BaseLlm instance (e.g., LiteLlm). When None, resolved from env.
         before_tool_callback: Called before each tool execution. Return a dict
             to skip the tool (e.g., for guardrails), or None to proceed.
             Use guardrails.require_confirmation() or guardrails.dry_run().
@@ -59,7 +107,7 @@ def create_agent(
         output_key: Session state key to store this agent's output.
             Useful for passing results between agents in a SequentialAgent.
     """
-    resolved_model = model or os.getenv("GEMINI_MODEL_VERSION", "gemini-2.0-flash")
+    resolved_model = model if model is not None else resolve_model()
 
     kwargs: dict[str, Any] = {
         "name": name,

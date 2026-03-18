@@ -10,11 +10,14 @@ def test_agent_config_defaults(monkeypatch):
     monkeypatch.delenv("GOOGLE_CLOUD_PROJECT", raising=False)
     monkeypatch.delenv("GOOGLE_API_KEY", raising=False)
     monkeypatch.delenv("GOOGLE_GENAI_USE_VERTEXAI", raising=False)
+    monkeypatch.delenv("MODEL_PROVIDER", raising=False)
+    monkeypatch.delenv("MODEL_NAME", raising=False)
     config = AgentConfig(
         _env_file=None,  # don't load any .env
     )
     assert config.google_genai_use_vertexai is True
-    assert config.gemini_model_version == "gemini-2.0-flash"
+    assert config.model_provider == "gemini"
+    assert config.model_name == "gemini-2.0-flash"
     assert config.google_cloud_project is None
     assert config.google_api_key is None
 
@@ -40,7 +43,7 @@ def test_subclass_config(monkeypatch):
     config = KafkaConfig(_env_file=None)
     assert config.kafka_bootstrap_servers == "broker:19092"
     # Base fields still work
-    assert config.gemini_model_version == "gemini-2.0-flash"
+    assert config.model_name == "gemini-2.0-flash"
 
 
 def test_load_config_from_env_file(tmp_path: Path, monkeypatch):

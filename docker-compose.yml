@@ -157,15 +157,20 @@ services:
     ports:
       - "8000:8000"
     environment:
-      # AI provider — set ONE of these:
-      # Option 1: Google AI Studio (easiest to get started)
+      # ── LLM provider (pick one) ──────────────────────────────────
+      # Option 1: Google AI Studio (default)
       GOOGLE_GENAI_USE_VERTEXAI: "FALSE"
       GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
       # Option 2: Vertex AI (uncomment and set these instead)
       # GOOGLE_GENAI_USE_VERTEXAI: "TRUE"
       # GOOGLE_CLOUD_PROJECT: ${GOOGLE_CLOUD_PROJECT:-}
       # GOOGLE_CLOUD_LOCATION: ${GOOGLE_CLOUD_LOCATION:-us-central1}
-
+      # Option 3: Any LiteLLM provider (anthropic, openai, ollama, ...)
+      # Set MODEL_PROVIDER + MODEL_NAME + provider API key
+      MODEL_PROVIDER: ${MODEL_PROVIDER:-gemini}
+      MODEL_NAME: ${MODEL_NAME:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       GEMINI_MODEL_VERSION: ${GEMINI_MODEL_VERSION:-gemini-2.0-flash}
 
       # Agent-specific
@@ -194,8 +199,12 @@ services:
       SLACK_BOT_TOKEN: ${SLACK_BOT_TOKEN:-}
       SLACK_SIGNING_SECRET: ${SLACK_SIGNING_SECRET:-}
 
+      MODEL_PROVIDER: ${MODEL_PROVIDER:-gemini}
+      MODEL_NAME: ${MODEL_NAME:-}
       GOOGLE_GENAI_USE_VERTEXAI: "FALSE"
       GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       GEMINI_MODEL_VERSION: ${GEMINI_MODEL_VERSION:-gemini-2.0-flash}
 
       KAFKA_BOOTSTRAP_SERVERS: kafka:19092

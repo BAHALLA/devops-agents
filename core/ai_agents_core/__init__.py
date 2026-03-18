@@ -4,6 +4,7 @@ from .base import create_agent as create_agent
 from .base import create_parallel_agent as create_parallel_agent
 from .base import create_sequential_agent as create_sequential_agent
 from .base import load_agent_env as load_agent_env
+from .base import resolve_model as resolve_model
 from .config import AgentConfig as AgentConfig
 from .config import load_config as load_config
 from .error_handlers import graceful_model_error as graceful_model_error

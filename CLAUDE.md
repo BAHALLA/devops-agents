@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```bash
 make install          # Install all workspace packages (uv sync)
-make test             # Run all 237 tests across all packages
+make test             # Run all 269 tests across all packages
 make lint             # ruff check + format check
 make fmt              # Auto-fix linting and formatting
 ```
@@ -40,7 +40,7 @@ This is a **DevOps/SRE agent platform** built on **Google ADK** (Agent Developme
 
 ### Workspace Layout
 
-- **`core/`** — Shared library (`ai-agents-core`): agent factory, RBAC, config, guardrails, structured logging, audit trail, activity tracking, error handlers, persistent runner
+- **`core/`** — Shared library (`ai-agents-core`): agent factory, multi-provider LLM support (Gemini/Claude/OpenAI/Ollama via LiteLLM), RBAC, config, guardrails, resilience (circuit breaker + retry), structured logging, audit trail, activity tracking, error handlers, persistent runner
 - **`agents/`** — Independent agent packages, each runnable standalone or composable:
   - `kafka-health/` — Kafka cluster monitoring (8 tools, uses confluent-kafka)
   - `k8s-health/` — Kubernetes cluster management (11 tools, uses kubernetes client)
@@ -56,6 +56,8 @@ This is a **DevOps/SRE agent platform** built on **Google ADK** (Agent Developme
 - **Guardrails as decorators**: `@destructive(reason)` and `@confirm(reason)` attach metadata to tool functions. `require_confirmation()` / `dry_run()` callbacks read this metadata at runtime.
 - **Structured JSON logging**: `setup_logging()` configures JSON output to stdout (called automatically by `load_agent_env()`). `audit_logger()` emits tool-call audit entries via the logging system. `activity_tracker()` records tool calls to session state for cross-agent visibility.
 - **Connection pooling**: Kafka `AdminClient`, K8s API clients, and HTTP sessions are cached as module-level singletons to avoid per-call connection overhead.
+- **Multi-provider LLM**: `resolve_model()` in `core/ai_agents_core/base.py` reads `MODEL_PROVIDER` + `MODEL_NAME` env vars. For Gemini returns a string; for others returns `LiteLlm(model=...)`. All agents use this via `create_agent()` — no per-agent changes needed.
+- **Resilience**: `CircuitBreaker` in `core/ai_agents_core/resilience.py` provides per-tool circuit breaking via ADK callbacks. `@with_retry` decorator adds exponential backoff with jitter to tool functions.
 - **Pydantic-settings config**: Each agent subclasses `AgentConfig` for typed env var loading from `.env` files colocated with the agent module.
 - **All tests use mocks**: `@patch` on internal client getters (e.g., `_get_admin_client`). No running Kafka/K8s/Docker required. Autouse fixtures reset cached clients between tests.
 

@@ -29,7 +29,7 @@ root_agent = create_agent(
 | `description` | Used by parent orchestrators to decide when to delegate |
 | `instruction` | System prompt for the agent |
 | `tools` | List of tool functions |
-| `model` | Override model (defaults to `GEMINI_MODEL_VERSION` env var or `gemini-2.0-flash`) |
+| `model` | Override model — can be a string (Gemini) or `BaseLlm` instance (LiteLlm). When `None`, resolved from `MODEL_PROVIDER`/`MODEL_NAME` env vars via `resolve_model()` |
 | `sub_agents` | List of child agents for orchestrators |
 | `before_tool_callback` | Called before each tool — return a dict to block execution |
 | `after_tool_callback` | Called after each tool — return a dict to override the result |
@@ -94,7 +94,7 @@ The LLM can then inform the user or try an alternative approach.
 
 ### `graceful_model_error()`
 
-An `on_model_error_callback` that returns a friendly message when the Gemini API call fails:
+An `on_model_error_callback` that returns a friendly message when the LLM API call fails:
 
 ```python
 from ai_agents_core import create_agent, graceful_model_error
@@ -104,6 +104,58 @@ root_agent = create_agent(
     on_model_error_callback=graceful_model_error(),
 )
 ```
+
+---
+
+## Resilience
+
+Fault-tolerance utilities for handling transient failures and service outages.
+
+### `CircuitBreaker`
+
+Per-tool circuit breaker that integrates with ADK callbacks. When a tool exceeds the failure threshold, subsequent calls are short-circuited until a recovery timeout allows a probe.
+
+```python
+from ai_agents_core import CircuitBreaker, graceful_tool_error, audit_logger, authorize, require_confirmation
+
+breaker = CircuitBreaker(failure_threshold=5, recovery_timeout=60)
+
+root_agent = create_agent(
+    ...,
+    before_tool_callback=[authorize(), require_confirmation(), breaker.before_tool_callback()],
+    after_tool_callback=[audit_logger(), breaker.after_tool_callback()],
+    on_tool_error_callback=[breaker.on_tool_error_callback(), graceful_tool_error()],
+)
+```
+
+| State | Behavior |
+|-------|----------|
+| **Closed** | All calls pass through normally |
+| **Open** | Calls are blocked with `{"error_type": "CircuitOpen", ...}` |
+| **Half-open** | One probe call is allowed after `recovery_timeout` seconds |
+
+The circuit breaker error callback returns `None` so it composes with `graceful_tool_error()` — it records the failure, then the graceful handler produces the response dict.
+
+### `@with_retry`
+
+Decorator for tool functions that adds retry with exponential backoff and jitter.
+
+```python
+from ai_agents_core import with_retry
+
+@with_retry(max_retries=3, retryable=(ConnectionError, TimeoutError))
+def list_kafka_topics(timeout: int = 10) -> dict:
+    ...
+```
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `max_retries` | `3` | Max retry attempts (total calls = max_retries + 1) |
+| `base_delay` | `1.0` | Initial backoff delay in seconds |
+| `max_delay` | `30.0` | Cap on backoff delay |
+| `retryable` | `(ConnectionError, TimeoutError, OSError)` | Exception types that trigger a retry |
+
+Apply `@with_retry` to **read-only** tools that call external services. Do not apply to mutating operations (create, delete) where retries could be dangerous.
 
 ---
 
@@ -352,18 +404,36 @@ class KafkaConfig(AgentConfig):
 
 config = load_config(KafkaConfig, __file__)
 print(config.kafka_bootstrap_servers)
-print(config.gemini_model_version)
+print(config.model_provider)   # "gemini", "anthropic", "openai", etc.
+print(config.model_name)       # "gemini-2.0-flash", "anthropic/claude-sonnet-4-20250514", etc.
 ```
 
 Base fields (inherited by all configs):
 
-| Field | Default | Env var |
-|-------|---------|---------|
-| `google_genai_use_vertexai` | `True` | `GOOGLE_GENAI_USE_VERTEXAI` |
-| `google_cloud_project` | `None` | `GOOGLE_CLOUD_PROJECT` |
-| `google_cloud_location` | `None` | `GOOGLE_CLOUD_LOCATION` |
-| `google_api_key` | `None` | `GOOGLE_API_KEY` |
-| `gemini_model_version` | `"gemini-2.0-flash"` | `GEMINI_MODEL_VERSION` |
+| Field | Default | Env var | Description |
+|-------|---------|---------|-------------|
+| `model_provider` | `"gemini"` | `MODEL_PROVIDER` | LLM backend (`gemini`, `anthropic`, `openai`, `ollama`, ...) |
+| `model_name` | `"gemini-2.0-flash"` | `MODEL_NAME` | Model identifier |
+| `google_genai_use_vertexai` | `True` | `GOOGLE_GENAI_USE_VERTEXAI` | Use Vertex AI or AI Studio (Gemini only) |
+| `google_cloud_project` | `None` | `GOOGLE_CLOUD_PROJECT` | GCP project (Vertex AI only) |
+| `google_cloud_location` | `None` | `GOOGLE_CLOUD_LOCATION` | GCP region (Vertex AI only) |
+| `google_api_key` | `None` | `GOOGLE_API_KEY` | AI Studio API key (Gemini only) |
+| `gemini_model_version` | `None` | `GEMINI_MODEL_VERSION` | Legacy alias for `MODEL_NAME` when provider is gemini |
+
+### `resolve_model()`
+
+Resolves the LLM model from environment variables. Called automatically by `create_agent()` when no explicit `model` is passed.
+
+- For `MODEL_PROVIDER=gemini` (default): returns a plain model string
+- For any other provider: returns a `LiteLlm` instance via ADK's built-in LiteLLM integration
+
+```python
+from ai_agents_core.base import resolve_model
+
+model = resolve_model()  # reads MODEL_PROVIDER + MODEL_NAME from env
+```
+
+See [Configuration reference](../docs/configuration.md) for provider-specific env vars and API key setup.
 
 ### `load_config(ConfigClass, __file__)`
 

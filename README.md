@@ -15,6 +15,8 @@ Agents can monitor infrastructure, diagnose issues, and take action — with bui
 - **Safety guardrails** — destructive tools (`@destructive`) require explicit confirmation; mutating tools (`@confirm`) prompt before executing
 - **Structured logging** — JSON-formatted logs to stdout, ready for Loki/ELK/Cloud Logging; every tool call is audited with timestamp, agent, arguments, and result
 - **Persistent sessions** — SQLite-backed session state, user-scoped notes, and app-wide shared data that survive restarts
+- **Multi-provider LLM support** — switch between Gemini, Claude, OpenAI, Ollama, or any [LiteLLM-supported provider](https://docs.litellm.ai/docs/providers) via environment variables
+- **Resilience** — circuit breaker and retry with exponential backoff for transient failures
 - **Composable architecture** — each agent is a standalone package that can run independently or plug into an orchestrator
 
 ## Architecture
@@ -91,17 +93,25 @@ graph TB
 
 ### Try it with Docker (no install required)
 
-The only prerequisite is [Docker](https://docs.docker.com/get-docker/) and a [Google AI Studio API key](https://aistudio.google.com/apikey).
+The only prerequisite is [Docker](https://docs.docker.com/get-docker/) and an API key from any supported provider.
 
 ```bash
-# Clone and start everything — infra + agent web UI
-GOOGLE_API_KEY=your-api-key docker compose --profile demo up -d
+# With Google AI Studio (default)
+GOOGLE_API_KEY=your-key docker compose --profile demo up -d
+
+# With Anthropic Claude
+MODEL_PROVIDER=anthropic MODEL_NAME=anthropic/claude-sonnet-4-20250514 \
+  ANTHROPIC_API_KEY=sk-ant-... docker compose --profile demo up -d
+
+# With OpenAI
+MODEL_PROVIDER=openai MODEL_NAME=openai/gpt-4o \
+  OPENAI_API_KEY=sk-... docker compose --profile demo up -d
 
 # Open the web UI
 open http://localhost:8000
 ```
 
-This starts Kafka, Zookeeper, Kafka UI, Prometheus, Loki, Alertmanager, and the devops-assistant agent with a chat interface.
+This starts Kafka, Zookeeper, Kafka UI, Prometheus, Loki, Alertmanager, and the devops-assistant agent with a chat interface. See the [configuration reference](docs/configuration.md) for all supported providers and API key setup.
 
 ### Local development
 
@@ -132,7 +142,7 @@ Each agent loads typed settings from `.env` files via Pydantic. Shared variables
 
 ## Testing
 
-Run the full suite (237 tests):
+Run the full suite (269 tests):
 
 ```bash
 make test
