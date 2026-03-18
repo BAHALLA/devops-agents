@@ -25,4 +25,7 @@ from .rbac import RolePolicy as RolePolicy
 from .rbac import authorize as authorize
 from .rbac import infer_minimum_role as infer_minimum_role
 from .rbac import requires_role as requires_role
+from .resilience import CircuitBreaker as CircuitBreaker
+from .resilience import CircuitState as CircuitState
+from .resilience import with_retry as with_retry
 from .runner import run_persistent as run_persistent

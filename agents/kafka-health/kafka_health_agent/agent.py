@@ -1,4 +1,5 @@
 from ai_agents_core import (
+    CircuitBreaker,
     audit_logger,
     authorize,
     create_agent,
@@ -20,6 +21,8 @@ from .tools import (
 
 load_agent_env(__file__)
 
+_breaker = CircuitBreaker(failure_threshold=5, recovery_timeout=60)
+
 root_agent = create_agent(
     name="kafka_health_agent",
     description="Agent to monitor and report on the health of a Kafka cluster.",
@@ -40,7 +43,7 @@ root_agent = create_agent(
         describe_consumer_groups,
         get_consumer_lag,
     ],
-    before_tool_callback=[authorize(), require_confirmation()],
-    after_tool_callback=audit_logger(),
-    on_tool_error_callback=graceful_tool_error(),
+    before_tool_callback=[authorize(), require_confirmation(), _breaker.before_tool_callback()],
+    after_tool_callback=[audit_logger(), _breaker.after_tool_callback()],
+    on_tool_error_callback=[_breaker.on_tool_error_callback(), graceful_tool_error()],
 )

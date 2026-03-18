@@ -6,7 +6,7 @@ from typing import Any
 from confluent_kafka import ConsumerGroupTopicPartitions, KafkaException, TopicPartition
 from confluent_kafka.admin import AdminClient, NewTopic, OffsetSpec
 
-from ai_agents_core import AgentConfig, confirm, destructive
+from ai_agents_core import AgentConfig, confirm, destructive, with_retry
 
 logger = logging.getLogger(__name__)
 
@@ -30,6 +30,7 @@ def _get_admin_client() -> AdminClient:
     return _admin_client
 
 
+@with_retry(max_retries=3, retryable=(KafkaException, ConnectionError, TimeoutError))
 def get_kafka_cluster_health() -> dict[str, Any]:
     """Checks the health of the Kafka cluster.
 
@@ -54,6 +55,7 @@ def get_kafka_cluster_health() -> dict[str, Any]:
         return {"status": "error", "message": f"Failed to connect to Kafka: {str(e)}"}
 
 
+@with_retry(max_retries=3, retryable=(KafkaException, ConnectionError, TimeoutError))
 def list_kafka_topics() -> dict[str, Any]:
     """Lists all available topics in the Kafka cluster.
 
@@ -145,6 +147,7 @@ def delete_kafka_topic(topic_name: str) -> dict[str, Any]:
         }
 
 
+@with_retry(max_retries=3, retryable=(KafkaException, ConnectionError, TimeoutError))
 def get_topic_metadata(topic_name: str) -> dict[str, Any]:
     """Gets detailed metadata for a specific topic.
 
@@ -186,6 +189,7 @@ def get_topic_metadata(topic_name: str) -> dict[str, Any]:
         }
 
 
+@with_retry(max_retries=3, retryable=(KafkaException, ConnectionError, TimeoutError))
 def list_consumer_groups() -> dict[str, Any]:
     """Lists all available consumer groups in the Kafka cluster.
 
@@ -202,6 +206,7 @@ def list_consumer_groups() -> dict[str, Any]:
         return {"status": "error", "message": f"Failed to list consumer groups: {str(e)}"}
 
 
+@with_retry(max_retries=3, retryable=(KafkaException, ConnectionError, TimeoutError))
 def describe_consumer_groups(group_ids: list[str]) -> dict[str, Any]:
     """Provides detailed information about specific consumer groups.
 
@@ -252,6 +257,7 @@ def describe_consumer_groups(group_ids: list[str]) -> dict[str, Any]:
         return {"status": "error", "message": f"Failed to describe consumer groups: {str(e)}"}
 
 
+@with_retry(max_retries=3, retryable=(KafkaException, ConnectionError, TimeoutError))
 def get_consumer_lag(group_id: str, topic_name: str | None = None) -> dict[str, Any]:
     """Calculates consumer lag for a given group and optionally a specific topic.
 
