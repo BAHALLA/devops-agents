@@ -12,6 +12,10 @@ wheels/
 # Environment variables
 .env
 .env.*
+!.env.*.example
+
+# Auth
+*.htpasswd
 
 # ADK
 **/.adk/
