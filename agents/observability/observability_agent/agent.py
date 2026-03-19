@@ -1,4 +1,5 @@
 from ai_agents_core import (
+    MetricsCollector,
     audit_logger,
     authorize,
     create_agent,
@@ -23,6 +24,8 @@ from .tools import (
 )
 
 load_agent_env(__file__)
+
+_metrics = MetricsCollector()
 
 root_agent = create_agent(
     name="observability_agent",
@@ -58,7 +61,7 @@ root_agent = create_agent(
         create_silence,
         delete_silence,
     ],
-    before_tool_callback=[authorize(), require_confirmation()],
-    after_tool_callback=audit_logger(),
-    on_tool_error_callback=graceful_tool_error(),
+    before_tool_callback=[authorize(), require_confirmation(), _metrics.before_tool_callback()],
+    after_tool_callback=[audit_logger(), _metrics.after_tool_callback()],
+    on_tool_error_callback=[_metrics.on_tool_error_callback(), graceful_tool_error()],
 )

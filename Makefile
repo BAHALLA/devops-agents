@@ -73,13 +73,13 @@ run-observability-cli: ## Run observability-agent in terminal
 # ── devops-assistant ───────────────────────────────────
 
 run-devops: ## Launch devops-assistant in ADK Dev UI
-	cd agents/devops-assistant && uv run adk web
+	cd agents/devops-assistant && ENABLE_METRICS_SERVER=true uv run adk web
 
 run-devops-cli: ## Run devops-assistant in terminal
-	cd agents/devops-assistant && uv run adk run devops_assistant
+	cd agents/devops-assistant && ENABLE_METRICS_SERVER=true uv run adk run devops_assistant
 
 run-devops-persistent: ## Run devops-assistant with SQLite persistence
-	cd agents/devops-assistant && uv run python run_persistent.py
+	cd agents/devops-assistant && ENABLE_METRICS_SERVER=true uv run python run_persistent.py
 
 # ── ops-journal ────────────────────────────────────────
 

@@ -16,7 +16,7 @@ from google.adk.sessions.database_session_service import DatabaseSessionService
 from slack_bolt.adapter.fastapi.async_handler import AsyncSlackRequestHandler
 from slack_bolt.async_app import AsyncApp
 
-from ai_agents_core import authorize
+from ai_agents_core import MetricsCollector, authorize
 
 from .config import SlackBotConfig
 from .confirmation import ConfirmationStore, slack_confirmation
@@ -81,6 +81,10 @@ async def lifespan(app: FastAPI):
         channel_ref=channel_ref,
         config=config,
     )
+
+    # Start Prometheus metrics server for scraping
+    metrics = MetricsCollector()
+    metrics.start_server(port=9100)
 
     logger.info("Slack bot started — ADK runner ready")
     yield

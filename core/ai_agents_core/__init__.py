@@ -21,6 +21,8 @@ from .guardrails import is_guarded as is_guarded
 from .guardrails import require_confirmation as require_confirmation
 from .log import JSONFormatter as JSONFormatter
 from .log import setup_logging as setup_logging
+from .metrics import MetricsCollector as MetricsCollector
+from .metrics import track_llm_tokens as track_llm_tokens
 from .rbac import Role as Role
 from .rbac import RolePolicy as RolePolicy
 from .rbac import authorize as authorize

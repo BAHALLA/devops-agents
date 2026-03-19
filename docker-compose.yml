@@ -100,6 +100,8 @@ services:
     image: prom/prometheus:v3.3.0
     container_name: prometheus
     restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "9090:9090"
     volumes:
@@ -172,6 +174,9 @@ services:
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       GEMINI_MODEL_VERSION: ${GEMINI_MODEL_VERSION:-gemini-2.0-flash}
+
+      # Metrics
+      ENABLE_METRICS_SERVER: "true"
 
       # Agent-specific
       KAFKA_BOOTSTRAP_SERVERS: kafka:19092

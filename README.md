@@ -16,6 +16,7 @@ Agents can monitor infrastructure, diagnose issues, and take action — with bui
 - **Structured logging** — JSON-formatted logs to stdout, ready for Loki/ELK/Cloud Logging; every tool call is audited with timestamp, agent, arguments, and result
 - **Persistent sessions** — SQLite-backed session state, user-scoped notes, and app-wide shared data that survive restarts
 - **Multi-provider LLM support** — switch between Gemini, Claude, OpenAI, Ollama, or any [LiteLLM-supported provider](https://docs.litellm.ai/docs/providers) via environment variables
+- **Prometheus metrics** — tool call counts, latency histograms, error rates, circuit breaker state, and LLM token tracking exposed via `/metrics` for Prometheus scraping
 - **Resilience** — circuit breaker and retry with exponential backoff for transient failures
 - **Composable architecture** — each agent is a standalone package that can run independently or plug into an orchestrator
 
@@ -51,6 +52,7 @@ graph TB
         RBAC[RBAC · authorize]
         GUARD[Guardrails · confirm / destructive]
         AUDIT[Audit Logger]
+        METRICS[Prometheus Metrics]
     end
 
     subgraph Infrastructure
@@ -75,13 +77,14 @@ graph TB
     ROOT -.-> RBAC
     ROOT -.-> GUARD
     ROOT -.-> AUDIT
+    ROOT -.-> METRICS
 ```
 
 ## Agents
 
 | Agent | Type | Description |
 |-------|------|-------------|
-| [**core**](core/) | Library | Agent factory, RBAC, guardrails, error handlers, structured logging, audit trail, activity tracking, persistent runner, typed config |
+| [**core**](core/) | Library | Agent factory, RBAC, guardrails, error handlers, structured logging, audit trail, activity tracking, Prometheus metrics, persistent runner, typed config |
 | [**kafka-health-agent**](agents/kafka-health/) | Single agent | Kafka cluster health, topics, consumer groups, lag |
 | [**k8s-health-agent**](agents/k8s-health/) | Single agent | Kubernetes cluster health, nodes, pods, deployments, logs, events |
 | [**observability-agent**](agents/observability/) | Single agent | Prometheus metrics/alerts, Loki log queries, Alertmanager silence management |
@@ -134,6 +137,12 @@ Chat with the agent directly from Slack — each thread is a separate conversati
 
 → **[Full setup guide](docs/slack-setup.md)** (app manifest, env vars, run commands)
 
+## Metrics
+
+Every tool call across all agents is instrumented with Prometheus metrics — latency histograms, error rates, invocation counts, and circuit breaker state. The Slack bot exposes a `/metrics` endpoint on port 9100 for Prometheus scraping.
+
+> **[Metrics reference](docs/metrics.md)** (available metrics, PromQL examples, integration guide)
+
 ## Configuration
 
 Each agent loads typed settings from `.env` files via Pydantic. Shared variables (GCP project, model version) plus per-agent settings (broker addresses, API tokens, etc.) are documented in the configuration reference.
@@ -142,7 +151,7 @@ Each agent loads typed settings from `.env` files via Pydantic. Shared variables
 
 ## Testing
 
-Run the full suite (269 tests):
+Run the full suite (289 tests):
 
 ```bash
 make test

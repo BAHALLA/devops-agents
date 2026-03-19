@@ -8,6 +8,7 @@ dependencies = [
     "litellm>=1.60.0",
     "pydantic>=2.12.5",
     "pydantic-settings>=2.0.0",
+    "prometheus-client>=0.21.0",
     "python-dotenv>=1.2.2",
 ]
 
