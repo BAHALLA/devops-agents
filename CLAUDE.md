@@ -64,9 +64,13 @@ This is a **DevOps/SRE agent platform** built on **Google ADK** (Agent Developme
 
 ### devops-assistant Agent Hierarchy
 
+Uses two delegation patterns (see [ADR-002](docs/adr/002-agent-tool-vs-sub-agents.md)):
+- **Sub-agents** for deterministic workflows (SequentialAgent/ParallelAgent)
+- **AgentTool** for LLM-routed specialist agents
+
 ```
 devops_assistant (root orchestrator)
-├── incident_triage_agent (SequentialAgent)
+├── [sub-agent] incident_triage_agent (SequentialAgent)
 │   ├── health_check_agent (ParallelAgent)
 │   │   ├── kafka_health_checker
 │   │   ├── k8s_health_checker
@@ -74,11 +78,11 @@ devops_assistant (root orchestrator)
 │   │   └── observability_health_checker
 │   ├── triage_summarizer
 │   └── journal_writer
-├── kafka_health_agent
-├── k8s_health_agent
-├── observability_agent
-├── docker_agent (5 tools using subprocess Docker CLI)
-└── ops_journal_agent
+├── [AgentTool] kafka_health_agent
+├── [AgentTool] k8s_health_agent
+├── [AgentTool] observability_agent
+├── [AgentTool] docker_agent (5 tools using subprocess Docker CLI)
+└── [AgentTool] ops_journal_agent
 ```
 
 ## Code Style

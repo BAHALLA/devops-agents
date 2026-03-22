@@ -9,7 +9,8 @@ Slack message / @mention
   → Socket Mode (WebSocket) or HTTP webhook
     → slack-bolt event handler
       → ADK Runner (devops-assistant root_agent)
-        → sub-agents (kafka, k8s, docker, observability, journal)
+        → AgentTools (kafka, k8s, docker, observability, journal)
+        → sub-agents (incident triage workflow)
       → response posted in-thread
 
 Guarded tools → Block Kit buttons [Approve] [Deny]

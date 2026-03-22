@@ -1,3 +1,5 @@
+from google.adk.tools.agent_tool import AgentTool as AgentTool
+
 from .activity import activity_tracker as activity_tracker
 from .audit import audit_logger as audit_logger
 from .base import create_agent as create_agent

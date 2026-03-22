@@ -1,6 +1,7 @@
 import os
 
 from ai_agents_core import (
+    AgentTool,
     MetricsCollector,
     activity_tracker,
     audit_logger,
@@ -197,40 +198,39 @@ incident_triage_agent = create_sequential_agent(
 
 root_agent = create_agent(
     name="devops_assistant",
-    description="DevOps orchestrator that delegates to specialized sub-agents.",
+    description="DevOps orchestrator that delegates to specialized agents.",
     instruction=(
         "You are a DevOps assistant that coordinates specialized agents. "
-        "You can delegate to individual agents for targeted queries, or trigger "
-        "structured workflows for broader operations:\n\n"
-        "## Structured Workflows\n"
+        "You have two delegation modes:\n\n"
+        "## Structured Workflows (sub-agents)\n"
         "- **incident_triage_agent**: Runs a comprehensive health check across "
-        "Kafka, Kubernetes, and Docker in parallel, then summarizes findings and "
-        "saves a report to the journal. Use when the user asks 'is everything healthy?', "
-        "'run a triage', or 'check all systems'.\n\n"
-        "## Individual Agents\n"
-        "- **kafka_health_agent**: For specific Kafka queries — cluster health, topics, "
-        "consumer groups, lag monitoring.\n"
-        "- **k8s_health_agent**: For specific Kubernetes queries — cluster info, nodes, "
-        "pods, deployments, logs, events, scaling, and restarts.\n"
-        "- **observability_agent**: For Prometheus metrics/alerts, Loki log queries, "
-        "and Alertmanager silence management.\n"
-        "- **docker_agent**: For specific Docker queries — containers, logs, stats, "
-        "compose status.\n"
-        "- **ops_journal_agent**: For saving notes, recalling past findings, tracking "
-        "session activity, managing preferences, and team bookmarks.\n\n"
+        "Kafka, Kubernetes, Docker, and Observability in parallel, then summarizes "
+        "findings and saves a report to the journal. Use when the user asks "
+        "'is everything healthy?', 'run a triage', or 'check all systems'.\n\n"
+        "## Specialist Tools (agent tools)\n"
+        "Call these tools for targeted queries on individual systems:\n"
+        "- **kafka_health_agent**: Kafka cluster health, topics, consumer groups, lag.\n"
+        "- **k8s_health_agent**: Kubernetes cluster info, nodes, pods, deployments, "
+        "logs, events, scaling, and restarts.\n"
+        "- **observability_agent**: Prometheus metrics/alerts, Loki log queries, "
+        "Alertmanager silence management.\n"
+        "- **docker_agent**: Docker containers, logs, stats, compose status.\n"
+        "- **ops_journal_agent**: Notes, past findings, session activity, preferences, "
+        "team bookmarks.\n\n"
         "Prefer incident_triage_agent for broad health checks. "
-        "Use individual agents for targeted investigations.\n\n"
+        "Use individual agent tools for targeted investigations.\n\n"
         "After completing a significant investigation, proactively suggest saving "
-        "the findings as a note via the journal agent."
+        "the findings as a note via the ops_journal_agent tool."
     ),
-    tools=[],
+    tools=[
+        AgentTool(agent=kafka_agent),
+        AgentTool(agent=k8s_agent),
+        AgentTool(agent=observability_agent),
+        AgentTool(agent=docker_agent),
+        AgentTool(agent=journal_agent),
+    ],
     sub_agents=[
         incident_triage_agent,
-        kafka_agent,
-        k8s_agent,
-        observability_agent,
-        docker_agent,
-        journal_agent,
     ],
     before_tool_callback=[authorize(), require_confirmation()],
     on_model_error_callback=graceful_model_error(),

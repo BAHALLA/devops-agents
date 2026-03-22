@@ -8,7 +8,7 @@ Agents can monitor infrastructure, diagnose issues, and take action — with bui
 
 ## Key Features
 
-- **Multi-agent orchestration** — a root agent delegates to specialized sub-agents based on user intent
+- **Multi-agent orchestration** — a root agent delegates to specialist agents via `AgentTool` (LLM-routed) and deterministic sub-agent workflows ([ADR-002](docs/adr/002-agent-tool-vs-sub-agents.md))
 - **Structured workflows** — `SequentialAgent` and `ParallelAgent` for deterministic multi-step pipelines (e.g., incident triage checks Kafka, K8s, Docker, and observability in parallel, then summarizes)
 - **Slack integration** — chat with the agent from Slack, with interactive Approve/Deny buttons for guarded operations
 - **Role-based access control** — three-role hierarchy (viewer/operator/admin) inferred from guardrail decorators; enforced via `authorize()` callback ([ADR-001](docs/adr/001-rbac.md))
@@ -33,12 +33,12 @@ graph TB
         ROOT[Root Agent]
         TRIAGE[Incident Triage]
 
-        ROOT --> KAFKA[Kafka Agent]
-        ROOT --> K8S[K8s Agent]
-        ROOT --> OBS[Observability Agent]
-        ROOT --> DOCKER[Docker Agent]
-        ROOT --> JOURNAL[Ops Journal]
-        ROOT --> TRIAGE
+        ROOT -.->|AgentTool| KAFKA[Kafka Agent]
+        ROOT -.->|AgentTool| K8S[K8s Agent]
+        ROOT -.->|AgentTool| OBS[Observability Agent]
+        ROOT -.->|AgentTool| DOCKER[Docker Agent]
+        ROOT -.->|AgentTool| JOURNAL[Ops Journal]
+        ROOT -->|sub-agent| TRIAGE
 
         TRIAGE -->|parallel| KAFKA
         TRIAGE -->|parallel| K8S
@@ -88,7 +88,7 @@ graph TB
 | [**kafka-health-agent**](agents/kafka-health/) | Single agent | Kafka cluster health, topics, consumer groups, lag |
 | [**k8s-health-agent**](agents/k8s-health/) | Single agent | Kubernetes cluster health, nodes, pods, deployments, logs, events |
 | [**observability-agent**](agents/observability/) | Single agent | Prometheus metrics/alerts, Loki log queries, Alertmanager silence management |
-| [**devops-assistant**](agents/devops-assistant/) | Multi-agent | Orchestrator that delegates to kafka, k8s, observability, docker, and journal sub-agents |
+| [**devops-assistant**](agents/devops-assistant/) | Multi-agent | Orchestrator using AgentTool for specialist agents and sub-agents for deterministic workflows |
 | [**ops-journal**](agents/ops-journal/) | Memory/state | Notes, preferences, and session tracking with persistent storage |
 | [**slack-bot**](agents/slack-bot/) | Integration | Slack bot with thread-based sessions and interactive confirmation buttons |
 

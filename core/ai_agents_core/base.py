@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 from google.adk.agents import Agent, ParallelAgent, SequentialAgent
 from google.adk.agents.base_agent import BaseAgent
 from google.adk.models.base_llm import BaseLlm
+from google.adk.tools.base_tool import BaseTool
 
 from .log import setup_logging
 
@@ -73,7 +74,7 @@ def create_agent(
     name: str,
     description: str,
     instruction: str,
-    tools: Sequence[Callable[..., Any]],
+    tools: Sequence[Callable[..., Any] | BaseTool],
     model: str | BaseLlm | None = None,
     sub_agents: Sequence[BaseAgent] | None = None,
     before_tool_callback: Callable | list[Callable] | None = None,

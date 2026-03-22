@@ -1,29 +1,33 @@
 # devops-assistant
 
-A multi-agent orchestrator that delegates to specialized sub-agents. It has no tools of its own — it routes user requests to the right specialist.
+A multi-agent orchestrator that routes user requests to specialist agents. Uses two delegation patterns (see [ADR-002](../../docs/adr/002-agent-tool-vs-sub-agents.md)):
+- **AgentTool** for LLM-routed specialists (the LLM decides which agent to call)
+- **Sub-agents** for deterministic workflows (fixed execution order)
 
 ## Agent Graph
 
 ```text
 devops_assistant (orchestrator)
-├── incident_triage_agent (SequentialAgent)
+├── [sub-agent] incident_triage_agent (SequentialAgent)
 │   ├── health_check_agent (ParallelAgent)
-│   │   ├── kafka_health_checker   — Kafka cluster health + lag
-│   │   ├── k8s_health_checker     — K8s nodes, events, pods
-│   │   └── docker_health_checker  — Container status + stats
-│   ├── triage_summarizer          — Synthesizes parallel results
-│   └── journal_writer             — Saves report to journal
-├── kafka_health_agent             — Ad-hoc Kafka queries
-├── k8s_health_agent               — Ad-hoc Kubernetes queries
-├── docker_agent                   — Ad-hoc Docker queries
-└── ops_journal_agent              — Notes, preferences, session tracking
+│   │   ├── kafka_health_checker      — Kafka cluster health + lag
+│   │   ├── k8s_health_checker        — K8s nodes, events, pods
+│   │   ├── docker_health_checker     — Container status + stats
+│   │   └── observability_health_checker — Prometheus targets + alerts
+│   ├── triage_summarizer             — Synthesizes parallel results
+│   └── journal_writer                — Saves report to journal
+├── [AgentTool] kafka_health_agent    — Ad-hoc Kafka queries
+├── [AgentTool] k8s_health_agent      — Ad-hoc Kubernetes queries
+├── [AgentTool] observability_agent   — Ad-hoc Prometheus/Loki/Alertmanager queries
+├── [AgentTool] docker_agent          — Ad-hoc Docker queries
+└── [AgentTool] ops_journal_agent     — Notes, preferences, session tracking
 ```
 
 ![DevOps Assistant — agent graph and container inspection](assets/devops-assistant-graph.png)
 
-*The ADK Dev UI showing the agent graph: `devops_assistant` delegates to sub-agents, each with their own tools.*
+*The ADK Dev UI showing the agent graph: `devops_assistant` delegates to specialist agents via AgentTool and deterministic sub-agent workflows.*
 
-## Sub-agents
+## Specialist Agents (AgentTool)
 
 ### kafka_health_agent
 
@@ -66,7 +70,7 @@ The incident triage pipeline:
 
 ### Ad-hoc delegation
 
-For targeted queries, the LLM reads the sub-agent descriptions and delegates to the right specialist:
+For targeted queries, the LLM invokes the appropriate AgentTool based on the user's intent:
 
 - *"what's the consumer lag?"* → `kafka_health_agent`
 - *"list all pods in staging"* → `k8s_health_agent`
