@@ -12,7 +12,8 @@ Agents can monitor infrastructure, diagnose issues, and take action — with bui
 - **Structured workflows** — `SequentialAgent` and `ParallelAgent` for deterministic multi-step pipelines (e.g., incident triage checks Kafka, K8s, Docker, and observability in parallel, then summarizes)
 - **Slack integration** — chat with the agent from Slack, with interactive Approve/Deny buttons for guarded operations
 - **Role-based access control** — three-role hierarchy (viewer/operator/admin) inferred from guardrail decorators; enforced via `authorize()` callback ([ADR-001](docs/adr/001-rbac.md))
-- **Safety guardrails** — destructive tools (`@destructive`) require explicit confirmation; mutating tools (`@confirm`) prompt before executing
+- **Input validation** — all tool inputs validated at the boundary with reusable validators (string length, integer range, URL scheme, path traversal, regex patterns)
+- **Safety guardrails** — destructive tools (`@destructive`) require explicit confirmation; mutating tools (`@confirm`) prompt before executing; confirmations are args-hashed and time-limited
 - **Structured logging** — JSON-formatted logs to stdout, ready for Loki/ELK/Cloud Logging; every tool call is audited with timestamp, agent, arguments, and result
 - **Persistent sessions** — SQLite-backed session state, user-scoped notes, and app-wide shared data that survive restarts
 - **Multi-provider LLM support** — switch between Gemini, Claude, OpenAI, Ollama, or any [LiteLLM-supported provider](https://docs.litellm.ai/docs/providers) via environment variables
@@ -84,7 +85,7 @@ graph TB
 
 | Agent | Type | Description |
 |-------|------|-------------|
-| [**core**](core/) | Library | Agent factory, RBAC, guardrails, error handlers, structured logging, audit trail, activity tracking, Prometheus metrics, persistent runner, typed config |
+| [**core**](core/) | Library | Agent factory, RBAC, guardrails, input validation, error handlers, structured logging, audit trail, activity tracking, Prometheus metrics, persistent runner, typed config |
 | [**kafka-health-agent**](agents/kafka-health/) | Single agent | Kafka cluster health, topics, consumer groups, lag |
 | [**k8s-health-agent**](agents/k8s-health/) | Single agent | Kubernetes cluster health, nodes, pods, deployments, logs, events |
 | [**observability-agent**](agents/observability/) | Single agent | Prometheus metrics/alerts, Loki log queries, Alertmanager silence management |
@@ -151,7 +152,7 @@ Each agent loads typed settings from `.env` files via Pydantic. Shared variables
 
 ## Testing
 
-Run the full suite (289 tests):
+Run the full suite (395 tests):
 
 ```bash
 make test

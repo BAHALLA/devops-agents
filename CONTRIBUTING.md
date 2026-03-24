@@ -101,6 +101,7 @@ This is the most impactful way to contribute. See the [Adding a New Agent](docs/
 - **Mock external dependencies** — no test should require a running Kafka broker, Kubernetes cluster, or Docker daemon
 - **Use `@patch`** to mock API clients at the tool level (e.g., `@patch("my_agent.tools._get_client")`)
 - **Test both success and error paths** — every tool should have at least one success test and one error/exception test
+- **Test input validation** — add tests verifying that invalid inputs return `{"status": "error", ...}` (empty strings, oversized values, path traversal, bad patterns)
 - **Verify guardrails** — if your tool uses `@confirm` or `@destructive`, add a test asserting the `_guardrail_level` attribute
 - **Use conftest fixtures** — if your tools need ADK's `ToolContext`, add a `conftest.py` with a `FakeToolContext` class (see `core/tests/conftest.py` or `agents/ops-journal/tests/conftest.py` for examples)
 
@@ -110,6 +111,18 @@ This is the most impactful way to contribute. See the [Adding a New Agent](docs/
 - Use type hints
 - Keep tools focused — one function per operation
 - Follow existing patterns (look at `kafka-health` as the reference)
+- **Validate all inputs** at the top of every tool function using validators from `ai_agents_core.validation`. Use the walrus operator for concise early-return:
+  ```python
+  from ai_agents_core.validation import validate_string, validate_positive_int
+
+  def my_tool(name: str, count: int = 10) -> dict:
+      if err := validate_string(name, "name", max_len=200):
+          return err
+      if err := validate_positive_int(count, "count", max_value=1000):
+          return err
+      ...
+  ```
+- Mark mutating tools with `@confirm("reason")` and destructive tools with `@destructive("reason")`
 
 ## Agent Design Guidelines
 

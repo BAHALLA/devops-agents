@@ -1,6 +1,6 @@
 # ai-agents-core
 
-Shared library providing the foundation for all agents: agent factory, RBAC, guardrails, audit logging, and typed configuration.
+Shared library providing the foundation for all agents: agent factory, RBAC, guardrails, input validation, audit logging, and typed configuration.
 
 ## Agent Factory
 
@@ -159,6 +159,45 @@ Apply `@with_retry` to **read-only** tools that call external services. Do not a
 
 ---
 
+## Input Validation
+
+Reusable validators for tool inputs. Each returns `None` on success or `{"status": "error", "message": ...}` on failure. Use the walrus operator for concise early-return:
+
+```python
+from ai_agents_core.validation import validate_string, validate_positive_int, KAFKA_TOPIC_PATTERN
+
+def create_kafka_topic(topic_name: str, num_partitions: int = 1) -> dict:
+    if err := validate_string(topic_name, "topic_name", pattern=KAFKA_TOPIC_PATTERN):
+        return err
+    if err := validate_positive_int(num_partitions, "num_partitions", max_value=10_000):
+        return err
+    ...
+```
+
+### Available Validators
+
+| Validator | Key Parameters | Description |
+|-----------|---------------|-------------|
+| `validate_string()` | `min_len`, `max_len`, `pattern` | Length bounds + optional regex |
+| `validate_positive_int()` | `min_value`, `max_value` | Integer range (rejects bool, float, str) |
+| `validate_url()` | `allowed_schemes` | Scheme allowlist; rejects `javascript:`, `data:`, `file:` |
+| `validate_path()` | — | Rejects `..` path traversal |
+| `validate_list()` | `min_len`, `max_len` | List length bounds |
+
+### Constants
+
+| Constant | Value | Usage |
+|----------|-------|-------|
+| `MAX_LOG_LINES` | `10,000` | Cap for log tail parameters |
+| `MAX_REPLICAS` | `1,000` | Cap for K8s replica scaling |
+| `MAX_PARTITIONS` | `10,000` | Cap for Kafka topic partitions |
+| `MAX_REPLICATION_FACTOR` | `10` | Cap for Kafka replication factor |
+| `MAX_QUERY_LENGTH` | `5,000` | Cap for Prometheus/Loki queries |
+| `K8S_NAME_PATTERN` | `^[a-z0-9]([a-z0-9._-]*[a-z0-9])?$` | Kubernetes resource name format |
+| `KAFKA_TOPIC_PATTERN` | `^[a-zA-Z0-9._-]+$` | Kafka topic name format |
+
+---
+
 ## Guardrails
 
 Guardrails prevent destructive tools from executing without confirmation. They use ADK's `before_tool_callback` mechanism.
@@ -283,7 +322,34 @@ infer_minimum_role(tool)  # → Role.ADMIN if @destructive, Role.OPERATOR if @co
 
 ### Setting the user role
 
-The integration layer sets `user_role` in session state at session creation. For the Slack bot, this is configured via environment variables:
+Use `set_user_role()` to assign a role from trusted server-side code. This marks the role as server-set, preventing untrusted session state from escalating privileges.
+
+```python
+from ai_agents_core import set_user_role
+
+# In your session creation handler (e.g., Slack bot, API endpoint):
+initial_state = {}
+set_user_role(initial_state, "admin")  # marks role as trusted
+session = session_service.create_session(state=initial_state, ...)
+```
+
+Invalid role values default to `viewer`. The role is normalized to lowercase.
+
+### `ensure_default_role()`
+
+A `before_agent_callback` that enforces the default role if no trusted role was set. Prevents privilege escalation from untrusted session state (e.g., a client injecting `"user_role": "admin"` into session state).
+
+```python
+from ai_agents_core import ensure_default_role, authorize, require_confirmation, create_agent
+
+root_agent = create_agent(
+    ...,
+    before_agent_callback=ensure_default_role(),  # forces "viewer" if role not set via set_user_role()
+    before_tool_callback=[authorize(), require_confirmation()],
+)
+```
+
+For the Slack bot, roles are configured via environment variables:
 
 ```bash
 SLACK_ADMIN_USERS=U12345,U67890
