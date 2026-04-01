@@ -25,6 +25,7 @@ def _suppress_deprecation():
         warnings.simplefilter("ignore", DeprecationWarning)
         yield
 
+
 # ── @destructive decorator ─────────────────────────────────────────────
 
 
