@@ -9,16 +9,16 @@ An open-source platform for building autonomous DevOps and SRE agents. Built wit
 
 Agents can monitor infrastructure, diagnose issues, and take action — with built-in safety guardrails that require human confirmation before any destructive operation. Interact via the ADK web UI, terminal, or directly from Slack.
 
-![Slack Bot Demo](docs/images/slack-bot-demo.png)
+![Slack Bot Demo](images/slack-bot-demo.png)
 
 ## Key Features
 
-- **Multi-agent orchestration** — a root agent delegates to specialist agents via `AgentTool` (LLM-routed) and deterministic sub-agent workflows ([ADR-002](docs/adr/002-agent-tool-vs-sub-agents.md))
+- **Multi-agent orchestration** — a root agent delegates to specialist agents via `AgentTool` (LLM-routed) and deterministic sub-agent workflows ([ADR-002](adr/002-agent-tool-vs-sub-agents.md))
 - **Structured workflows** — `SequentialAgent` and `ParallelAgent` for deterministic multi-step pipelines (e.g., incident triage checks Kafka, K8s, Docker, and observability in parallel, then summarizes)
 - **Slack integration** — chat with the agent from Slack, with interactive Approve/Deny buttons for guarded operations
 - **ADK Plugins** — cross-cutting concerns (RBAC, guardrails, metrics, audit, activity tracking, resilience, error handling) are packaged as ADK plugins and registered once on the Runner via `default_plugins()` — no per-agent callback wiring
 - **Async tools** — all tool functions are `async def` using `asyncio.to_thread()` for non-blocking I/O
-- **Role-based access control** — three-role hierarchy (viewer/operator/admin) inferred from guardrail decorators; enforced globally via `GuardrailsPlugin` ([ADR-001](docs/adr/001-rbac.md))
+- **Role-based access control** — three-role hierarchy (viewer/operator/admin) inferred from guardrail decorators; enforced globally via `GuardrailsPlugin` ([ADR-001](adr/001-rbac.md))
 - **Input validation** — all tool inputs validated at the boundary with reusable validators (string length, integer range, URL scheme, path traversal, regex patterns)
 - **Safety guardrails** — destructive tools (`@destructive`) require explicit confirmation; mutating tools (`@confirm`) prompt before executing; confirmations are args-hashed and time-limited
 - **Structured logging** — JSON-formatted logs to stdout, ready for Loki/ELK/Cloud Logging; every tool call is audited with timestamp, agent, arguments, and result
@@ -122,7 +122,7 @@ MODEL_PROVIDER=openai MODEL_NAME=openai/gpt-4o \
 open http://localhost:8000
 ```
 
-This starts Kafka, Zookeeper, Kafka UI, Prometheus, Loki, Alertmanager, and the devops-assistant agent with a chat interface. See the [configuration reference](docs/configuration.md) for all supported providers and API key setup.
+This starts Kafka, Zookeeper, Kafka UI, Prometheus, Loki, Alertmanager, and the devops-assistant agent with a chat interface. See the [configuration reference](configuration.md) for all supported providers and API key setup.
 
 ### Local development
 
@@ -143,19 +143,19 @@ Run `make help` to see all available commands.
 
 Chat with the agent directly from Slack — each thread is a separate conversation, with interactive Approve/Deny buttons for guarded operations.
 
-→ **[Full setup guide](docs/slack-setup.md)** (app manifest, env vars, run commands)
+→ **[Full setup guide](slack-setup.md)** (app manifest, env vars, run commands)
 
 ## Metrics
 
 Every tool call across all agents is instrumented with Prometheus metrics — latency histograms, error rates, invocation counts, and circuit breaker state. The Slack bot exposes a `/metrics` endpoint on port 9100 for Prometheus scraping.
 
-> **[Metrics reference](docs/metrics.md)** (available metrics, PromQL examples, integration guide)
+> **[Metrics reference](metrics.md)** (available metrics, PromQL examples, integration guide)
 
 ## Configuration
 
 Each agent loads typed settings from `.env` files via Pydantic. Every agent ships a `.env.example` next to its module (e.g. `agents/kafka-health/kafka_health_agent/.env.example`) documenting every supported variable — copy it to `.env` in the same directory and fill in your values. Shared variables (LLM provider, GCP project) plus per-agent settings (broker addresses, API tokens, etc.) are documented in the configuration reference.
 
-→ **[Configuration reference](docs/configuration.md)** (env vars, infrastructure ports, Docker Compose profiles)
+→ **[Configuration reference](configuration.md)** (env vars, infrastructure ports, Docker Compose profiles)
 
 ## Testing
 
@@ -175,12 +175,12 @@ All external dependencies (Kafka, Kubernetes, Docker, Slack) are mocked — no r
 
 ## Adding a New Agent
 
-→ **[Step-by-step guide](docs/adding-an-agent.md)** with boilerplate, RBAC setup, and testing tips.
+→ **[Step-by-step guide](adding-an-agent.md)** with boilerplate, RBAC setup, and testing tips.
 
 ## Contributing
 
-Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on adding new agents, improving existing ones, and submitting pull requests.
+Contributions are welcome! See [CONTRIBUTING.md](https://github.com/BAHALLA/ai-agents/blob/main/CONTRIBUTING.md) for guidelines on adding new agents, improving existing ones, and submitting pull requests.
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE).
+This project is licensed under the [MIT License](https://github.com/BAHALLA/ai-agents/blob/main/LICENSE).
