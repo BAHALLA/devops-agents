@@ -1,7 +1,7 @@
 site_name: AI Agents for DevOps & SRE
-site_url: https://bahalla.github.io/ai-agents/
-repo_url: https://github.com/BAHALLA/ai-agents
-repo_name: BAHALLA/ai-agents
+site_url: https://bahalla.github.io/devops-agents/
+repo_url: https://github.com/BAHALLA/devops-agents
+repo_name: BAHALLA/devops-agents
 edit_uri: edit/main/docs/
 
 theme:
