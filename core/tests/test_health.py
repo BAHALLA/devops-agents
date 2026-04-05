@@ -54,7 +54,7 @@ class TestHealthServerStart:
             hs = HealthServer()
             hs.start(port=9999)
             mock_http_cls.assert_called_once()
-            assert mock_http_cls.call_args[0][0] == ("0.0.0.0", 9999)
+            assert mock_http_cls.call_args[0][0] == ("0.0.0.0", 9999)  # nosec B104
             mock_thread_cls.return_value.start.assert_called_once()
         finally:
             health_mod._server_started = False
@@ -83,6 +83,6 @@ class TestHealthServerStart:
         try:
             hs = HealthServer()
             hs.start()
-            assert mock_http_cls.call_args[0][0] == ("0.0.0.0", 7777)
+            assert mock_http_cls.call_args[0][0] == ("0.0.0.0", 7777)  # nosec B104
         finally:
             health_mod._server_started = False

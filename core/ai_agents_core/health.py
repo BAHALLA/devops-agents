@@ -97,7 +97,7 @@ class HealthServer:
                 def log_message(self, format: str, *args: object) -> None:  # noqa: A002
                     pass  # suppress default stderr logging
 
-            server = HTTPServer(("0.0.0.0", resolved_port), Handler)
+            server = HTTPServer(("0.0.0.0", resolved_port), Handler)  # nosec B104
             thread = threading.Thread(target=server.serve_forever, daemon=True)
             thread.start()
             _server_started = True

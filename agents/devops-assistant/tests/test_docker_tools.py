@@ -90,7 +90,7 @@ async def test_inspect_container_success(mock_run):
                 "Health": {"Status": "healthy"},
             },
             "Config": {"Image": "nginx:latest", "Env": ["PORT=80"]},
-            "NetworkSettings": {"Ports": {"80/tcp": [{"HostIp": "0.0.0.0", "HostPort": "8080"}]}},
+            "NetworkSettings": {"Ports": {"80/tcp": [{"HostIp": "0.0.0.0", "HostPort": "8080"}]}},  # nosec B104
             "RestartCount": 0,
         }
     ]
