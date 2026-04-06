@@ -7,6 +7,7 @@ license = "MIT"
 requires-python = ">=3.11"
 dependencies = [
     "ai-agents-core",
+    "docker-agent",
     "kafka-health-agent",
     "k8s-health-agent",
     "observability-agent",
@@ -17,6 +18,7 @@ dependencies = [
 
 [tool.uv.sources]
 ai-agents-core = { workspace = true }
+docker-agent = { workspace = true }
 kafka-health-agent = { workspace = true }
 k8s-health-agent = { workspace = true }
 observability-agent = { workspace = true }
@@ -63,6 +65,7 @@ ignore = [
 [tool.ruff.lint.isort]
 known-first-party = [
     "ai_agents_core",
+    "docker_agent",
     "kafka_health_agent",
     "k8s_health_agent",
     "observability_agent",
@@ -78,6 +81,7 @@ markers = [
 addopts = "-m 'not eval'"
 testpaths = [
     "core/tests",
+    "agents/docker-agent/tests",
     "agents/kafka-health/tests",
     "agents/k8s-health/tests",
     "agents/observability/tests",

@@ -1,10 +1,11 @@
-"""Docker tools exposed to the docker sub-agent."""
+"""Docker tools for container and image management."""
 
 import asyncio
 import json
 import logging
 from typing import Any
 
+from ai_agents_core import confirm, destructive
 from ai_agents_core.validation import (
     MAX_LOG_LINES,
     validate_path,
@@ -55,6 +56,9 @@ async def _run_docker(args: list[str], timeout: int = 15) -> tuple[bool, str]:
         if proc:
             proc.kill()
         return False, f"Command timed out after {timeout}s"
+
+
+# ── Container operations ─────────────────────────────────────────────
 
 
 async def list_containers(all: bool = False) -> dict[str, Any]:
@@ -220,3 +224,123 @@ async def docker_compose_status(project_dir: str | None = None) -> dict[str, Any
             services.append(json.loads(line))
 
     return {"status": "success", "services": services, "count": len(services)}
+
+
+@confirm("stops a running container")
+async def stop_container(container_name: str, timeout: int = 10) -> dict[str, Any]:
+    """Stops a running container.
+
+    Args:
+        container_name: Name or ID of the container to stop.
+        timeout: Seconds to wait before killing the container. Defaults to 10.
+
+    Returns:
+        A dictionary with the result of the stop operation.
+    """
+    if err := validate_string(container_name, "container_name", max_len=128):
+        return err
+    if err := validate_positive_int(timeout, "timeout", max_value=300):
+        return err
+
+    ok, output = await _run_docker(["stop", "-t", str(timeout), container_name])
+    if not ok:
+        return {"status": "error", "message": output}
+
+    return {"status": "success", "container": container_name, "action": "stopped"}
+
+
+@confirm("starts a stopped container")
+async def start_container(container_name: str) -> dict[str, Any]:
+    """Starts a stopped container.
+
+    Args:
+        container_name: Name or ID of the container to start.
+
+    Returns:
+        A dictionary with the result of the start operation.
+    """
+    if err := validate_string(container_name, "container_name", max_len=128):
+        return err
+
+    ok, output = await _run_docker(["start", container_name])
+    if not ok:
+        return {"status": "error", "message": output}
+
+    return {"status": "success", "container": container_name, "action": "started"}
+
+
+@destructive("restarts the container, causing brief downtime")
+async def restart_container(container_name: str, timeout: int = 10) -> dict[str, Any]:
+    """Restarts a container.
+
+    Args:
+        container_name: Name or ID of the container to restart.
+        timeout: Seconds to wait before killing the container during stop. Defaults to 10.
+
+    Returns:
+        A dictionary with the result of the restart operation.
+    """
+    if err := validate_string(container_name, "container_name", max_len=128):
+        return err
+    if err := validate_positive_int(timeout, "timeout", max_value=300):
+        return err
+
+    ok, output = await _run_docker(["restart", "-t", str(timeout), container_name])
+    if not ok:
+        return {"status": "error", "message": output}
+
+    return {"status": "success", "container": container_name, "action": "restarted"}
+
+
+# ── Image operations ─────────────────────────────────────────────────
+
+
+async def list_images(all: bool = False) -> dict[str, Any]:
+    """Lists Docker images.
+
+    Args:
+        all: If True, include intermediate images. Defaults to False.
+
+    Returns:
+        A dictionary with the list of images.
+    """
+    args = ["images", "--format", "json"]
+    if all:
+        args.append("--all")
+
+    ok, output = await _run_docker(args)
+    if not ok:
+        return {"status": "error", "message": output}
+
+    images = []
+    for line in output.splitlines():
+        if line.strip():
+            images.append(json.loads(line))
+
+    return {"status": "success", "images": images, "count": len(images)}
+
+
+@destructive("permanently removes a Docker image from the host")
+async def remove_image(image_name: str, force: bool = False) -> dict[str, Any]:
+    """Removes a Docker image.
+
+    Args:
+        image_name: Name or ID of the image to remove (e.g., "nginx:latest").
+        force: If True, force removal even if containers use it. Defaults to False.
+
+    Returns:
+        A dictionary with the result of the removal.
+    """
+    if err := validate_string(image_name, "image_name", max_len=256):
+        return err
+
+    args = ["rmi"]
+    if force:
+        args.append("--force")
+    args.append(image_name)
+
+    ok, output = await _run_docker(args)
+    if not ok:
+        return {"status": "error", "message": output}
+
+    return {"status": "success", "image": image_name, "action": "removed", "details": output}

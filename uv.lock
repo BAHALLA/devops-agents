@@ -18,6 +18,7 @@ members = [
     "ai-agents",
     "ai-agents-core",
     "devops-assistant",
+    "docker-agent",
     "k8s-health-agent",
     "kafka-health-agent",
     "observability-agent",
@@ -41,6 +42,7 @@ source = { virtual = "." }
 dependencies = [
     { name = "ai-agents-core" },
     { name = "devops-assistant" },
+    { name = "docker-agent" },
     { name = "k8s-health-agent" },
     { name = "kafka-health-agent" },
     { name = "observability-agent" },
@@ -67,6 +69,7 @@ dev = [
 requires-dist = [
     { name = "ai-agents-core", editable = "core" },
     { name = "devops-assistant", editable = "agents/devops-assistant" },
+    { name = "docker-agent", editable = "agents/docker-agent" },
     { name = "k8s-health-agent", editable = "agents/k8s-health" },
     { name = "kafka-health-agent", editable = "agents/kafka-health" },
     { name = "observability-agent", editable = "agents/observability" },
@@ -616,6 +619,7 @@ source = { editable = "agents/devops-assistant" }
 dependencies = [
     { name = "ai-agents-core" },
     { name = "aiosqlite" },
+    { name = "docker-agent" },
     { name = "k8s-health-agent" },
     { name = "kafka-health-agent" },
     { name = "observability-agent" },
@@ -626,6 +630,7 @@ dependencies = [
 requires-dist = [
     { name = "ai-agents-core", editable = "core" },
     { name = "aiosqlite", specifier = ">=0.20.0" },
+    { name = "docker-agent", editable = "agents/docker-agent" },
     { name = "k8s-health-agent", editable = "agents/k8s-health" },
     { name = "kafka-health-agent", editable = "agents/kafka-health" },
     { name = "observability-agent", editable = "agents/observability" },
@@ -640,6 +645,17 @@ sdist = { url = "https://files.pythonhosted.org/packages/fc/f8/98eea607f65de6527
 wheels = [
     { url = "https://files.pythonhosted.org/packages/12/b3/231ffd4ab1fc9d679809f356cebee130ac7daa00d6d6f3206dd4fd137e9e/distro-1.9.0-py3-none-any.whl", hash = "sha256:7bffd925d65168f85027d8da9af6bddab658135b840670a223589bc0c8ef02b2", size = 20277, upload-time = "2023-12-24T09:54:30.421Z" },
 ]
+
+[[package]]
+name = "docker-agent"
+version = "0.1.0"
+source = { editable = "agents/docker-agent" }
+dependencies = [
+    { name = "ai-agents-core" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "ai-agents-core", editable = "core" }]
 
 [[package]]
 name = "docstring-parser"

@@ -5,6 +5,12 @@ from ai_agents_core import (
     create_sequential_agent,
     load_agent_env,
 )
+from docker_agent.agent import root_agent as docker_agent_root
+from docker_agent.tools import (
+    docker_compose_status,
+    get_container_stats,
+    list_containers,
+)
 from k8s_health_agent.agent import root_agent as k8s_agent
 from k8s_health_agent.tools import (
     get_cluster_info,
@@ -29,38 +35,7 @@ from observability_agent.tools import (
 from ops_journal_agent.agent import root_agent as journal_agent
 from ops_journal_agent.tools import log_operation, save_note
 
-from .docker_tools import (
-    docker_compose_status,
-    get_container_logs,
-    get_container_stats,
-    inspect_container,
-    list_containers,
-)
-
 load_agent_env(__file__)
-
-# ── Sub-agent: Docker operations ──────────────────────────────────────
-
-docker_agent = create_agent(
-    name="docker_agent",
-    description=(
-        "Specialist for Docker container operations. Use this agent for anything "
-        "related to containers: listing, inspecting, logs, stats, and compose status."
-    ),
-    instruction=(
-        "You are a Docker operations specialist. Use your tools to inspect containers, "
-        "read logs, check resource usage, and report on Docker Compose services. "
-        "When diagnosing issues, start by listing containers to see what's running, "
-        "then drill into specific containers as needed."
-    ),
-    tools=[
-        list_containers,
-        inspect_container,
-        get_container_logs,
-        get_container_stats,
-        docker_compose_status,
-    ],
-)
 
 # ── Incident triage: structured parallel health checks ────────────────
 
@@ -191,7 +166,7 @@ root_agent = create_agent(
         AgentTool(agent=kafka_agent),
         AgentTool(agent=k8s_agent),
         AgentTool(agent=observability_agent),
-        AgentTool(agent=docker_agent),
+        AgentTool(agent=docker_agent_root),
         AgentTool(agent=journal_agent),
     ],
     sub_agents=[

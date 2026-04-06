@@ -50,6 +50,7 @@ open http://localhost:8000
 | Agent | Description |
 |-------|-------------|
 | [**devops-assistant**](https://bahalla.github.io/devops-agents/agents/devops-assistant/) | Orchestrator for specialist agents and incident triage. |
+| [**docker-health**](https://bahalla.github.io/devops-agents/agents/docker-agent/) | Monitor containers, images, and stats. |
 | [**kafka-health**](https://bahalla.github.io/devops-agents/agents/kafka-health/) | Monitor brokers, topics, and consumer lag. |
 | [**k8s-health**](https://bahalla.github.io/devops-agents/agents/k8s-health/) | Inspect nodes, pods, deployments, and logs. |
 | [**observability**](https://bahalla.github.io/devops-agents/agents/observability/) | Query Prometheus metrics and Loki logs. |

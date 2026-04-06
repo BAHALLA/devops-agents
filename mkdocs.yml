@@ -46,7 +46,7 @@ plugins:
   - mkdocstrings:
       handlers:
         python:
-          paths: [core, agents/kafka-health, agents/k8s-health, agents/observability, agents/devops-assistant, agents/ops-journal, agents/slack-bot]
+          paths: [core, agents/docker-agent, agents/kafka-health, agents/k8s-health, agents/observability, agents/devops-assistant, agents/ops-journal, agents/slack-bot]
 
 markdown_extensions:
   - pymdownx.highlight:
@@ -94,6 +94,7 @@ nav:
   - Agents:
     - Core: core/README.md
     - Devops Assistant: agents/devops-assistant.md
+    - Docker Health: agents/docker-agent.md
     - K8s Health: agents/k8s-health.md
     - Kafka Health: agents/kafka-health.md
     - Observability: agents/observability.md

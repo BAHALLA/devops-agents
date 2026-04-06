@@ -1,0 +1,53 @@
+# docker-agent
+
+A single agent with tools for monitoring and managing Docker containers and images.
+
+## Tools
+
+| Tool | Description | Guardrail |
+|------|-------------|-----------|
+| `list_containers` | List running or all containers with status and names | — |
+| `inspect_container` | Detailed info: state, image, ports, env, and health | — |
+| `get_container_logs` | Tail container logs with optional tail and since filters | — |
+| `get_container_stats` | Resource usage: CPU, memory, network, and block IO | — |
+| `docker_compose_status`| Status of services in a Docker Compose project | — |
+| `list_images` | List available Docker images on the host | — |
+| `start_container` | Start a stopped container | `@confirm` |
+| `stop_container` | Stop a running container | `@confirm` |
+| `restart_container` | Trigger a container restart | `@destructive` |
+| `remove_image` | Delete a Docker image from the host | `@destructive` |
+
+## Diagnosis Flow
+
+The agent follows this investigation pattern:
+
+1. `list_containers` + `docker_compose_status` — overview of running services
+2. `get_container_stats` — identify resource bottlenecks
+3. `inspect_container` — check health status and configuration
+4. `get_container_logs` — drill into specific application errors
+
+## Environment Variables
+
+Place a `.env` file in `agents/docker-agent/docker_agent/.env`:
+
+```bash
+# No specific variables required, uses local docker socket by default.
+# Ensure the user running the agent has permissions for /var/run/docker.sock
+```
+
+See the root [README](../../README.md#configuration) for Google AI / Vertex AI config.
+
+## Running
+
+```bash
+cd agents/docker-agent
+uv run adk web                      # ADK Dev UI
+uv run adk run docker_agent         # Terminal mode
+```
+
+Or from the repo root:
+
+```bash
+make run-docker      # ADK Dev UI
+make run-docker-cli  # Terminal mode
+```

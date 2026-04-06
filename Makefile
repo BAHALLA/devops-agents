@@ -1,6 +1,7 @@
 .PHONY: help install test eval lint type-check ty fmt infra-up infra-down infra-reset \
        docker-build docker-demo docker-down \
        docs-serve docs-build docs-deploy \
+       run-docker run-docker-cli \
        run-kafka-health run-kafka-health-cli \
        run-k8s run-k8s-cli \
        run-observability run-observability-cli \
@@ -29,6 +30,7 @@ lint: ## Run linter checks (ruff check + format check)
 type-check: ## Run type checks (ty)
 	uv run ty check \
 		--extra-search-path core \
+		--extra-search-path agents/docker-agent \
 		--extra-search-path agents/kafka-health \
 		--extra-search-path agents/k8s-health \
 		--extra-search-path agents/observability \
@@ -74,6 +76,14 @@ docker-demo: ## Start full demo (infra + devops-assistant web UI on :8000)
 
 docker-down: ## Stop all services (infra + agents)
 	docker compose --profile demo down
+
+# ── docker-agent ──────────────────────────────────────
+
+run-docker: ## Launch docker-agent in ADK Dev UI
+	cd agents/docker-agent && uv run adk web
+
+run-docker-cli: ## Run docker-agent in terminal
+	cd agents/docker-agent && uv run adk run docker_agent
 
 # ── kafka-health-agent ─────────────────────────────────
 
