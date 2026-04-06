@@ -1,0 +1,187 @@
+{
+  "eval_set_id": "docker_agent_container_ops",
+  "name": "Docker Agent Container Operations",
+  "description": "Scenarios verifying the Docker agent routes container queries to the correct tools.",
+  "eval_cases": [
+    {
+      "eval_id": "list_containers",
+      "conversation": [
+        {
+          "invocation_id": "inv-001",
+          "user_content": {
+            "parts": [{"text": "What containers are currently running?"}],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "text": "There are 2 running containers: web-app (nginx:latest) and redis-cache (redis:7)."
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": {
+            "tool_uses": [{"name": "list_containers", "args": {}}],
+            "intermediate_responses": []
+          }
+        }
+      ],
+      "session_input": {
+        "app_name": "docker_agent",
+        "user_id": "test_user",
+        "state": {"user_role": "viewer"}
+      }
+    },
+    {
+      "eval_id": "inspect_container",
+      "conversation": [
+        {
+          "invocation_id": "inv-002",
+          "user_content": {
+            "parts": [{"text": "Inspect the web-app container."}],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "text": "The web-app container is running nginx:latest, started 2 hours ago, with port 80 mapped to 8080."
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": {
+            "tool_uses": [
+              {"name": "inspect_container", "args": {"container_name": "web-app"}}
+            ],
+            "intermediate_responses": []
+          }
+        }
+      ],
+      "session_input": {
+        "app_name": "docker_agent",
+        "user_id": "test_user",
+        "state": {"user_role": "viewer"}
+      }
+    },
+    {
+      "eval_id": "get_container_logs",
+      "conversation": [
+        {
+          "invocation_id": "inv-003",
+          "user_content": {
+            "parts": [{"text": "Show me the logs for the web-app container."}],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "text": "Here are the recent logs from the web-app container showing HTTP requests."
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": {
+            "tool_uses": [
+              {"name": "get_container_logs", "args": {"container_name": "web-app"}}
+            ],
+            "intermediate_responses": []
+          }
+        }
+      ],
+      "session_input": {
+        "app_name": "docker_agent",
+        "user_id": "test_user",
+        "state": {"user_role": "viewer"}
+      }
+    },
+    {
+      "eval_id": "get_container_stats",
+      "conversation": [
+        {
+          "invocation_id": "inv-004",
+          "user_content": {
+            "parts": [{"text": "How much CPU and memory is the web-app container using?"}],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "text": "The web-app container is using 2.5% CPU and 128MiB of memory."
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": {
+            "tool_uses": [
+              {"name": "get_container_stats", "args": {"container_name": "web-app"}}
+            ],
+            "intermediate_responses": []
+          }
+        }
+      ],
+      "session_input": {
+        "app_name": "docker_agent",
+        "user_id": "test_user",
+        "state": {"user_role": "viewer"}
+      }
+    },
+    {
+      "eval_id": "docker_compose_status",
+      "conversation": [
+        {
+          "invocation_id": "inv-005",
+          "user_content": {
+            "parts": [{"text": "What is the status of the Docker Compose services?"}],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "text": "The Docker Compose project has 2 services: web-app (running) and redis-cache (running)."
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": {
+            "tool_uses": [{"name": "docker_compose_status", "args": {}}],
+            "intermediate_responses": []
+          }
+        }
+      ],
+      "session_input": {
+        "app_name": "docker_agent",
+        "user_id": "test_user",
+        "state": {"user_role": "viewer"}
+      }
+    },
+    {
+      "eval_id": "list_images",
+      "conversation": [
+        {
+          "invocation_id": "inv-006",
+          "user_content": {
+            "parts": [{"text": "List the Docker images on this host."}],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "text": "There are 2 images: nginx:latest (50MB) and redis:7 (30MB)."
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": {
+            "tool_uses": [{"name": "list_images", "args": {}}],
+            "intermediate_responses": []
+          }
+        }
+      ],
+      "session_input": {
+        "app_name": "docker_agent",
+        "user_id": "test_user",
+        "state": {"user_role": "viewer"}
+      }
+    }
+  ]
+}

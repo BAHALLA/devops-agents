@@ -1,0 +1,108 @@
+{
+  "eval_set_id": "kafka_health_agent_topic_ops",
+  "name": "Kafka Health Agent Topic Operations",
+  "description": "Scenarios verifying the Kafka agent routes topic-related queries to the correct tools.",
+  "eval_cases": [
+    {
+      "eval_id": "get_topic_metadata",
+      "conversation": [
+        {
+          "invocation_id": "inv-010",
+          "user_content": {
+            "parts": [{"text": "Show me the metadata for the orders topic."}],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "text": "The 'orders' topic has 3 partitions, each with a leader and in-sync replicas."
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": {
+            "tool_uses": [{"name": "get_topic_metadata", "args": {"topic_name": "orders"}}],
+            "intermediate_responses": []
+          }
+        }
+      ],
+      "session_input": {
+        "app_name": "kafka_health_agent",
+        "user_id": "test_user",
+        "state": {"user_role": "viewer"}
+      }
+    },
+    {
+      "eval_id": "describe_consumer_group",
+      "conversation": [
+        {
+          "invocation_id": "inv-011",
+          "user_content": {
+            "parts": [{"text": "Describe the order-processor consumer group."}],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "text": "The order-processor consumer group has 2 members and is in a Stable state."
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": {
+            "tool_uses": [
+              {
+                "name": "describe_consumer_groups",
+                "args": {"group_ids": ["order-processor"]}
+              }
+            ],
+            "intermediate_responses": []
+          }
+        }
+      ],
+      "session_input": {
+        "app_name": "kafka_health_agent",
+        "user_id": "test_user",
+        "state": {"user_role": "viewer"}
+      }
+    },
+    {
+      "eval_id": "get_consumer_lag",
+      "conversation": [
+        {
+          "invocation_id": "inv-012",
+          "user_content": {
+            "parts": [
+              {
+                "text": "What is the consumer lag for the order-processor group on the orders topic?"
+              }
+            ],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "text": "The consumer lag for the order-processor group on the orders topic is 150 messages total across partitions."
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": {
+            "tool_uses": [
+              {
+                "name": "get_consumer_lag",
+                "args": {"group_id": "order-processor", "topic_name": "orders"}
+              }
+            ],
+            "intermediate_responses": []
+          }
+        }
+      ],
+      "session_input": {
+        "app_name": "kafka_health_agent",
+        "user_id": "test_user",
+        "state": {"user_role": "viewer"}
+      }
+    }
+  ]
+}

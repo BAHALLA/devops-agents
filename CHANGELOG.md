@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased] - 2026-04-06
+
+### Added
+
+- **Agent evaluation framework** (AEP-002) — 22 eval scenarios across 4 agents verifying correct tool routing via ADK's `AgentEvaluator`:
+  - `kafka-health`: 6 scenarios (cluster health, topics, consumer groups, metadata, describe groups, lag)
+  - `k8s-health`: 9 scenarios (cluster info, nodes, namespaces, pods, describe, logs, deployments, status, events)
+  - `docker-agent`: 6 scenarios (list containers, inspect, logs, stats, compose status, images)
+  - `observability`: 6 scenarios (Prometheus query/targets, Loki logs/labels, Alertmanager alerts/silences)
+  - Each agent has `tests/evals/` with `.test.json` datasets, `test_config.json` criteria, and a `test_*_eval.py` runner
+  - Evals are gated behind `@pytest.mark.eval` and require LLM credentials (Vertex AI / Gemini API key)
+  - Criteria: `tool_trajectory_avg_score >= 1.0` (exact tool call match); `response_match_score` intentionally excluded due to LLM non-determinism
+  - Run with `make eval`; CI triggers via manual dispatch or `run-eval` PR label
+
 ## [Unreleased] - 2026-03-31
 
 ### Changed

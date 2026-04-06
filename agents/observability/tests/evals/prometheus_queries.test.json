@@ -1,0 +1,67 @@
+{
+  "eval_set_id": "observability_agent_prometheus",
+  "name": "Observability Agent Prometheus Scenarios",
+  "description": "Scenarios verifying the observability agent routes Prometheus queries to the correct tools.",
+  "eval_cases": [
+    {
+      "eval_id": "query_prometheus",
+      "conversation": [
+        {
+          "invocation_id": "inv-001",
+          "user_content": {
+            "parts": [{"text": "Run this PromQL query: up{job=\"node\"}"}],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "text": "The query returned 1 result: the node job target is up with value 1."
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": {
+            "tool_uses": [
+              {"name": "query_prometheus", "args": {"query": "up{job=\"node\"}"}}
+            ],
+            "intermediate_responses": []
+          }
+        }
+      ],
+      "session_input": {
+        "app_name": "observability_agent",
+        "user_id": "test_user",
+        "state": {"user_role": "viewer"}
+      }
+    },
+    {
+      "eval_id": "get_prometheus_targets",
+      "conversation": [
+        {
+          "invocation_id": "inv-003",
+          "user_content": {
+            "parts": [{"text": "List all Prometheus scrape targets and their health status."}],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "text": "There are 2 active targets: node-exporter and kafka-exporter, both up and healthy."
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": {
+            "tool_uses": [{"name": "get_prometheus_targets", "args": {}}],
+            "intermediate_responses": []
+          }
+        }
+      ],
+      "session_input": {
+        "app_name": "observability_agent",
+        "user_id": "test_user",
+        "state": {"user_role": "viewer"}
+      }
+    }
+  ]
+}

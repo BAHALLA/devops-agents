@@ -1,0 +1,97 @@
+{
+  "eval_set_id": "k8s_health_agent_cluster",
+  "name": "K8s Health Agent Cluster Overview",
+  "description": "Scenarios verifying the K8s agent routes cluster-level queries to the correct tools.",
+  "eval_cases": [
+    {
+      "eval_id": "get_cluster_info",
+      "conversation": [
+        {
+          "invocation_id": "inv-001",
+          "user_content": {
+            "parts": [{"text": "Give me an overview of the Kubernetes cluster."}],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "text": "The cluster is running Kubernetes v1.29 with 2 nodes. Both nodes are ready with 4 CPUs and 8Gi memory each."
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": {
+            "tool_uses": [
+              {"name": "get_cluster_info", "args": {}},
+              {"name": "get_nodes", "args": {}}
+            ],
+            "intermediate_responses": []
+          }
+        }
+      ],
+      "session_input": {
+        "app_name": "k8s_health_agent",
+        "user_id": "test_user",
+        "state": {"user_role": "viewer"}
+      }
+    },
+    {
+      "eval_id": "get_nodes",
+      "conversation": [
+        {
+          "invocation_id": "inv-002",
+          "user_content": {
+            "parts": [{"text": "Show me the nodes in the cluster."}],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "text": "The cluster has 2 nodes: node-1 and node-2, both in Ready state."
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": {
+            "tool_uses": [{"name": "get_nodes", "args": {}}],
+            "intermediate_responses": []
+          }
+        }
+      ],
+      "session_input": {
+        "app_name": "k8s_health_agent",
+        "user_id": "test_user",
+        "state": {"user_role": "viewer"}
+      }
+    },
+    {
+      "eval_id": "list_namespaces",
+      "conversation": [
+        {
+          "invocation_id": "inv-003",
+          "user_content": {
+            "parts": [{"text": "What namespaces are available?"}],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "text": "The cluster has 3 namespaces: default, kube-system, and monitoring."
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": {
+            "tool_uses": [{"name": "list_namespaces", "args": {}}],
+            "intermediate_responses": []
+          }
+        }
+      ],
+      "session_input": {
+        "app_name": "k8s_health_agent",
+        "user_id": "test_user",
+        "state": {"user_role": "viewer"}
+      }
+    }
+  ]
+}

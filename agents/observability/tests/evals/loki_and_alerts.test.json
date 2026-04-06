@@ -1,0 +1,128 @@
+{
+  "eval_set_id": "observability_agent_loki_alerts",
+  "name": "Observability Agent Loki and Alertmanager Scenarios",
+  "description": "Scenarios verifying the observability agent routes Loki log queries and Alertmanager operations to the correct tools.",
+  "eval_cases": [
+    {
+      "eval_id": "query_loki_logs",
+      "conversation": [
+        {
+          "invocation_id": "inv-010",
+          "user_content": {
+            "parts": [{"text": "Search the logs for errors in the api-server using Loki."}],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "text": "Found 2 log entries matching the query from the api-server with error messages."
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": {
+            "tool_uses": [
+              {
+                "name": "query_loki_logs",
+                "args": {"query": "{job=\"api-server\"} |= \"error\""}
+              }
+            ],
+            "intermediate_responses": []
+          }
+        }
+      ],
+      "session_input": {
+        "app_name": "observability_agent",
+        "user_id": "test_user",
+        "state": {"user_role": "viewer"}
+      }
+    },
+    {
+      "eval_id": "get_loki_labels",
+      "conversation": [
+        {
+          "invocation_id": "inv-011",
+          "user_content": {
+            "parts": [{"text": "What log labels are available in Loki?"}],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "text": "Loki has 3 labels available: job, instance, and level."
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": {
+            "tool_uses": [{"name": "get_loki_labels", "args": {}}],
+            "intermediate_responses": []
+          }
+        }
+      ],
+      "session_input": {
+        "app_name": "observability_agent",
+        "user_id": "test_user",
+        "state": {"user_role": "viewer"}
+      }
+    },
+    {
+      "eval_id": "get_active_alerts",
+      "conversation": [
+        {
+          "invocation_id": "inv-012",
+          "user_content": {
+            "parts": [{"text": "What alerts are currently active in Alertmanager?"}],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "text": "There is 1 active alert in Alertmanager: HighMemoryUsage firing for the api-server."
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": {
+            "tool_uses": [{"name": "get_active_alerts", "args": {}}],
+            "intermediate_responses": []
+          }
+        }
+      ],
+      "session_input": {
+        "app_name": "observability_agent",
+        "user_id": "test_user",
+        "state": {"user_role": "viewer"}
+      }
+    },
+    {
+      "eval_id": "get_silences",
+      "conversation": [
+        {
+          "invocation_id": "inv-013",
+          "user_content": {
+            "parts": [{"text": "Are there any active silences in Alertmanager?"}],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "text": "There is 1 active silence: silencing HighDiskUsage alerts, created by admin, expires in 2 hours."
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": {
+            "tool_uses": [{"name": "get_silences", "args": {}}],
+            "intermediate_responses": []
+          }
+        }
+      ],
+      "session_input": {
+        "app_name": "observability_agent",
+        "user_id": "test_user",
+        "state": {"user_role": "viewer"}
+      }
+    }
+  ]
+}

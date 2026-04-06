@@ -1,0 +1,187 @@
+{
+  "eval_set_id": "k8s_health_agent_workloads",
+  "name": "K8s Health Agent Workload Queries",
+  "description": "Scenarios verifying the K8s agent routes pod and deployment queries to the correct tools.",
+  "eval_cases": [
+    {
+      "eval_id": "list_pods",
+      "conversation": [
+        {
+          "invocation_id": "inv-010",
+          "user_content": {
+            "parts": [{"text": "List the pods in the default namespace."}],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "text": "There are 2 pods in the default namespace: web-app-1 and api-server-1, both Running."
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": {
+            "tool_uses": [{"name": "list_pods", "args": {"namespace": "default"}}],
+            "intermediate_responses": []
+          }
+        }
+      ],
+      "session_input": {
+        "app_name": "k8s_health_agent",
+        "user_id": "test_user",
+        "state": {"user_role": "viewer"}
+      }
+    },
+    {
+      "eval_id": "describe_pod",
+      "conversation": [
+        {
+          "invocation_id": "inv-011",
+          "user_content": {
+            "parts": [{"text": "Describe the pod web-app-1 in the default namespace."}],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "text": "Pod web-app-1 is Running on node-1 with 1 container using nginx:latest."
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": {
+            "tool_uses": [
+              {"name": "describe_pod", "args": {"pod_name": "web-app-1", "namespace": "default"}}
+            ],
+            "intermediate_responses": []
+          }
+        }
+      ],
+      "session_input": {
+        "app_name": "k8s_health_agent",
+        "user_id": "test_user",
+        "state": {"user_role": "viewer"}
+      }
+    },
+    {
+      "eval_id": "get_pod_logs",
+      "conversation": [
+        {
+          "invocation_id": "inv-012",
+          "user_content": {
+            "parts": [{"text": "Show me the logs for pod web-app-1 in the default namespace."}],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "text": "Here are the recent logs for web-app-1 showing HTTP request entries."
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": {
+            "tool_uses": [
+              {"name": "get_pod_logs", "args": {"pod_name": "web-app-1", "namespace": "default"}}
+            ],
+            "intermediate_responses": []
+          }
+        }
+      ],
+      "session_input": {
+        "app_name": "k8s_health_agent",
+        "user_id": "test_user",
+        "state": {"user_role": "viewer"}
+      }
+    },
+    {
+      "eval_id": "list_deployments",
+      "conversation": [
+        {
+          "invocation_id": "inv-013",
+          "user_content": {
+            "parts": [{"text": "What deployments are running in the default namespace?"}],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "text": "There is 1 deployment in the default namespace: web-app with 3/3 replicas ready."
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": {
+            "tool_uses": [{"name": "list_deployments", "args": {"namespace": "default"}}],
+            "intermediate_responses": []
+          }
+        }
+      ],
+      "session_input": {
+        "app_name": "k8s_health_agent",
+        "user_id": "test_user",
+        "state": {"user_role": "viewer"}
+      }
+    },
+    {
+      "eval_id": "get_deployment_status",
+      "conversation": [
+        {
+          "invocation_id": "inv-014",
+          "user_content": {
+            "parts": [{"text": "What is the status of the web-app deployment in the default namespace?"}],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "text": "The web-app deployment has 3/3 replicas ready and available."
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": {
+            "tool_uses": [
+              {"name": "get_deployment_status", "args": {"name": "web-app", "namespace": "default"}}
+            ],
+            "intermediate_responses": []
+          }
+        }
+      ],
+      "session_input": {
+        "app_name": "k8s_health_agent",
+        "user_id": "test_user",
+        "state": {"user_role": "viewer"}
+      }
+    },
+    {
+      "eval_id": "get_events",
+      "conversation": [
+        {
+          "invocation_id": "inv-015",
+          "user_content": {
+            "parts": [{"text": "Show me the recent events in the default namespace."}],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "text": "There are 2 recent events: a Normal Scheduled event for web-app-1 and a Warning BackOff event for api-server-1."
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": {
+            "tool_uses": [{"name": "get_events", "args": {"namespace": "default"}}],
+            "intermediate_responses": []
+          }
+        }
+      ],
+      "session_input": {
+        "app_name": "k8s_health_agent",
+        "user_id": "test_user",
+        "state": {"user_role": "viewer"}
+      }
+    }
+  ]
+}

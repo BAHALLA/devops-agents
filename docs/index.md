@@ -159,10 +159,11 @@ Each agent loads typed settings from `.env` files via Pydantic. Every agent ship
 
 ## Testing
 
-Run the full suite (404 tests):
+Run the full suite (425 unit tests + 22 agent evals):
 
 ```bash
-make test
+make test             # unit tests only (no LLM required)
+make eval             # agent evaluations (requires LLM credentials)
 ```
 
 Run tests for a single package:
@@ -172,6 +173,19 @@ uv run pytest agents/kafka-health/tests/ -v
 ```
 
 All external dependencies (Kafka, Kubernetes, Docker, Slack) are mocked — no running infrastructure needed.
+
+### Agent Evaluations
+
+Each specialist agent has evaluation scenarios that verify the LLM chooses the correct tool for a given user query. Evals use ADK's `AgentEvaluator` with a real LLM and mocked infrastructure, checking that the tool call trajectory exactly matches expectations (`tool_trajectory_avg_score >= 1.0`).
+
+| Agent | Scenarios | Example |
+|-------|-----------|---------|
+| kafka-health | 6 | "Is my Kafka cluster healthy?" → `get_kafka_cluster_health` |
+| k8s-health | 9 | "List the pods in the default namespace" → `list_pods` |
+| docker | 6 | "What containers are running?" → `list_containers` |
+| observability | 6 | "List all Prometheus scrape targets" → `get_prometheus_targets` |
+
+Evals are gated behind `@pytest.mark.eval` and require Gemini credentials (API key or Vertex AI). See [AEP-002](enhancements/aep-002-agent-evaluation.md) for details.
 
 ## Adding a New Agent
 

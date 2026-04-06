@@ -6,7 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```bash
 make install          # Install all workspace packages (uv sync)
-make test             # Run all 404 tests across all packages
+make test             # Run all 425 unit tests across all packages
+make eval             # Run 22 agent eval scenarios (requires LLM credentials)
 make lint             # ruff check + format check
 make fmt              # Auto-fix linting and formatting
 ```
@@ -64,6 +65,7 @@ This is a **DevOps/SRE agent platform** built on **Google ADK** (Agent Developme
 - **Resilience**: `ResiliencePlugin` in `core/ai_agents_core/plugins.py` wraps `CircuitBreaker` for per-tool circuit breaking globally. `@with_retry` decorator adds exponential backoff with jitter to async tool functions.
 - **Pydantic-settings config**: Each agent subclasses `AgentConfig` for typed env var loading from `.env` files colocated with the agent module.
 - **All tests use mocks**: `@patch` on internal client getters (e.g., `_get_admin_client`). All tool tests are `async` with `@pytest.mark.asyncio`. No running Kafka/K8s/Docker required. Autouse fixtures reset cached clients between tests.
+- **Agent evals** (`make eval`): 22 scenarios across 4 agents using ADK's `AgentEvaluator`. Each agent has `tests/evals/` with `.test.json` datasets and a `test_*_eval.py` runner. Evals use a real LLM (gated behind `@pytest.mark.eval`) with mocked external dependencies. Criteria: `tool_trajectory_avg_score >= 1.0` (exact tool call match). Eval test files must have unique names across agents to avoid pytest import collisions.
 
 ### devops-assistant Agent Hierarchy
 
