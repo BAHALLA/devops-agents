@@ -46,7 +46,7 @@ make run-slack-bot-socket  # start the bot (Socket Mode, no public URL needed)
 
 6. Invite the bot to a channel (`/invite @DevOps Agent`) and start chatting.
 
-![Slack Bot Thread](images/slack-bot-thread.png)
+![Slack Bot Thread](../images/slack-bot-thread.png)
 
 Each thread is a separate conversation. Guarded tools (marked with `@confirm` or `@destructive`) prompt for confirmation before executing.
 

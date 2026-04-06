@@ -409,7 +409,7 @@ Resolves the LLM model from environment variables. Called automatically by `crea
 - For `MODEL_PROVIDER=gemini` (default): returns a plain model string
 - For any other provider: returns a `LiteLlm` instance via ADK's built-in LiteLLM integration
 
-See [Configuration reference](../docs/configuration.md) for provider-specific env vars and API key setup.
+See [Configuration reference](../docs/config/general.md) for provider-specific env vars and API key setup.
 
 ### `load_config(ConfigClass, __file__)`
 

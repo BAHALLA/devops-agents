@@ -124,7 +124,7 @@ MODEL_PROVIDER=openai MODEL_NAME=openai/gpt-4o \
 open http://localhost:8000
 ```
 
-This starts Kafka, Zookeeper, Kafka UI, Prometheus, Loki, Alertmanager, and the devops-assistant agent with a chat interface. See the [configuration reference](configuration.md) for all supported providers and API key setup.
+This starts Kafka, Zookeeper, Kafka UI, Prometheus, Loki, Alertmanager, and the devops-assistant agent with a chat interface. See the [configuration reference](config/general.md) for all supported providers and API key setup.
 
 ### Local development
 
@@ -141,6 +141,7 @@ Run `make help` to see all available commands.
 - **Docker only** for the quick start above
 - For local development: [uv](https://docs.astral.sh/uv/), [Docker](https://docs.docker.com/get-docker/), and a Google AI Studio API key or Vertex AI project
 
+<a id="slack-bot"></a>
 ## Platform Integrations
 
 The platform can be interactively managed through several chat and web interfaces, with [Google Chat support](integrations.md) currently in progress.
@@ -157,7 +158,7 @@ Every tool call across all agents is instrumented with Prometheus metrics — la
 
 Each agent loads typed settings from `.env` files via Pydantic. Every agent ships a `.env.example` next to its module (e.g. `agents/kafka-health/kafka_health_agent/.env.example`) documenting every supported variable — copy it to `.env` in the same directory and fill in your values. Shared variables (LLM provider, GCP project) plus per-agent settings (broker addresses, API tokens, etc.) are documented in the configuration reference.
 
-→ **[Configuration reference](configuration.md)** (env vars, infrastructure ports, Docker Compose profiles)
+→ **[Configuration reference](config/general.md)** (env vars, infrastructure ports, Docker Compose profiles)
 
 ## Testing
 

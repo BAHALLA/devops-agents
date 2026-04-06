@@ -14,7 +14,7 @@ The primary interface for local development and agent debugging.
 A production-ready bot that brings autonomous DevOps to your Slack channels.
 - **Features**: Thread-based session isolation, interactive Approve/Deny buttons for guarded tools, and role-based access control based on Slack user IDs.
 - **Interactive Guards**: When an agent hits a `@confirm` or `@destructive` tool, it posts a Slack Card with buttons, pausing execution until a human interacts.
-- **Setup Guide**: [Slack Setup Reference](slack-setup.md)
+- **Setup Guide**: [Slack Setup Reference](integrations/slack.md)
 
 ### 3. CLI Runner
 A headless interface for terminal-based interactions and CI/CD automation.
