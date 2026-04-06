@@ -7,7 +7,7 @@
 
 An open-source platform for building autonomous DevOps and SRE agents. Built with [Google ADK](https://google.github.io/adk-docs/) and managed as a [uv workspace](https://docs.astral.sh/uv/concepts/workspaces/).
 
-Agents can monitor infrastructure, diagnose issues, and take action — with built-in safety guardrails that require human confirmation before any destructive operation. Interact via the ADK web UI, terminal, or directly from Slack.
+Agents can monitor infrastructure, diagnose issues, and take action — with built-in safety guardrails that require human confirmation before any destructive operation. Interact via the [ADK web UI, terminal, Slack, or Google Chat](integrations.md).
 
 ![Slack Bot Demo](images/slack-bot-demo.png)
 
@@ -15,7 +15,7 @@ Agents can monitor infrastructure, diagnose issues, and take action — with bui
 
 - **Multi-agent orchestration** — a root agent delegates to specialist agents via `AgentTool` (LLM-routed) and deterministic sub-agent workflows ([ADR-002](adr/002-agent-tool-vs-sub-agents.md)). Aligned with [Google Cloud Agentic Design Patterns](agent-design-patterns.md).
 - **Structured workflows** — `SequentialAgent` and `ParallelAgent` for deterministic multi-step pipelines (e.g., incident triage checks Kafka, K8s, Docker, and observability in parallel, then summarizes)
-- **Slack integration** — chat with the agent from Slack, with interactive Approve/Deny buttons for guarded operations
+- **Multi-interface support** — chat with agents from Slack, terminal, or [Google Chat](integrations.md), with consistent RBAC and safety guardrails across all frontends.
 - **ADK Plugins** — cross-cutting concerns (RBAC, guardrails, metrics, audit, activity tracking, resilience, error handling) are packaged as ADK plugins and registered once on the Runner via `default_plugins()` — no per-agent callback wiring
 - **Async tools** — all tool functions are `async def` using `asyncio.to_thread()` for non-blocking I/O
 - **Role-based access control** — three-role hierarchy (viewer/operator/admin) inferred from guardrail decorators; enforced globally via `GuardrailsPlugin` ([ADR-001](adr/001-rbac.md))
@@ -35,6 +35,7 @@ graph TB
     subgraph Frontends
         WEB[ADK Web UI / CLI]
         SLACK[Slack Bot]
+        GCHAT[Google Chat Bot]
     end
 
     subgraph "devops-assistant (orchestrator)"
@@ -74,6 +75,7 @@ graph TB
 
     WEB --> ROOT
     SLACK --> ROOT
+    GCHAT --> ROOT
 
     KAFKA --> KF
     K8S --> KU
@@ -139,11 +141,11 @@ Run `make help` to see all available commands.
 - **Docker only** for the quick start above
 - For local development: [uv](https://docs.astral.sh/uv/), [Docker](https://docs.docker.com/get-docker/), and a Google AI Studio API key or Vertex AI project
 
-## Slack Bot
+## Platform Integrations
 
-Chat with the agent directly from Slack — each thread is a separate conversation, with interactive Approve/Deny buttons for guarded operations.
+The platform can be interactively managed through several chat and web interfaces, with [Google Chat support](integrations.md) currently in progress.
 
-→ **[Full setup guide](slack-setup.md)** (app manifest, env vars, run commands)
+→ **[Full integrations guide](integrations.md)** (Slack, CLI, Web UI, Roadmap)
 
 ## Metrics
 

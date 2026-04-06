@@ -68,11 +68,20 @@ markdown_extensions:
 
 nav:
   - Home: index.md
-  - Getting Started:
-    - Adding a New Agent: adding-an-agent.md
-    - Configuration: configuration.md
-    - Slack Bot Setup: slack-setup.md
+  - Getting Started: getting-started.md
+  - Design Patterns: agent-design-patterns.md
+  - Integrations:
+    - Overview: integrations.md
+    - Slack: integrations/slack.md
+    - Google Chat: integrations/google-chat.md
+  - Configuration:
+    - General: config/general.md
+    - Agents: config/agents.md
+  - Observability:
     - Metrics: metrics.md
+    - Tracing: enhancements/aep-010-observability-tracing.md
+  - Developing:
+    - Adding a New Agent: adding-an-agent.md
   - Architecture (ADR):
     - "ADR-001: RBAC": adr/001-rbac.md
     - "ADR-002: Agent Composition": adr/002-agent-tool-vs-sub-agents.md
@@ -87,7 +96,6 @@ nav:
     - "AEP-007: Context Caching": enhancements/aep-007-context-caching.md
     - "AEP-008: Skills": enhancements/aep-008-skills.md
     - "AEP-009: Streaming": enhancements/aep-009-streaming.md
-    - "AEP-010: Tracing": enhancements/aep-010-observability-tracing.md
     - "AEP-011: Deployment Hardening": enhancements/aep-011-deployment-hardening.md
     - "AEP-012: Custom Agents": enhancements/aep-012-custom-agents.md
     - "AEP-013: Security Hardening": enhancements/aep-013-security-hardening.md
