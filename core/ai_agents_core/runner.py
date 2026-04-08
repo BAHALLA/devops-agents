@@ -13,6 +13,7 @@ from collections.abc import Sequence
 
 from google.adk.agents import Agent
 from google.adk.apps import App
+from google.adk.memory.base_memory_service import BaseMemoryService
 from google.adk.plugins.base_plugin import BasePlugin
 from google.adk.runners import Runner
 from google.adk.sessions.database_session_service import DatabaseSessionService
@@ -31,6 +32,7 @@ async def run_persistent(
     db_url: str | None = None,
     user_id: str = "default_user",
     plugins: Sequence[BasePlugin] | None = None,
+    memory_service: BaseMemoryService | None = None,
     health_port: int | None = None,
 ) -> None:
     """Run an agent in a persistent CLI loop with SQLite-backed sessions.
@@ -42,6 +44,8 @@ async def run_persistent(
         user_id: User ID for session scoping.
         plugins: Optional list of ADK plugins for cross-cutting concerns.
             Use ``default_plugins()`` for the standard set.
+        memory_service: Optional memory service for cross-session recall.
+            Use ``SecureMemoryService()`` for dev with redaction and limits.
         health_port: Port for the health probe server.  Defaults to the
             ``HEALTH_PORT`` env var or 8080.
     """
@@ -56,7 +60,7 @@ async def run_persistent(
         root_agent=agent,
         plugins=list(plugins) if plugins else [],
     )
-    runner = Runner(app=app, session_service=session_service)
+    runner = Runner(app=app, session_service=session_service, memory_service=memory_service)
 
     # Start health probe server
     health = HealthServer()

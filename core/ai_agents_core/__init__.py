@@ -24,12 +24,14 @@ from .guardrails import require_confirmation as require_confirmation
 from .health import HealthServer as HealthServer
 from .log import JSONFormatter as JSONFormatter
 from .log import setup_logging as setup_logging
+from .memory import SecureMemoryService as SecureMemoryService
 from .metrics import MetricsCollector as MetricsCollector
 from .metrics import track_llm_tokens as track_llm_tokens
 from .plugins import ActivityPlugin as ActivityPlugin
 from .plugins import AuditPlugin as AuditPlugin
 from .plugins import ErrorHandlerPlugin as ErrorHandlerPlugin
 from .plugins import GuardrailsPlugin as GuardrailsPlugin
+from .plugins import MemoryPlugin as MemoryPlugin
 from .plugins import MetricsPlugin as MetricsPlugin
 from .plugins import ResiliencePlugin as ResiliencePlugin
 from .plugins import default_plugins as default_plugins

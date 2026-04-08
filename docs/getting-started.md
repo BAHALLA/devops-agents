@@ -37,4 +37,5 @@ If you have a targeted query, such as *"How many pods are running in the 'kube-s
 
 - **[Set up Slack](integrations/slack.md)** to interact with your agents where your team already collaborates.
 - **[Configure Providers](config/general.md)** to switch from Gemini to Claude, OpenAI, or a local model.
+- **[Enable Cross-Session Memory](memory.md)** so agents recall past incidents and investigations.
 - **[Examine Metrics](metrics.md)** to see how your agents perform in real-time via Prometheus.

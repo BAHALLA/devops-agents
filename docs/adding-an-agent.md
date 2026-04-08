@@ -73,6 +73,21 @@ from .agent import root_agent
 asyncio.run(run_persistent(root_agent, app_name="my_agent", plugins=default_plugins()))
 ```
 
+To enable [cross-session memory](memory.md) (agents recall past sessions):
+
+```python
+from ai_agents_core import SecureMemoryService
+
+asyncio.run(
+    run_persistent(
+        root_agent,
+        app_name="my_agent",
+        memory_service=SecureMemoryService(),
+        plugins=default_plugins(enable_memory=True),
+    )
+)
+```
+
 ## 5. Register and install
 
 Add your agent to the root `pyproject.toml` workspace members, then run:

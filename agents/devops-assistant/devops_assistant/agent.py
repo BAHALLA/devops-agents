@@ -1,3 +1,5 @@
+from google.adk.tools.preload_memory_tool import PreloadMemoryTool
+
 from ai_agents_core import (
     AgentTool,
     create_agent,
@@ -160,7 +162,10 @@ root_agent = create_agent(
         "Prefer incident_triage_agent for broad health checks. "
         "Use individual agent tools for targeted investigations.\n\n"
         "After completing a significant investigation, proactively suggest saving "
-        "the findings as a note via the ops_journal_agent tool."
+        "the findings as a note via the ops_journal_agent tool.\n\n"
+        "You have access to cross-session memory. Relevant context from past "
+        "sessions is automatically loaded. Use this to correlate incidents "
+        "with similar past events and avoid repeating investigations."
     ),
     tools=[
         AgentTool(agent=kafka_agent),
@@ -168,6 +173,7 @@ root_agent = create_agent(
         AgentTool(agent=observability_agent),
         AgentTool(agent=docker_agent_root),
         AgentTool(agent=journal_agent),
+        PreloadMemoryTool(),
     ],
     sub_agents=[
         incident_triage_agent,

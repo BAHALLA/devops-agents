@@ -22,7 +22,8 @@ correct sequence:
 3. MetricsPlugin      (timing + counters)
 4. AuditPlugin        (structured audit logging)
 5. ActivityPlugin     (session activity tracking)
-6. ErrorHandlerPlugin (graceful error recovery — must be last)
+6. MemoryPlugin       (cross-session memory persistence)
+7. ErrorHandlerPlugin (graceful error recovery — must be last)
 """
 
 from __future__ import annotations
@@ -277,6 +278,58 @@ class ActivityPlugin(BasePlugin):
         )
 
 
+# ── Memory Plugin ───────────────────────────────────────────────────
+
+
+class MemoryPlugin(BasePlugin):
+    """Auto-saves sessions to long-term memory after root agent completes.
+
+    Only saves sessions with at least ``min_events`` events to avoid
+    polluting memory with trivial single-turn interactions.
+
+    Requires a ``memory_service`` to be configured on the Runner.
+
+    Args:
+        min_events: Minimum event count before a session is worth saving.
+    """
+
+    def __init__(self, min_events: int = 4) -> None:
+        super().__init__(name="memory")
+        self._min_events = min_events
+
+    async def after_agent_callback(
+        self, *, agent: BaseAgent, callback_context: CallbackContext
+    ) -> None:
+        """Save session to memory after the root agent finishes."""
+        inv = callback_context._invocation_context  # noqa: SLF001
+
+        # Only fire for the root agent
+        if agent.name != inv.agent.name:
+            return None
+
+        memory_service = inv.memory_service
+        if memory_service is None:
+            return None
+
+        session = inv.session
+        if len(session.events) < self._min_events:
+            logger.debug(
+                "Skipping memory save for session %s (%d events < %d min)",
+                session.id,
+                len(session.events),
+                self._min_events,
+            )
+            return None
+
+        await memory_service.add_session_to_memory(session)
+        logger.debug(
+            "Saved session %s to memory (%d events)",
+            session.id,
+            len(session.events),
+        )
+        return None
+
+
 # ── Error Handler Plugin ─────────────────────────────────────────────
 
 
@@ -323,6 +376,8 @@ def default_plugins(
     circuit_breaker_timeout: float = 60.0,
     audit_log_path: str | Path | None = None,
     enable_activity_tracking: bool = True,
+    enable_memory: bool = False,
+    memory_min_events: int = 4,
 ) -> list[BasePlugin]:
     """Create the standard set of cross-cutting plugins.
 
@@ -333,7 +388,8 @@ def default_plugins(
     3. MetricsPlugin      — Prometheus metrics (wired to circuit breaker)
     4. AuditPlugin        — structured audit logs
     5. ActivityPlugin     — session activity tracking (optional)
-    6. ErrorHandlerPlugin — graceful error recovery
+    6. MemoryPlugin       — cross-session memory persistence (optional)
+    7. ErrorHandlerPlugin — graceful error recovery
 
     Args:
         role_policy: Custom ``RolePolicy`` for RBAC overrides.
@@ -342,6 +398,8 @@ def default_plugins(
         circuit_breaker_timeout: Recovery timeout in seconds.
         audit_log_path: Optional local audit log file path.
         enable_activity_tracking: Whether to track activity in session state.
+        enable_memory: Whether to auto-save sessions to long-term memory.
+        memory_min_events: Minimum events before a session is saved to memory.
     """
     resilience = ResiliencePlugin(
         failure_threshold=circuit_breaker_threshold,
@@ -357,6 +415,9 @@ def default_plugins(
 
     if enable_activity_tracking:
         plugins.append(ActivityPlugin())
+
+    if enable_memory:
+        plugins.append(MemoryPlugin(min_events=memory_min_events))
 
     plugins.append(ErrorHandlerPlugin())
 

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -11,6 +11,7 @@ from ai_agents_core.plugins import (
     AuditPlugin,
     ErrorHandlerPlugin,
     GuardrailsPlugin,
+    MemoryPlugin,
     MetricsPlugin,
     ResiliencePlugin,
     default_plugins,
@@ -224,6 +225,81 @@ async def test_error_handler_plugin_suppresses_model_error(callback_context):
     assert "Model timeout" in text
 
 
+# ── MemoryPlugin Tests ──────────────────────────────────────────────
+
+
+@pytest.fixture
+def memory_callback_context():
+    """CallbackContext mock with invocation_context for memory tests."""
+    ctx = MagicMock()
+    ctx.state = {}
+    # Root agent
+    ctx._invocation_context.agent.name = "root_agent"
+    # Session with enough events
+    ctx._invocation_context.session.events = [MagicMock() for _ in range(6)]
+    ctx._invocation_context.session.id = "sess-123"
+    # Memory service mock
+    ctx._invocation_context.memory_service = MagicMock()
+    ctx._invocation_context.memory_service.add_session_to_memory = AsyncMock()
+    return ctx
+
+
+@pytest.fixture
+def root_agent():
+    agent = MagicMock()
+    agent.name = "root_agent"
+    return agent
+
+
+@pytest.mark.asyncio
+async def test_memory_plugin_saves_root_session(memory_callback_context, root_agent):
+    """MemoryPlugin saves session when root agent finishes with enough events."""
+    plugin = MemoryPlugin(min_events=4)
+
+    await plugin.after_agent_callback(agent=root_agent, callback_context=memory_callback_context)
+
+    memory_callback_context._invocation_context.memory_service.add_session_to_memory.assert_called_once_with(
+        memory_callback_context._invocation_context.session
+    )
+
+
+@pytest.mark.asyncio
+async def test_memory_plugin_skips_trivial_session(memory_callback_context, root_agent):
+    """MemoryPlugin skips sessions with fewer events than min_events."""
+    memory_callback_context._invocation_context.session.events = [MagicMock(), MagicMock()]
+    plugin = MemoryPlugin(min_events=4)
+
+    await plugin.after_agent_callback(agent=root_agent, callback_context=memory_callback_context)
+
+    memory_callback_context._invocation_context.memory_service.add_session_to_memory.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_memory_plugin_skips_sub_agent(memory_callback_context):
+    """MemoryPlugin only fires for the root agent."""
+    sub_agent = MagicMock()
+    sub_agent.name = "sub_agent"
+    plugin = MemoryPlugin(min_events=4)
+
+    await plugin.after_agent_callback(agent=sub_agent, callback_context=memory_callback_context)
+
+    memory_callback_context._invocation_context.memory_service.add_session_to_memory.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_memory_plugin_skips_no_memory_service(root_agent):
+    """MemoryPlugin handles missing memory_service gracefully."""
+    ctx = MagicMock()
+    ctx._invocation_context.agent.name = "root_agent"
+    ctx._invocation_context.memory_service = None
+    ctx._invocation_context.session.events = [MagicMock() for _ in range(6)]
+    plugin = MemoryPlugin(min_events=4)
+
+    result = await plugin.after_agent_callback(agent=root_agent, callback_context=ctx)
+
+    assert result is None
+
+
 # ── Factory Tests ────────────────────────────────────────────────────
 
 
@@ -238,4 +314,25 @@ def test_default_plugins_composition():
     assert plugin_names == expected_names
 
     # Verify ErrorHandlerPlugin is last
+    assert isinstance(plugins[-1], ErrorHandlerPlugin)
+
+
+def test_default_plugins_with_memory():
+    """Verify enable_memory adds MemoryPlugin before ErrorHandlerPlugin."""
+    plugins = default_plugins(enable_memory=True)
+
+    expected_names = [
+        "guardrails",
+        "resilience",
+        "metrics",
+        "audit",
+        "activity",
+        "memory",
+        "error_handler",
+    ]
+    plugin_names = [p.name for p in plugins]
+    assert plugin_names == expected_names
+
+    # MemoryPlugin is present and ErrorHandlerPlugin is still last
+    assert isinstance(plugins[-2], MemoryPlugin)
     assert isinstance(plugins[-1], ErrorHandlerPlugin)

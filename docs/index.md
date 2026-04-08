@@ -5,128 +5,178 @@
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/release/python-3110/)
 [![uv](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v1.json)](https://docs.astral.sh/uv/)
 
-An open-source platform for building autonomous DevOps and SRE agents. Built with [Google ADK](https://google.github.io/adk-docs/) and managed as a [uv workspace](https://docs.astral.sh/uv/concepts/workspaces/).
+An open-source platform for building **autonomous DevOps and SRE agents**. Built with [Google ADK](https://google.github.io/adk-docs/) and managed as a [uv workspace](https://docs.astral.sh/uv/concepts/workspaces/).
 
-Agents can monitor infrastructure, diagnose issues, and take action — with built-in safety guardrails that require human confirmation before any destructive operation. Interact via the [ADK web UI, terminal, Slack, or Google Chat](integrations.md).
+Agents monitor infrastructure, diagnose issues, and take action — with built-in safety guardrails that require human confirmation before any destructive operation.
 
 ![Slack Bot Demo](images/slack-bot-demo.png)
 
-## Key Features
+---
 
-- **Multi-agent orchestration** — a root agent delegates to specialist agents via `AgentTool` (LLM-routed) and deterministic sub-agent workflows ([ADR-002](adr/002-agent-tool-vs-sub-agents.md)). Aligned with [Google Cloud Agentic Design Patterns](agent-design-patterns.md).
-- **Structured workflows** — `SequentialAgent` and `ParallelAgent` for deterministic multi-step pipelines (e.g., incident triage checks Kafka, K8s, Docker, and observability in parallel, then summarizes)
-- **Multi-interface support** — chat with agents from Slack, terminal, or [Google Chat](integrations.md), with consistent RBAC and safety guardrails across all frontends.
-- **ADK Plugins** — cross-cutting concerns (RBAC, guardrails, metrics, audit, activity tracking, resilience, error handling) are packaged as ADK plugins and registered once on the Runner via `default_plugins()` — no per-agent callback wiring
-- **Async tools** — all tool functions are `async def` using `asyncio.to_thread()` for non-blocking I/O
-- **Role-based access control** — three-role hierarchy (viewer/operator/admin) inferred from guardrail decorators; enforced globally via `GuardrailsPlugin` ([ADR-001](adr/001-rbac.md))
-- **Input validation** — all tool inputs validated at the boundary with reusable validators (string length, integer range, URL scheme, path traversal, regex patterns)
-- **Safety guardrails** — destructive tools (`@destructive`) require explicit confirmation; mutating tools (`@confirm`) prompt before executing; confirmations are args-hashed and time-limited
-- **Structured logging** — JSON-formatted logs to stdout, ready for Loki/ELK/Cloud Logging; every tool call is audited with timestamp, agent, arguments, and result
-- **Persistent sessions** — SQLite-backed session state, user-scoped notes, and app-wide shared data that survive restarts
-- **Multi-provider LLM support** — switch between Gemini, Claude, OpenAI, Ollama, or any [LiteLLM-supported provider](https://docs.litellm.ai/docs/providers) via environment variables
-- **Prometheus metrics** — tool call counts, latency histograms, error rates, circuit breaker state, and LLM token tracking exposed via `/metrics` for Prometheus scraping
-- **Resilience** — circuit breaker and retry with exponential backoff for transient failures
-- **Composable architecture** — each agent is a standalone package that can run independently or plug into an orchestrator
+## Highlights
+
+<div class="grid cards" markdown>
+
+-   :material-robot-outline:{ .lg .middle } **Multi-Agent Orchestration**
+
+    ---
+
+    A root agent delegates to specialists via `AgentTool` and deterministic sub-agent workflows. [Learn more](agent-design-patterns.md)
+
+-   :material-shield-check:{ .lg .middle } **Safety Guardrails**
+
+    ---
+
+    `@destructive` and `@confirm` decorators gate dangerous operations. RBAC (viewer/operator/admin) enforced globally via plugins. [ADR-001](adr/001-rbac.md)
+
+-   :material-brain:{ .lg .middle } **Cross-Session Memory**
+
+    ---
+
+    Agents recall past incidents and investigations. Sensitive data is automatically redacted before storage. [Setup guide](memory.md)
+
+-   :material-swap-horizontal:{ .lg .middle } **Multi-Provider LLM**
+
+    ---
+
+    Switch between Gemini, Claude, OpenAI, Ollama, or any LiteLLM provider with two env vars. [Configuration](config/general.md)
+
+-   :material-chat-outline:{ .lg .middle } **Multi-Interface**
+
+    ---
+
+    Chat with agents from the ADK web UI, terminal, Slack, or Google Chat — same RBAC everywhere. [Integrations](integrations.md)
+
+-   :material-chart-line:{ .lg .middle } **Observable & Resilient**
+
+    ---
+
+    Prometheus metrics, structured JSON logging, audit trails, circuit breakers, and retry with backoff. [Metrics](metrics.md)
+
+</div>
+
+---
 
 ## Architecture
 
+The platform uses a **coordinator pattern** where a root agent delegates to specialist agents, with cross-cutting concerns handled by plugins:
+
 ```mermaid
-graph TB
+graph LR
     subgraph Frontends
-        WEB[ADK Web UI / CLI]
-        SLACK[Slack Bot]
-        GCHAT[Google Chat Bot]
+        direction TB
+        WEB[Web UI / CLI]
+        SLACK[Slack]
+        GCHAT[Google Chat]
     end
 
-    subgraph "devops-assistant (orchestrator)"
-        ROOT[Root Agent]
-        TRIAGE[Incident Triage]
-
-        ROOT -.->|AgentTool| KAFKA[Kafka Agent]
-        ROOT -.->|AgentTool| K8S[K8s Agent]
-        ROOT -.->|AgentTool| OBS[Observability Agent]
-        ROOT -.->|AgentTool| DOCKER[Docker Agent]
-        ROOT -.->|AgentTool| JOURNAL[Ops Journal]
-        ROOT -->|sub-agent| TRIAGE
-
-        TRIAGE -->|parallel| KAFKA
-        TRIAGE -->|parallel| K8S
-        TRIAGE -->|parallel| DOCKER
-        TRIAGE -->|parallel| OBS
-        TRIAGE -->|then| SUMMARIZE[Triage Summary]
-        TRIAGE -->|then| SAVE[Save to Journal]
+    subgraph Orchestrator
+        ROOT[DevOps Assistant]
     end
 
-    subgraph Safety
-        RBAC[RBAC · authorize]
-        GUARD[Guardrails · confirm / destructive]
-        AUDIT[Audit Logger]
-        METRICS[Prometheus Metrics]
+    subgraph Specialists
+        direction TB
+        KAFKA[Kafka Agent]
+        K8S[K8s Agent]
+        OBS[Observability]
+        DOCKER[Docker Agent]
+        JOURNAL[Ops Journal]
     end
 
-    subgraph Infrastructure
-        KF[Kafka]
-        KU[Kubernetes]
-        PR[Prometheus]
-        LO[Loki]
-        AM[Alertmanager]
-        DK[Docker]
+    subgraph Plugins
+        direction TB
+        P1[RBAC & Guardrails]
+        P2[Metrics & Audit]
+        P3[Memory & Resilience]
     end
 
     WEB --> ROOT
     SLACK --> ROOT
     GCHAT --> ROOT
 
-    KAFKA --> KF
-    K8S --> KU
-    OBS --> PR
-    OBS --> LO
-    OBS --> AM
-    DOCKER --> DK
+    ROOT --> KAFKA
+    ROOT --> K8S
+    ROOT --> OBS
+    ROOT --> DOCKER
+    ROOT --> JOURNAL
 
-    ROOT -.-> RBAC
-    ROOT -.-> GUARD
-    ROOT -.-> AUDIT
-    ROOT -.-> METRICS
+    ROOT -.-> P1
+    ROOT -.-> P2
+    ROOT -.-> P3
 ```
+
+??? info "Detailed agent hierarchy"
+
+    The `devops-assistant` orchestrator uses two delegation patterns ([ADR-002](adr/002-agent-tool-vs-sub-agents.md)):
+
+    - **`AgentTool`** for LLM-routed specialist queries
+    - **Sub-agents** (`SequentialAgent` / `ParallelAgent`) for deterministic workflows
+
+    ```
+    devops_assistant (root orchestrator)
+    ├── [AgentTool] kafka_health_agent
+    ├── [AgentTool] k8s_health_agent
+    ├── [AgentTool] observability_agent
+    ├── [AgentTool] docker_agent
+    ├── [AgentTool] ops_journal_agent
+    └── [sub-agent] incident_triage_agent (Sequential)
+        ├── health_check_agent (Parallel)
+        │   ├── kafka_health_checker
+        │   ├── k8s_health_checker
+        │   ├── docker_health_checker
+        │   └── observability_health_checker
+        ├── triage_summarizer
+        └── journal_writer
+    ```
+
+---
 
 ## Agents
 
-| Agent | Type | Description |
-|-------|------|-------------|
-| [**core**](core/README.md) | Library | Agent factory, ADK plugins, RBAC, guardrails, input validation, error handlers, structured logging, audit trail, activity tracking, Prometheus metrics, persistent runner, typed config |
-| [**kafka-health-agent**](agents/kafka-health.md) | Single agent | Kafka cluster health, topics, consumer groups, lag |
-| [**k8s-health-agent**](agents/k8s-health.md) | Single agent | Kubernetes cluster health, nodes, pods, deployments, logs, events |
-| [**observability-agent**](agents/observability.md) | Single agent | Prometheus metrics/alerts, Loki log queries, Alertmanager silence management |
-| [**devops-assistant**](agents/devops-assistant.md) | Multi-agent | Orchestrator using AgentTool for specialist agents and sub-agents for deterministic workflows |
-| [**ops-journal**](agents/ops-journal.md) | Memory/state | Notes, preferences, and session tracking with persistent storage |
-| [**slack-bot**](agents/slack-bot.md) | Integration | Slack bot with thread-based sessions and interactive confirmation buttons |
+| Agent | Description |
+|-------|-------------|
+| [**core**](core/README.md) | Shared library: agent factory, plugins (RBAC, guardrails, metrics, audit, memory, resilience), persistent runner, typed config |
+| [**kafka-health**](agents/kafka-health.md) | Kafka cluster health, topics, consumer groups, lag |
+| [**k8s-health**](agents/k8s-health.md) | Kubernetes nodes, pods, deployments, logs, events |
+| [**observability**](agents/observability.md) | Prometheus metrics/alerts, Loki log queries, Alertmanager |
+| [**docker**](agents/docker-agent.md) | Docker containers, logs, stats, compose status |
+| [**devops-assistant**](agents/devops-assistant.md) | Multi-agent orchestrator composing all above agents |
+| [**ops-journal**](agents/ops-journal.md) | Notes, preferences, session tracking with persistent storage |
+| [**slack-bot**](agents/slack-bot.md) | Slack integration with thread-based sessions and confirmation buttons |
+
+---
 
 ## Quick Start
 
-### Try it with Docker (no install required)
+### Docker (no install required)
 
-The only prerequisite is [Docker](https://docs.docker.com/get-docker/) and an API key from any supported provider.
+The only prerequisite is [Docker](https://docs.docker.com/get-docker/) and an API key.
 
-```bash
-# With Google AI Studio (default)
-GOOGLE_API_KEY=your-key docker compose --profile demo up -d
+=== "Gemini (default)"
 
-# With Anthropic Claude
-MODEL_PROVIDER=anthropic MODEL_NAME=anthropic/claude-sonnet-4-20250514 \
-  ANTHROPIC_API_KEY=sk-ant-... docker compose --profile demo up -d
+    ```bash
+    GOOGLE_API_KEY=your-key docker compose --profile demo up -d
+    open http://localhost:8000
+    ```
 
-# With OpenAI
-MODEL_PROVIDER=openai MODEL_NAME=openai/gpt-4o \
-  OPENAI_API_KEY=sk-... docker compose --profile demo up -d
+=== "Claude"
 
-# Open the web UI
-open http://localhost:8000
-```
+    ```bash
+    MODEL_PROVIDER=anthropic MODEL_NAME=anthropic/claude-sonnet-4-20250514 \
+      ANTHROPIC_API_KEY=sk-ant-... docker compose --profile demo up -d
+    ```
 
-This starts Kafka, Zookeeper, Kafka UI, Prometheus, Loki, Alertmanager, and the devops-assistant agent with a chat interface. See the [configuration reference](config/general.md) for all supported providers and API key setup.
+=== "OpenAI"
 
-### Local development
+    ```bash
+    MODEL_PROVIDER=openai MODEL_NAME=openai/gpt-4o \
+      OPENAI_API_KEY=sk-... docker compose --profile demo up -d
+    ```
+
+This starts Kafka, Zookeeper, Prometheus, Loki, Alertmanager, and the devops-assistant with a chat UI.
+
+<a id="configuration"></a>
+### Local Development
 
 ```bash
 make install      # install all workspace packages
@@ -139,65 +189,28 @@ Run `make help` to see all available commands.
 ### Prerequisites
 
 - **Docker only** for the quick start above
-- For local development: [uv](https://docs.astral.sh/uv/), [Docker](https://docs.docker.com/get-docker/), and a Google AI Studio API key or Vertex AI project
+- For local dev: [uv](https://docs.astral.sh/uv/), [Docker](https://docs.docker.com/get-docker/), and a Google AI Studio API key or Vertex AI project
 
-<a id="slack-bot"></a>
-## Platform Integrations
-
-The platform can be interactively managed through several chat and web interfaces, with [Google Chat support](integrations.md) currently in progress.
-
-→ **[Full integrations guide](integrations.md)** (Slack, CLI, Web UI, Roadmap)
-
-## Metrics
-
-Every tool call across all agents is instrumented with Prometheus metrics — latency histograms, error rates, invocation counts, and circuit breaker state. The Slack bot exposes a `/metrics` endpoint on port 9100 for Prometheus scraping.
-
-> **[Metrics reference](metrics.md)** (available metrics, PromQL examples, integration guide)
-
-## Configuration
-
-Each agent loads typed settings from `.env` files via Pydantic. Every agent ships a `.env.example` next to its module (e.g. `agents/kafka-health/kafka_health_agent/.env.example`) documenting every supported variable — copy it to `.env` in the same directory and fill in your values. Shared variables (LLM provider, GCP project) plus per-agent settings (broker addresses, API tokens, etc.) are documented in the configuration reference.
-
-→ **[Configuration reference](config/general.md)** (env vars, infrastructure ports, Docker Compose profiles)
+---
 
 ## Testing
 
-Run the full suite (425 unit tests + 22 agent evals):
+Run the full suite (439 unit tests + 22 agent evals):
 
 ```bash
-make test             # unit tests only (no LLM required)
-make eval             # agent evaluations (requires LLM credentials)
+make test    # unit tests (no LLM required)
+make eval    # agent evaluations (requires LLM credentials)
 ```
 
-Run tests for a single package:
+All external dependencies are mocked — no running infrastructure needed. See [AEP-002](enhancements/aep-002-agent-evaluation.md) for eval details.
 
-```bash
-uv run pytest agents/kafka-health/tests/ -v
-```
+---
 
-All external dependencies (Kafka, Kubernetes, Docker, Slack) are mocked — no running infrastructure needed.
-
-### Agent Evaluations
-
-Each specialist agent has evaluation scenarios that verify the LLM chooses the correct tool for a given user query. Evals use ADK's `AgentEvaluator` with a real LLM and mocked infrastructure, checking that the tool call trajectory exactly matches expectations (`tool_trajectory_avg_score >= 1.0`).
-
-| Agent | Scenarios | Example |
-|-------|-----------|---------|
-| kafka-health | 6 | "Is my Kafka cluster healthy?" → `get_kafka_cluster_health` |
-| k8s-health | 9 | "List the pods in the default namespace" → `list_pods` |
-| docker | 6 | "What containers are running?" → `list_containers` |
-| observability | 6 | "List all Prometheus scrape targets" → `get_prometheus_targets` |
-
-Evals are gated behind `@pytest.mark.eval` and require Gemini credentials (API key or Vertex AI). See [AEP-002](enhancements/aep-002-agent-evaluation.md) for details.
-
-## Adding a New Agent
-
-→ **[Step-by-step guide](adding-an-agent.md)** with boilerplate, RBAC setup, and testing tips.
-
+<a id="slack-bot"></a>
 ## Contributing
 
-Contributions are welcome! See [CONTRIBUTING.md](https://github.com/BAHALLA/devops-agents/blob/main/CONTRIBUTING.md) for guidelines on adding new agents, improving existing ones, and submitting pull requests.
+Contributions are welcome! See the [contributing guide](https://github.com/BAHALLA/devops-agents/blob/main/CONTRIBUTING.md) and [adding a new agent](adding-an-agent.md) for how to get started.
 
 ## License
 
-This project is licensed under the [MIT License](https://github.com/BAHALLA/devops-agents/blob/main/LICENSE).
+[MIT License](https://github.com/BAHALLA/devops-agents/blob/main/LICENSE)

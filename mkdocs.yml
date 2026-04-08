@@ -6,6 +6,8 @@ edit_uri: edit/main/docs/
 
 theme:
   name: material
+  icon:
+    logo: material/robot-outline
   palette:
     # Palette toggle for light mode
     - media: "(prefers-color-scheme: light)"
@@ -26,13 +28,16 @@ theme:
         name: Switch to light mode
   features:
     - navigation.tabs
+    - navigation.tabs.sticky
     - navigation.sections
     - navigation.top
     - navigation.tracking
+    - navigation.indexes
     - search.suggest
     - search.highlight
     - content.code.copy
     - content.tooltips
+    - content.tabs.link
 
 plugins:
   - search
@@ -61,54 +66,57 @@ markdown_extensions:
   - pymdownx.tabbed:
       alternate_style: true
   - admonition
+  - pymdownx.details
   - attr_list
   - md_in_html
   - toc:
       permalink: true
 
 nav:
-  - Home: index.md
-  - Getting Started: getting-started.md
-  - Design Patterns: agent-design-patterns.md
-  - Integrations:
-    - Overview: integrations.md
-    - Slack: integrations/slack.md
-    - Google Chat: integrations/google-chat.md
-  - Configuration:
-    - General: config/general.md
-    - Agents: config/agents.md
-  - Observability:
-    - Metrics: metrics.md
-    - Tracing: enhancements/aep-010-observability-tracing.md
-  - Developing:
+  - Home:
+    - index.md
+    - Getting Started: getting-started.md
+  - Guides:
+    - Design Patterns: agent-design-patterns.md
+    - Cross-Session Memory: memory.md
     - Adding a New Agent: adding-an-agent.md
-  - Architecture (ADR):
-    - "ADR-001: RBAC": adr/001-rbac.md
-    - "ADR-002: Agent Composition": adr/002-agent-tool-vs-sub-agents.md
-  - Enhancements (AEP):
-    - Overview: enhancements/README.md
-    - "AEP-001: Tool Confirmation": enhancements/aep-001-adk-native-confirmation.md
-    - "AEP-002: Agent Evaluation": enhancements/aep-002-agent-evaluation.md
-    - "AEP-003: Memory Service": enhancements/aep-003-memory-service.md
-    - "AEP-004: Remediation Loop": enhancements/aep-004-loop-agent-remediation.md
-    - "AEP-005: A2A Protocol": enhancements/aep-005-a2a-protocol.md
-    - "AEP-006: Artifacts": enhancements/aep-006-artifacts.md
-    - "AEP-007: Context Caching": enhancements/aep-007-context-caching.md
-    - "AEP-008: Skills": enhancements/aep-008-skills.md
-    - "AEP-009: Streaming": enhancements/aep-009-streaming.md
-    - "AEP-011: Deployment Hardening": enhancements/aep-011-deployment-hardening.md
-    - "AEP-012: Custom Agents": enhancements/aep-012-custom-agents.md
-    - "AEP-013: Security Hardening": enhancements/aep-013-security-hardening.md
+    - Configuration:
+      - General: config/general.md
+      - Agents: config/agents.md
+    - Integrations:
+      - Overview: integrations.md
+      - Slack: integrations/slack.md
+      - Google Chat: integrations/google-chat.md
+    - Observability:
+      - Metrics: metrics.md
   - Agents:
-    - Core: core/README.md
+    - Core Library: core/README.md
     - Devops Assistant: agents/devops-assistant.md
-    - Docker Health: agents/docker-agent.md
+    - Docker Agent: agents/docker-agent.md
     - K8s Health: agents/k8s-health.md
     - Kafka Health: agents/kafka-health.md
     - Observability: agents/observability.md
     - Ops Journal: agents/ops-journal.md
     - Slack Bot: agents/slack-bot.md
-  - Project Info:
+  - Architecture:
+    - "ADR-001: RBAC": adr/001-rbac.md
+    - "ADR-002: Agent Composition": adr/002-agent-tool-vs-sub-agents.md
+    - Enhancements (AEP):
+      - Overview: enhancements/README.md
+      - "AEP-001: Tool Confirmation": enhancements/aep-001-adk-native-confirmation.md
+      - "AEP-002: Agent Evaluation": enhancements/aep-002-agent-evaluation.md
+      - "AEP-003: Memory Service": enhancements/aep-003-memory-service.md
+      - "AEP-004: Remediation Loop": enhancements/aep-004-loop-agent-remediation.md
+      - "AEP-005: A2A Protocol": enhancements/aep-005-a2a-protocol.md
+      - "AEP-006: Artifacts": enhancements/aep-006-artifacts.md
+      - "AEP-007: Context Caching": enhancements/aep-007-context-caching.md
+      - "AEP-008: Skills": enhancements/aep-008-skills.md
+      - "AEP-009: Streaming": enhancements/aep-009-streaming.md
+      - "AEP-010: Observability": enhancements/aep-010-observability-tracing.md
+      - "AEP-011: Deployment": enhancements/aep-011-deployment-hardening.md
+      - "AEP-012: Custom Agents": enhancements/aep-012-custom-agents.md
+      - "AEP-013: Security": enhancements/aep-013-security-hardening.md
+  - Project:
     - Changelog: CHANGELOG.md
     - Contributing: CONTRIBUTING.md
     - Security: SECURITY.md
