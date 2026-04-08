@@ -1,8 +1,9 @@
 /* ── Homepage highlights table ─────────────────────────────────────── */
-/* Style the first table on the homepage as borderless feature cards */
+/* Style the first table on the homepage as borderless feature rows */
 .md-content h2#highlights + table {
   border: none;
   box-shadow: none;
+  border-collapse: collapse;
 }
 
 .md-content h2#highlights + table thead {
@@ -12,7 +13,7 @@
 .md-content h2#highlights + table td {
   border: none;
   vertical-align: top;
-  padding: 0.6rem 0.8rem;
+  padding: 0.8rem 1rem;
 }
 
 .md-content h2#highlights + table td:first-child {
@@ -28,4 +29,18 @@
 
 .md-content h2#highlights + table tr:last-child {
   border-bottom: none;
+}
+
+/* Remove outer table border */
+.md-content h2#highlights + table,
+.md-content h2#highlights + table th,
+.md-content h2#highlights + table td,
+.md-content h2#highlights + table tr {
+  border-left: none;
+  border-right: none;
+  border-top: none;
+}
+
+.md-content h2#highlights + table tr:first-child td {
+  border-top: none;
 }
