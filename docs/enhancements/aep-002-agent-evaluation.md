@@ -2,7 +2,7 @@
 
 | Field | Value |
 |-------|-------|
-| **Status** | in-progress |
+| **Status** | completed |
 | **Priority** | P0 |
 | **Effort** | High (5-7 days) |
 | **Impact** | Critical |
@@ -11,13 +11,13 @@
 ## Gap Analysis
 
 ### Current Implementation
-The project has **425+ unit tests** with mocked external dependencies. These tests verify:
+The project has **439+ unit tests** with mocked external dependencies. These tests verify:
 - Individual tool functions return correct data
 - Input validation rejects bad inputs
 - RBAC blocks unauthorized users
 - Plugins execute in correct order
 
-Additionally, **22 agent-level evaluation scenarios** across 4 agents now verify that the LLM chooses the correct tools for user queries.
+Additionally, **27 agent-level evaluation scenarios** across 4 agents now verify that the LLM chooses the correct tools for user queries.
 
 ### What ADK Provides
 ADK has a comprehensive **evaluation framework** with:
@@ -102,8 +102,8 @@ Currently only **tool trajectory** is evaluated:
 ### Running Evals
 
 ```bash
-make eval                    # runs all eval tests (requires LLM credentials)
-make test                    # runs 425 unit tests, skips evals
+make eval                    # runs all 27 eval scenarios (requires LLM credentials)
+make test                    # runs 439 unit tests, skips evals
 ```
 
 Evals are gated behind `@pytest.mark.eval` and skip when no LLM credentials are available. CI runs evals via the `eval` job (manual trigger or `run-eval` label).
@@ -166,12 +166,12 @@ These require the Vertex Gen AI Evaluation Service (paid) and are not yet integr
 ## Acceptance Criteria
 
 - [x] Each specialist agent has evaluation scenarios covering core read-only tools
-- [ ] Each agent has at least 5 evaluation scenarios (Kafka: 6, K8s: 9, Docker: 6, Observability: 6)
-- [ ] DevOps assistant has routing evaluation (correct agent delegation)
-- [ ] Incident triage workflow has end-to-end evaluation
+- [x] Each agent has at least 5 evaluation scenarios (Kafka: 6, K8s: 9, Docker: 6, Observability: 6)
+- [ ] DevOps assistant has routing evaluation (correct agent delegation) — deferred to Phase 2
+- [ ] Incident triage workflow has end-to-end evaluation — deferred to Phase 2
 - [x] Evaluation runs in CI/CD with `make eval`
 - [x] Tool trajectory score >= 1.0 (exact match) for all scenarios
-- [ ] Hallucination score >= 0.95 for health-check scenarios
+- [ ] Hallucination score >= 0.95 for health-check scenarios — requires paid Vertex AI, deferred to Phase 3
 - [x] Evaluation results are visible in CI/CD output
 
 ## Notes
