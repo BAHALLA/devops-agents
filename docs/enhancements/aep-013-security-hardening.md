@@ -3,7 +3,7 @@
 | Field | Value |
 |-------|-------|
 | **Status** | proposed |
-| **Priority** | P3 |
+| **Priority** | P0 |
 | **Effort** | High (7-10 days) |
 | **Impact** | Critical |
 | **Dependencies** | AEP-011 (deployment hardening) |

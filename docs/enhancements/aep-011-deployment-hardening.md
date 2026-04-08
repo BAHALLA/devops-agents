@@ -2,11 +2,11 @@
 
 | Field | Value |
 |-------|-------|
-| **Status** | proposed |
-| **Priority** | P2 |
+| **Status** | in-progress |
+| **Priority** | P0 |
 | **Effort** | High (7-10 days) |
 | **Impact** | Critical |
-| **Dependencies** | AEP-010 (tracing) |
+| **Dependencies** | None |
 
 ## Gap Analysis
 
@@ -17,13 +17,19 @@ The project has basic deployment support:
 - `run_persistent.py` for CLI with SQLite persistence
 - `HealthServer` in `core/ai_agents_core/health.py`
 
-Missing for production:
+Already implemented:
+- Health probes: `/healthz` (liveness) and `/readyz` (readiness) via `HealthServer`
+- Graceful shutdown: SIGTERM/SIGINT handler in `run_persistent()`
+- Resource limits: memory/CPU configured in `docker-compose.yml`
+- Docker security: multi-stage build, non-root user, minimal base image
+
+Still missing for production:
 - No Kubernetes manifests or Helm charts
-- No readiness/liveness probes integrated with the agent runner
-- No graceful shutdown handling
+- No CD pipeline (Docker image build + push to registry)
 - No horizontal scaling guidance
 - No rate limiting
-- SQLite doesn't support concurrent access
+- No PostgreSQL support (SQLite doesn't support concurrent access)
+- No `.env.example` at root level with all required variables
 
 ### What ADK Provides
 ADK supports multiple deployment targets:
@@ -197,13 +203,16 @@ deploy/
 
 ## Acceptance Criteria
 
-- [ ] Health (`/health`) and readiness (`/ready`) endpoints functional
-- [ ] Graceful shutdown handles SIGTERM with drain timeout
+- [x] Health (`/healthz`) and readiness (`/readyz`) endpoints functional
+- [x] Graceful shutdown handles SIGTERM/SIGINT with shutdown event
+- [x] Docker: multi-stage build, non-root user, health checks, resource limits
+- [ ] CD pipeline: Docker image build + push to GHCR on merge to main
 - [ ] Kubernetes manifests with probes, resource limits, rolling update
 - [ ] PostgreSQL session service for multi-instance
 - [ ] Rate limiting on HTTP endpoints
 - [ ] Helm chart with configurable values
 - [ ] HPA (Horizontal Pod Autoscaler) configuration
+- [ ] Root `.env.example` with all required/optional variables documented
 - [ ] Production deployment documentation
 - [ ] Zero-downtime rolling update verified
 
