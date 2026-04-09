@@ -25,9 +25,11 @@ Interact via the **ADK web UI**, **terminal**, or directly from **Slack**.
 ## Key Features
 
 - **Multi-agent orchestration** — Root agent delegates to specialists via `AgentTool` or deterministic sub-agent workflows.
+- **Self-healing remediation** — Closed-loop `LoopAgent` pipeline: act (restart/scale/rollback) → verify → retry up to 3 times.
 - **Slack integration** — Chat with agents from Slack, featuring interactive Approve/Deny buttons for guarded operations.
 - **Safety first** — Destructive tools (`@destructive`) and mutating tools (`@confirm`) require explicit human confirmation.
 - **Observability** — Every tool call is instrumented with Prometheus metrics (latency, errors, token tracking).
+- **Context caching** — Static system instructions are cached across requests (Gemini), reducing token usage and latency.
 - **Extensible** — Add new agents using the [Agent Factory](https://bahalla.github.io/devops-agents/core/) and standardized plugins.
 
 ## Quick Start (Docker)

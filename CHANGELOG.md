@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased] - 2026-04-09
+
+### Added
+
+- **Closed-loop remediation** (AEP-004) — Self-healing using ADK `LoopAgent` that runs act → verify → retry (up to 3 iterations):
+  - `create_loop_agent()` factory function in core, matching existing `create_sequential_agent`/`create_parallel_agent` pattern
+  - `remediation_pipeline` exposed as `AgentTool` on the root orchestrator: actor (restart/scale/rollback) → verifier (diagnostics + `exit_loop`) → summarizer
+  - `exit_loop` tool signals loop termination via `tool_context.actions.escalate = True`
+  - `rollback_deployment` tool (`@destructive`) added to k8s-health agent
+  - RBAC enforced on all remediation tools via existing `@destructive`/`@confirm` decorators
+  - 20 new tests (468 total)
+
+- **Context caching for LLM cost reduction** (AEP-007) — ADK `ContextCacheConfig` for Gemini models:
+  - `create_context_cache_config()` factory with env-var defaults (`CONTEXT_CACHE_MIN_TOKENS`, `CONTEXT_CACHE_TTL_SECONDS`, `CONTEXT_CACHE_INTERVALS`)
+  - `context_cache_config` parameter on `run_persistent()` and `App` object in devops-assistant
+  - `CONTEXT_CACHE_EVENTS_TOTAL` Prometheus counter and `track_cache_event()` helper for hit/miss tracking
+  - 9 new tests
+
 ## [Unreleased] - 2026-04-06
 
 ### Added

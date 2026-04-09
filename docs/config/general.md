@@ -71,6 +71,22 @@ OLLAMA_API_BASE=http://localhost:11434
 
 ---
 
+## Context Caching
+
+Context caching reduces token usage and latency by caching static system instructions (agent descriptions, tool schemas, RBAC rules) across requests. This is only effective with **Gemini models** — when using Claude/OpenAI via LiteLLM, the config is accepted but has no effect.
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `CONTEXT_CACHE_MIN_TOKENS` | `2048` | Only cache if context exceeds this token count |
+| `CONTEXT_CACHE_TTL_SECONDS` | `600` | Cache lifetime in seconds (10 minutes) |
+| `CONTEXT_CACHE_INTERVALS` | `10` | Max invocations before cache refresh |
+
+Context caching is enabled by default in the `devops-assistant` agent. You can tune the values via environment variables or disable it by not passing a `context_cache_config` to `run_persistent()`.
+
+Cache hit/miss events are exposed as the `ai_agents_context_cache_events_total` Prometheus counter on the `/metrics` endpoint.
+
+---
+
 ## Infrastructure
 
 The included `docker-compose.yml` starts the local diagnostic stack.

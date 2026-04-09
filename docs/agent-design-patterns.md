@@ -11,8 +11,8 @@ This document analyzes the platform's architecture against the [Google Cloud Age
 | | Parallel | `health_check_agent` runs K8s, Kafka, and Docker checks concurrently. |
 | | Hierarchical | Root Orchestrator → Workflow Agents → Specialist Workers. |
 | **Iterative & Feedback** | ReAct | Default behavior for all `LlmAgent` instances (Thought/Action/Observation). |
-| | Loop / Refinement | **Proposed (AEP-004)**: `LoopAgent` for self-healing remediation. |
-| | Generator/Critic | **QA (AEP-002)**: Evaluation framework uses LLM-as-a-judge. |
+| | Loop / Refinement | `LoopAgent` remediation loop: act → verify → retry (AEP-004). |
+| | Generator/Critic | Evaluation framework uses LLM-as-a-judge (AEP-002). |
 | **Specialized** | Human-in-the-Loop | `GuardrailsPlugin` gates tools with `@confirm` and `@destructive`. |
 | | Custom Logic | Enforced via `SequentialAgent` and `ParallelAgent` factory functions. |
 
@@ -31,10 +31,13 @@ The project leverages the **Coordinator Pattern** as its primary entry point. Th
 
 Every individual agent in the project follows the **ReAct (Reason and Act)** pattern. When an agent is given a task, it iterates through "Thoughts" and "Actions" (tool calls) until it observes enough information to provide a final response.
 
-**Iterative Refinement** is currently a target for the remediation layer ([AEP-004](enhancements/aep-004-loop-agent-remediation.md)). The proposed `LoopAgent` will implement a **closed-loop remediation** pattern:
-1.  **Act**: Attempt a fix (e.g., `restart_pod`).
-2.  **Check**: Verify system health.
-3.  **Decide**: If still failing, retry with a different action (e.g., `scale_deployment`) or exit.
+**Iterative Refinement** is implemented in the remediation layer ([AEP-004](enhancements/aep-004-loop-agent-remediation.md)). The `LoopAgent`-based `remediation_pipeline` implements a **closed-loop remediation** pattern:
+
+1.  **Act**: The `remediation_actor` attempts a fix (restart, scale, or rollback a deployment).
+2.  **Verify**: The `remediation_verifier` checks system health using diagnostic tools.
+3.  **Decide**: If resolved, the verifier calls `exit_loop` (sets `escalate = True`). If still failing, the loop retries with a different action — up to 3 iterations.
+
+The `remediation_pipeline` is exposed as an `AgentTool` on the root orchestrator, so the user can trigger it after a triage with "fix it" or "auto-remediate".
 
 ### 3. Specialized Patterns
 

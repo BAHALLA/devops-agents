@@ -22,6 +22,7 @@ Agents monitor infrastructure, diagnose issues, and take action — with built-i
 | **Cross-Session Memory** | Agents recall past incidents and investigations. Sensitive data is automatically redacted before storage. [Setup guide](memory.md) |
 | **Multi-Provider LLM** | Switch between Gemini, Claude, OpenAI, Ollama, or any LiteLLM provider with two env vars. [Configuration](config/general.md) |
 | **Multi-Interface** | Chat from the ADK web UI, terminal, Slack, or Google Chat — same RBAC everywhere. [Integrations](integrations.md) |
+| **Self-Healing Remediation** | Closed-loop remediation via `LoopAgent`: act → verify → retry up to 3 times. Agents can auto-fix issues found during triage. [AEP-004](enhancements/aep-004-loop-agent-remediation.md) |
 | **Observable & Resilient** | Prometheus metrics, structured JSON logging, audit trails, circuit breakers, and retry with backoff. [Metrics](metrics.md) |
 
 ---
@@ -84,10 +85,15 @@ graph LR
     ```
     devops_assistant (root orchestrator)
     ├── [AgentTool] kafka_health_agent
-    ├── [AgentTool] k8s_health_agent
+    ├── [AgentTool] k8s_health_agent (+ rollback_deployment)
     ├── [AgentTool] observability_agent
     ├── [AgentTool] docker_agent
     ├── [AgentTool] ops_journal_agent
+    ├── [AgentTool] remediation_pipeline (Sequential)
+    │   ├── remediation_loop (LoopAgent, max 3 iterations)
+    │   │   ├── remediation_actor (restart/scale/rollback)
+    │   │   └── remediation_verifier (diagnostics + exit_loop)
+    │   └── remediation_summarizer
     └── [sub-agent] incident_triage_agent (Sequential)
         ├── health_check_agent (Parallel)
         │   ├── kafka_health_checker
@@ -164,7 +170,7 @@ Run `make help` to see all available commands.
 
 ## Testing
 
-Run the full suite (439 unit tests + 22 agent evals):
+Run the full suite (468 unit tests + 22 agent evals):
 
 ```bash
 make test    # unit tests (no LLM required)
