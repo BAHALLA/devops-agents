@@ -46,6 +46,7 @@ async def exit_loop(
         A dict confirming the loop exit.
     """
     tool_context.actions.escalate = True
+    tool_context.actions.skip_summarization = True
     return {"status": "remediation_complete", "reason": reason}
 
 

@@ -25,6 +25,7 @@ class TestExitLoop:
         ctx = MagicMock()
         result = await exit_loop("issue resolved", tool_context=ctx)
         assert ctx.actions.escalate is True
+        assert ctx.actions.skip_summarization is True
         assert result["status"] == "remediation_complete"
         assert result["reason"] == "issue resolved"
 
