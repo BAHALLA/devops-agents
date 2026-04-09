@@ -12,6 +12,7 @@ from .tools import (
     list_namespaces,
     list_pods,
     restart_deployment,
+    rollback_deployment,
     scale_deployment,
 )
 
@@ -47,6 +48,7 @@ root_agent = create_agent(
         get_deployment_status,
         scale_deployment,
         restart_deployment,
+        rollback_deployment,
         get_events,
     ],
     before_tool_callback=require_confirmation(),

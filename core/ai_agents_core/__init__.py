@@ -3,6 +3,7 @@ from google.adk.tools.agent_tool import AgentTool as AgentTool
 from .activity import activity_tracker as activity_tracker
 from .audit import audit_logger as audit_logger
 from .base import create_agent as create_agent
+from .base import create_loop_agent as create_loop_agent
 from .base import create_parallel_agent as create_parallel_agent
 from .base import create_sequential_agent as create_sequential_agent
 from .base import load_agent_env as load_agent_env

@@ -9,6 +9,7 @@ from ai_agents_core import (
     create_sequential_agent,
     load_agent_env,
 )
+from devops_assistant.remediation import remediation_pipeline
 from docker_agent.agent import root_agent as docker_agent_root
 from docker_agent.tools import (
     docker_compose_status,
@@ -138,6 +139,7 @@ incident_triage_agent = create_sequential_agent(
     sub_agents=[health_check_agent, triage_summarizer, journal_writer],
 )
 
+
 # ── Root orchestrator ─────────────────────────────────────────────────
 
 root_agent = create_agent(
@@ -150,7 +152,7 @@ root_agent = create_agent(
         "- **incident_triage_agent**: Runs a comprehensive health check across "
         "Kafka, Kubernetes, Docker, and Observability in parallel, then summarizes "
         "findings and saves a report to the journal. Use when the user asks "
-        "'is everything healthy?', 'run a triage', or 'check all systems'.\n\n"
+        "'is everything healthy?', 'run a triage', or 'check all systems'.\n"
         "## Specialist Tools (agent tools)\n"
         "Call these tools for targeted queries on individual systems:\n"
         "- **kafka_health_agent**: Kafka cluster health, topics, consumer groups, lag.\n"
@@ -160,7 +162,11 @@ root_agent = create_agent(
         "Alertmanager silence management.\n"
         "- **docker_agent**: Docker containers, logs, stats, compose status.\n"
         "- **ops_journal_agent**: Notes, past findings, session activity, preferences, "
-        "team bookmarks.\n\n"
+        "team bookmarks.\n"
+        "- **remediation_pipeline**: Closed-loop auto-remediation. Runs an act → "
+        "verify → retry loop (up to 3 times). Use AFTER a triage when the user "
+        "asks to 'fix it', 'auto-remediate', or 'heal the system'. The triage "
+        "report in session state guides the remediation actions.\n\n"
         "Prefer incident_triage_agent for broad health checks. "
         "Use individual agent tools for targeted investigations.\n\n"
         "After completing a significant investigation, proactively suggest saving "
@@ -175,6 +181,7 @@ root_agent = create_agent(
         AgentTool(agent=observability_agent),
         AgentTool(agent=docker_agent_root),
         AgentTool(agent=journal_agent),
+        AgentTool(agent=remediation_pipeline),
         PreloadMemoryTool(),
     ],
     sub_agents=[

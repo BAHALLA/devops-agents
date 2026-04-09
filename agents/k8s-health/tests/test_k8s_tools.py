@@ -21,6 +21,7 @@ from k8s_health_agent.tools import (
     list_namespaces,
     list_pods,
     restart_deployment,
+    rollback_deployment,
     scale_deployment,
 )
 
@@ -454,6 +455,47 @@ async def test_restart_deployment_api_error(mock_api):
 def test_restart_deployment_has_destructive_guardrail():
     assert restart_deployment._guardrail_level == "destructive"
     assert hasattr(restart_deployment, "_guardrail_reason")
+
+
+# ── Rollback Deployment ───────────────────────────────────────────────
+
+
+@pytest.mark.asyncio
+@patch("k8s_health_agent.tools._apps_api")
+async def test_rollback_deployment_success(mock_api):
+    deploy = MagicMock()
+    deploy.metadata.annotations = {"deployment.kubernetes.io/revision": "5"}
+    mock_api.return_value.read_namespaced_deployment.return_value = deploy
+
+    result = await rollback_deployment("web")
+    assert result["status"] == "success"
+    assert "Rollback triggered" in result["message"]
+    assert "revision 5" in result["message"]
+    mock_api.return_value.patch_namespaced_deployment.assert_called_once()
+
+
+@pytest.mark.asyncio
+@patch("k8s_health_agent.tools._apps_api")
+async def test_rollback_deployment_api_error(mock_api):
+    deploy = MagicMock()
+    deploy.metadata.annotations = {}
+    mock_api.return_value.read_namespaced_deployment.return_value = deploy
+    mock_api.return_value.patch_namespaced_deployment.side_effect = _api_exception("Not Found")
+
+    result = await rollback_deployment("gone")
+    assert result["status"] == "error"
+
+
+def test_rollback_deployment_has_destructive_guardrail():
+    assert rollback_deployment._guardrail_level == "destructive"
+    assert hasattr(rollback_deployment, "_guardrail_reason")
+
+
+@pytest.mark.asyncio
+async def test_rollback_deployment_rejects_invalid_name():
+    result = await rollback_deployment("INVALID!")
+    assert result["status"] == "error"
+    assert "name" in result["message"]
 
 
 # ── Events ────────────────────────────────────────────────────────────

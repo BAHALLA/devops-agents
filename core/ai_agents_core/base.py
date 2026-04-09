@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from dotenv import load_dotenv
-from google.adk.agents import Agent, ParallelAgent, SequentialAgent
+from google.adk.agents import Agent, LoopAgent, ParallelAgent, SequentialAgent
 from google.adk.agents.base_agent import BaseAgent
 from google.adk.models.base_llm import BaseLlm
 from google.adk.tools.base_tool import BaseTool
@@ -160,3 +160,30 @@ def create_parallel_agent(
     sub-agents to write results to session state for downstream agents.
     """
     return ParallelAgent(name=name, description=description, sub_agents=list(sub_agents))
+
+
+def create_loop_agent(
+    *,
+    name: str,
+    description: str = "",
+    sub_agents: Sequence[BaseAgent],
+    max_iterations: int = 3,
+) -> LoopAgent:
+    """Create a LoopAgent that runs sub-agents in a loop until exit or max iterations.
+
+    Sub-agents execute sequentially in each iteration. A sub-agent can signal
+    loop termination by calling a tool that sets
+    ``tool_context.actions.escalate = True``.
+
+    Use this for closed-loop remediation patterns:
+    Act -> Verify -> (exit or retry).
+
+    Args:
+        max_iterations: Safety limit to prevent runaway loops.
+    """
+    return LoopAgent(
+        name=name,
+        description=description,
+        sub_agents=list(sub_agents),
+        max_iterations=max_iterations,
+    )

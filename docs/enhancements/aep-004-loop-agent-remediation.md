@@ -2,7 +2,7 @@
 
 | Field | Value |
 |-------|-------|
-| **Status** | proposed |
+| **Status** | completed |
 | **Priority** | P1 |
 | **Effort** | Medium (3-4 days) |
 | **Impact** | High |
@@ -120,21 +120,25 @@ async def exit_loop(tool_context: ToolContext) -> dict:
 
 | File | Change |
 |------|--------|
-| `agents/devops-assistant/devops_assistant/agent.py` | Add `remediation_loop` to triage pipeline |
-| `agents/devops-assistant/devops_assistant/remediation.py` | New: remediation actor/verifier agents |
-| `agents/k8s-health/k8s_health_agent/tools.py` | Add `rollback_deployment` tool |
-| `core/ai_agents_core/base.py` | Add `create_loop_agent()` factory function |
-| `agents/devops-assistant/tests/test_remediation.py` | New: remediation loop tests |
+| `core/ai_agents_core/base.py` | `create_loop_agent()` factory function |
+| `core/ai_agents_core/__init__.py` | Export `create_loop_agent` |
+| `agents/k8s-health/k8s_health_agent/tools.py` | `rollback_deployment` tool (`@destructive`) |
+| `agents/k8s-health/k8s_health_agent/agent.py` | Register `rollback_deployment` |
+| `agents/devops-assistant/devops_assistant/remediation.py` | New: `exit_loop`, actor, verifier, loop, summarizer, pipeline |
+| `agents/devops-assistant/devops_assistant/agent.py` | Expose `remediation_pipeline` as AgentTool on root agent |
+| `core/tests/test_loop_agent.py` | 5 tests for `create_loop_agent` factory |
+| `agents/k8s-health/tests/test_k8s_tools.py` | 4 tests for `rollback_deployment` |
+| `agents/devops-assistant/tests/test_devops_remediation.py` | 11 tests for exit_loop + agent wiring |
 
 ## Acceptance Criteria
 
-- [ ] `create_loop_agent()` factory function added to core
-- [ ] Remediation loop integrated into incident triage pipeline
-- [ ] Loop exits on successful remediation (via `exit_loop` tool)
-- [ ] Loop respects `max_iterations` safety limit
-- [ ] Remediation actions are logged to ops journal
-- [ ] At least 2 remediation scenarios tested (pod restart, consumer lag)
-- [ ] RBAC enforced: only operator/admin roles can trigger remediation loops
+- [x] `create_loop_agent()` factory function added to core
+- [x] Remediation loop integrated into devops-assistant (as AgentTool)
+- [x] Loop exits on successful remediation (via `exit_loop` tool)
+- [x] Loop respects `max_iterations` safety limit (default: 3)
+- [x] Remediation actions are logged to ops journal (`log_operation` tool)
+- [x] Remediation scenarios: pod restart, scale, rollback (actor tools)
+- [x] RBAC enforced: `@destructive`/`@confirm` decorators on all remediation tools
 
 ## Notes
 

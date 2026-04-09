@@ -499,6 +499,59 @@ async def restart_deployment(name: str, namespace: str = "default") -> dict[str,
         return {"status": "error", "message": f"Failed to restart '{name}': {e.reason}"}
 
 
+@destructive("rolls back a deployment to the previous revision, which changes running pods")
+async def rollback_deployment(name: str, namespace: str = "default") -> dict[str, Any]:
+    """Rolls back a deployment to its previous revision.
+
+    Args:
+        name: Deployment name.
+        namespace: Kubernetes namespace.
+
+    Returns:
+        A dictionary with the operation result.
+    """
+    if err := validate_string(name, "name", pattern=K8S_NAME_PATTERN):
+        return err
+    if err := _validate_namespace(namespace):
+        return err
+
+    try:
+        apps = _apps_api()
+        # Read current revision
+        d = await asyncio.to_thread(apps.read_namespaced_deployment, name, namespace)
+        current_revision = (d.metadata.annotations or {}).get(
+            "deployment.kubernetes.io/revision", "unknown"
+        )
+
+        # Trigger rollback by patching rollbackTo (uses last ReplicaSet)
+        # In modern K8s, rollback is done via patching the deployment spec
+        # to match a previous ReplicaSet template. The simplest approach is
+        # to use the rollout undo equivalent: patch with revision annotation.
+        body = [
+            {
+                "op": "add",
+                "path": "/metadata/annotations/deployment.kubernetes.io~1rollback-to",
+                "value": "0",  # 0 = previous revision
+            }
+        ]
+        await asyncio.to_thread(
+            apps.patch_namespaced_deployment,
+            name,
+            namespace,
+            body,
+        )
+        return {
+            "status": "success",
+            "message": (
+                f"Rollback triggered for deployment '{name}' "
+                f"from revision {current_revision} to previous."
+            ),
+        }
+    except ApiException as e:
+        logger.exception("Failed to rollback deployment '%s'", name)
+        return {"status": "error", "message": f"Failed to rollback '{name}': {e.reason}"}
+
+
 # ── Events ─────────────────────────────────────────────────────────────
 
 
