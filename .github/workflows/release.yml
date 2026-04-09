@@ -1,0 +1,86 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v0.*"
+
+permissions:
+  contents: write
+
+jobs:
+  ci:
+    name: CI Checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Set up Python
+        run: uv python install 3.11
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Lint
+        run: |
+          uv run ruff check .
+          uv run ruff format --check .
+
+      - name: Type check
+        run: |
+          uv run ty check \
+            --extra-search-path core \
+            --extra-search-path agents/docker-agent \
+            --extra-search-path agents/kafka-health \
+            --extra-search-path agents/k8s-health \
+            --extra-search-path agents/observability \
+            --extra-search-path agents/devops-assistant \
+            --extra-search-path agents/ops-journal \
+            --extra-search-path agents/slack-bot \
+            .
+
+      - name: Test
+        run: uv run pytest -v
+
+  release:
+    name: GitHub Release
+    needs: ci
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Extract version from tag
+        id: version
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Extract changelog for this version
+        id: changelog
+        run: |
+          # Extract the section between this version header and the next version header (or EOF)
+          version="${{ steps.version.outputs.version }}"
+          changelog=$(awk -v ver="$version" '
+            /^## \[/ {
+              if (found) exit
+              if (index($0, "[" ver "]")) { found=1; next }
+            }
+            found { print }
+          ' CHANGELOG.md)
+
+          # Write to output using heredoc delimiter
+          {
+            echo "body<<CHANGELOG_EOF"
+            echo "$changelog"
+            echo "CHANGELOG_EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: v${{ steps.version.outputs.version }}
+          body: ${{ steps.changelog.outputs.body }}
+          draft: false
+          prerelease: true
+          generate_release_notes: false
