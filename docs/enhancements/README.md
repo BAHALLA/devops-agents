@@ -15,7 +15,7 @@ enterprise-grade requirements for autonomous DevOps systems.
 | P0 | [AEP-011](aep-011-deployment-hardening.md) | Production Deployment Hardening | **in-progress** | High | Critical |
 | P0 | [AEP-013](aep-013-security-hardening.md) | Security Hardening & Auth Layer | proposed | High | Critical |
 | P1 | [AEP-004](aep-004-loop-agent-remediation.md) | LoopAgent for Self-Healing Remediation | proposed | Medium | High |
-| P1 | [AEP-007](aep-007-context-caching.md) | Context Caching for LLM Cost Reduction | proposed | Low | High |
+| P1 | [AEP-007](aep-007-context-caching.md) | Context Caching for LLM Cost Reduction | **completed** | Low | High |
 | P1 | [AEP-010](aep-010-observability-tracing.md) | Distributed Tracing & Observability | proposed | Medium | High |
 | P2 | [AEP-005](aep-005-a2a-protocol.md) | Agent-to-Agent (A2A) Protocol Support | proposed | High | High |
 | P2 | [AEP-006](aep-006-artifacts.md) | Artifact Management for Reports & Logs | proposed | Low | Medium |

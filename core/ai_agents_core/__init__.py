@@ -25,7 +25,9 @@ from .health import HealthServer as HealthServer
 from .log import JSONFormatter as JSONFormatter
 from .log import setup_logging as setup_logging
 from .memory import SecureMemoryService as SecureMemoryService
+from .metrics import CONTEXT_CACHE_EVENTS_TOTAL as CONTEXT_CACHE_EVENTS_TOTAL
 from .metrics import MetricsCollector as MetricsCollector
+from .metrics import track_cache_event as track_cache_event
 from .metrics import track_llm_tokens as track_llm_tokens
 from .plugins import ActivityPlugin as ActivityPlugin
 from .plugins import AuditPlugin as AuditPlugin
@@ -45,6 +47,7 @@ from .rbac import set_user_role as set_user_role
 from .resilience import CircuitBreaker as CircuitBreaker
 from .resilience import CircuitState as CircuitState
 from .resilience import with_retry as with_retry
+from .runner import create_context_cache_config as create_context_cache_config
 from .runner import run_persistent as run_persistent
 from .validation import K8S_NAME_PATTERN as K8S_NAME_PATTERN
 from .validation import KAFKA_TOPIC_PATTERN as KAFKA_TOPIC_PATTERN

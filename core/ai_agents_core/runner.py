@@ -8,10 +8,12 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os
 import signal
 from collections.abc import Sequence
 
 from google.adk.agents import Agent
+from google.adk.agents.context_cache_config import ContextCacheConfig
 from google.adk.apps import App
 from google.adk.memory.base_memory_service import BaseMemoryService
 from google.adk.plugins.base_plugin import BasePlugin
@@ -25,6 +27,43 @@ from .rbac import set_user_role
 logger = logging.getLogger("ai_agents.runner")
 
 
+def create_context_cache_config(
+    *,
+    min_tokens: int | None = None,
+    ttl_seconds: int | None = None,
+    cache_intervals: int | None = None,
+) -> ContextCacheConfig:
+    """Create a ``ContextCacheConfig`` with env-var defaults.
+
+    Each parameter falls back to an environment variable, then to ADK defaults:
+
+    - ``CONTEXT_CACHE_MIN_TOKENS`` (default: 2048)
+    - ``CONTEXT_CACHE_TTL_SECONDS`` (default: 600)
+    - ``CONTEXT_CACHE_INTERVALS`` (default: 10)
+
+    Note: context caching is only supported for Gemini models.  When using
+    Claude/OpenAI via LiteLLM, the config is accepted but has no effect.
+    """
+    resolved_min_tokens = (
+        min_tokens if min_tokens is not None else int(os.getenv("CONTEXT_CACHE_MIN_TOKENS", "2048"))
+    )
+    resolved_ttl = (
+        ttl_seconds
+        if ttl_seconds is not None
+        else int(os.getenv("CONTEXT_CACHE_TTL_SECONDS", "600"))
+    )
+    resolved_intervals = (
+        cache_intervals
+        if cache_intervals is not None
+        else int(os.getenv("CONTEXT_CACHE_INTERVALS", "10"))
+    )
+    return ContextCacheConfig(
+        min_tokens=resolved_min_tokens,
+        ttl_seconds=resolved_ttl,
+        cache_intervals=resolved_intervals,
+    )
+
+
 async def run_persistent(
     agent: Agent,
     *,
@@ -34,6 +73,7 @@ async def run_persistent(
     plugins: Sequence[BasePlugin] | None = None,
     memory_service: BaseMemoryService | None = None,
     health_port: int | None = None,
+    context_cache_config: ContextCacheConfig | None = None,
 ) -> None:
     """Run an agent in a persistent CLI loop with SQLite-backed sessions.
 
@@ -48,6 +88,9 @@ async def run_persistent(
             Use ``SecureMemoryService()`` for dev with redaction and limits.
         health_port: Port for the health probe server.  Defaults to the
             ``HEALTH_PORT`` env var or 8080.
+        context_cache_config: Optional context caching configuration.
+            Use ``create_context_cache_config()`` for env-var-configurable
+            defaults.  Only effective with Gemini models.
     """
     resolved_db_url = db_url or f"sqlite:///{app_name}.db"
 
@@ -55,11 +98,15 @@ async def run_persistent(
 
     # Wrap the agent in an ADK App so plugins can be passed via the supported
     # `app` argument (the `plugins=` kwarg on Runner is deprecated).
-    app = App(
-        name=app_name,
-        root_agent=agent,
-        plugins=list(plugins) if plugins else [],
-    )
+    app_kwargs: dict[str, object] = {
+        "name": app_name,
+        "root_agent": agent,
+        "plugins": list(plugins) if plugins else [],
+    }
+    if context_cache_config is not None:
+        app_kwargs["context_cache_config"] = context_cache_config
+        logger.info("Context caching enabled: %s", context_cache_config)
+    app = App(**app_kwargs)
     runner = Runner(app=app, session_service=session_service, memory_service=memory_service)
 
     # Start health probe server

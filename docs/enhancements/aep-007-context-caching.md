@@ -2,7 +2,7 @@
 
 | Field | Value |
 |-------|-------|
-| **Status** | proposed |
+| **Status** | completed |
 | **Priority** | P1 |
 | **Effort** | Low (1 day) |
 | **Impact** | High |
@@ -65,16 +65,18 @@ cache_misses = Counter("agent_context_cache_misses_total", "Context cache misses
 
 | File | Change |
 |------|--------|
-| `core/ai_agents_core/runner.py` | Accept `context_cache_config` in `run_persistent()` |
-| `agents/devops-assistant/run_persistent.py` | Configure context caching |
-| `core/ai_agents_core/metrics.py` | Add cache hit/miss counters |
+| `core/ai_agents_core/runner.py` | `create_context_cache_config()` factory + `context_cache_config` param on `run_persistent()` |
+| `agents/devops-assistant/run_persistent.py` | Configure context caching via `create_context_cache_config()` |
+| `core/ai_agents_core/metrics.py` | `CONTEXT_CACHE_EVENTS_TOTAL` counter + `track_cache_event()` helper |
+| `core/ai_agents_core/__init__.py` | Export `create_context_cache_config`, `track_cache_event`, `CONTEXT_CACHE_EVENTS_TOTAL` |
+| `core/tests/test_context_cache.py` | 9 tests: factory defaults, env vars, explicit overrides, App wiring, metrics |
 
 ## Acceptance Criteria
 
-- [ ] Context caching enabled for devops-assistant
+- [x] Context caching enabled for devops-assistant
 - [ ] Token usage reduced by measurable amount (track before/after)
-- [ ] Cache TTL and intervals configurable via environment variables
-- [ ] Cache metrics exposed on `/metrics` endpoint
+- [x] Cache TTL and intervals configurable via environment variables
+- [x] Cache metrics exposed on `/metrics` endpoint
 - [ ] No impact on response quality (same outputs with caching enabled)
 
 ## Notes

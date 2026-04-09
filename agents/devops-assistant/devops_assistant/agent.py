@@ -1,8 +1,10 @@
+from google.adk.apps import App
 from google.adk.tools.preload_memory_tool import PreloadMemoryTool
 
 from ai_agents_core import (
     AgentTool,
     create_agent,
+    create_context_cache_config,
     create_parallel_agent,
     create_sequential_agent,
     load_agent_env,
@@ -178,4 +180,11 @@ root_agent = create_agent(
     sub_agents=[
         incident_triage_agent,
     ],
+)
+
+# ADK web/api_server picks up `app` (with context caching) over bare `root_agent`.
+app = App(
+    name="devops_assistant",
+    root_agent=root_agent,
+    context_cache_config=create_context_cache_config(),
 )

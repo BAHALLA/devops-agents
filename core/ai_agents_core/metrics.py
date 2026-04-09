@@ -79,6 +79,12 @@ LLM_TOKENS_TOTAL = Counter(
     ["agent", "direction"],
 )
 
+CONTEXT_CACHE_EVENTS_TOTAL = Counter(
+    "ai_agents_context_cache_events_total",
+    "Context cache hit/miss events",
+    ["event"],  # "hit" or "miss"
+)
+
 # ── Module-level server guard ─────────────────────────────────────────
 # Multiple MetricsCollector instances may exist (one per agent module).
 # The HTTP server should start exactly once per process.
@@ -261,3 +267,15 @@ def track_llm_tokens(agent_name: str, input_tokens: int, output_tokens: int) -> 
     """
     LLM_TOKENS_TOTAL.labels(agent=agent_name, direction="input").inc(input_tokens)
     LLM_TOKENS_TOTAL.labels(agent=agent_name, direction="output").inc(output_tokens)
+
+
+def track_cache_event(*, hit: bool) -> None:
+    """Record a context cache hit or miss.
+
+    Call this from model callbacks or middleware that can detect whether
+    the LLM response used a cached context prefix.
+
+    Args:
+        hit: True for a cache hit, False for a miss.
+    """
+    CONTEXT_CACHE_EVENTS_TOTAL.labels(event="hit" if hit else "miss").inc()
