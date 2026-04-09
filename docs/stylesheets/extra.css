@@ -1,48 +1,76 @@
 /* ── Homepage Grid Cards ─────────────────────────────────────────── */
 .grid.cards > ul {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 1rem;
   padding: 0;
   list-style: none;
+  margin-top: 1.5rem;
 }
 
 .grid.cards > ul > li {
   border: 1px solid var(--md-default-fg-color--lightest);
-  border-radius: 0.2rem;
-  padding: 1rem;
-  transition: border 0.2s, box-shadow 0.2s;
+  border-radius: 0.4rem;
+  padding: 1.25rem;
+  transition: all 0.25s ease;
+  background-color: var(--md-default-bg-color);
+  display: flex;
+  flex-direction: column;
 }
 
 .grid.cards > ul > li:hover {
   border-color: var(--md-primary-fg-color);
-  box-shadow: var(--md-shadow-z1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
 }
 
 .grid.cards > ul > li hr {
-  margin: 0.5rem 0;
+  margin: 0.75rem 0;
+  border: 0;
+  border-top: 1px solid var(--md-default-fg-color--lightest);
 }
 
 .grid.cards > ul > li a {
   font-weight: 700;
   display: block;
   margin-bottom: 0.5rem;
+  color: var(--md-primary-fg-color);
+  text-decoration: none;
 }
 
-/* Icon styling in cards */
+.grid.cards > ul > li a:hover {
+  text-decoration: underline;
+}
+
+/* Icon styling in cards - fixed for SVG icons */
 .grid.cards .middle {
   vertical-align: middle;
   margin-right: 0.5rem;
 }
 
 .grid.cards .lg {
-  font-size: 1.5rem;
+  width: 1.75rem;
+  height: 1.75rem;
+  font-size: 1.75rem;
+}
+
+/* Material icons as SVGs might need specific styling when used in cards */
+.grid.cards .twemoji svg, 
+.grid.cards .md-icon svg {
+  width: 1.75rem;
+  height: 1.75rem;
+  display: inline-block;
+  vertical-align: middle;
+  fill: currentColor;
 }
 
 /* ── Mermaid Diagram Styling ─────────────────────────────────────── */
 .mermaid {
   background-color: var(--md-default-bg-color);
-  padding: 1rem;
-  border-radius: 0.2rem;
-  margin-bottom: 1rem;
+  padding: 1.5rem;
+  border-radius: 0.4rem;
+  margin: 1.5rem 0;
+  display: flex;
+  justify-content: center;
+  border: 1px solid var(--md-default-fg-color--lightest);
 }
