@@ -1,106 +1,147 @@
-# Adding a New Agent
+# 🛠️ Adding a New Specialist Agent
 
-See [CONTRIBUTING.md](https://github.com/BAHALLA/devops-agents/blob/main/CONTRIBUTING.md) for the full contribution guide. Below is the minimal boilerplate to get a new agent running.
+This guide provides a step-by-step walkthrough for building a new specialist agent using the `ai-agents-core` library.
 
-## 0. Choose a Design Pattern
+## 🏗️ Agent Design Patterns
 
-Before writing code, decide which [Agentic Design Pattern](agent-design-patterns.md) your agent should follow:
-- **Single Agent (ReAct)**: Good for standalone specialists.
-- **Sequential/Parallel**: Good for deterministic diagnostic or remediation pipelines.
-- **Coordinator**: Use if your agent needs to delegate to other specialist agents.
+Before you start coding, decide on your agent's role:
+-   **Specialist (LLM-routed):** A standalone expert with specific tools. Most agents fit here.
+-   **Sequential/Parallel Workflow:** A deterministic pipeline for repetitive tasks.
+-   **Coordinator:** An orchestrator that delegates to other agents.
 
-## 1. Create the package
+---
+
+## 1. Create the Package Structure
+
+We follow a standard `uv` workspace structure. Each agent is a separate package under `agents/`.
 
 ```bash
 mkdir -p agents/my-agent/my_agent
 ```
 
-## 2. Define async tools
+Your agent should have the following structure:
+```text
+agents/my-agent/
+├── pyproject.toml        # uv package definition
+├── README.md             # Agent-specific documentation
+└── my_agent/
+    ├── __init__.py
+    ├── agent.py          # Agent definition & wiring
+    ├── tools.py          # Async tool implementations
+    └── .env.example      # Template for environment variables
+```
 
-All tools must be `async def` functions. Use `asyncio.to_thread()` to offload blocking I/O:
+---
+
+## 2. Define Async Tools
+
+Tools are the core capabilities of your agent. They must be `async def` and reside in `tools.py`.
 
 ```python
-# my_agent/tools.py
+# agents/my-agent/my_agent/tools.py
 import asyncio
 from ai_agents_core import with_retry, confirm, destructive
 from ai_agents_core.validation import validate_string
 
-@with_retry(max_retries=3, retryable=(ConnectionError, TimeoutError))
+@with_retry(max_retries=3)
 async def get_status(name: str) -> dict:
-    if err := validate_string(name, "name", max_len=200):
+    """Check the status of a specific resource."""
+    if err := validate_string(name, "name", max_len=100):
         return err
+    
+    # Use asyncio.to_thread for blocking SDK calls
     result = await asyncio.to_thread(_blocking_api_call, name)
     return {"status": "success", "data": result}
 
-@confirm("creates a new resource")
-async def create_resource(name: str) -> dict:
+@confirm("This will modify the resource state.")
+async def update_resource(name: str, value: str) -> dict:
+    """Update a resource's configuration."""
     ...
 
-@destructive("permanently deletes the resource")
+@destructive("This action is irreversible and will delete the resource.")
 async def delete_resource(name: str) -> dict:
+    """Permanently delete a resource."""
     ...
 ```
 
-## 3. Wire up the agent
+---
 
-Agent definitions are now simple — no callback wiring needed. Cross-cutting concerns (RBAC, guardrails, metrics, audit, resilience, error handling) are handled globally by plugins registered on the Runner.
+## 3. Wire Up the Agent
+
+In `agent.py`, use the `create_agent` factory from `ai-agents-core`.
 
 ```python
-# my_agent/agent.py
+# agents/my-agent/my_agent/agent.py
 from ai_agents_core import create_agent, load_agent_env
-from .tools import get_status, create_resource, delete_resource
+from .tools import get_status, update_resource, delete_resource
 
+# Load local .env file
 load_agent_env(__file__)
 
 root_agent = create_agent(
     name="my_agent",
-    description="What this agent does.",
-    instruction="How the agent should behave.",
-    tools=[get_status, create_resource, delete_resource],
+    description="Specialist for managing [Your Service].",
+    instruction="""
+    You are an expert at managing [Your Service].
+    Follow these rules:
+    1. Always check status before updating.
+    2. Provide concise summaries of actions.
+    """,
+    tools=[get_status, update_resource, delete_resource],
 )
 ```
 
-> **Note:** Plugins (`default_plugins()`) enforce RBAC, guardrails, metrics, audit logging, activity tracking, resilience, and error handling globally — no per-agent setup required. See [ADR-001](adr/001-rbac.md) for RBAC details and [metrics reference](metrics.md) for Prometheus metrics.
+---
 
-## 4. Run with plugins
+## 4. Enable Global Plugins
+
+When running your agent, we recommend using `default_plugins()`. This ensures it inherits **RBAC, Guardrails, Metrics, and Audit Logs** automatically.
 
 ```python
-# my_agent/__main__.py
+# agents/my-agent/my_agent/__main__.py
 import asyncio
 from ai_agents_core import run_persistent, default_plugins
 from .agent import root_agent
 
-asyncio.run(run_persistent(root_agent, app_name="my_agent", plugins=default_plugins()))
-```
-
-To enable [cross-session memory](memory.md) (agents recall past sessions):
-
-```python
-from ai_agents_core import SecureMemoryService
-
-asyncio.run(
-    run_persistent(
-        root_agent,
-        app_name="my_agent",
-        memory_service=SecureMemoryService(),
-        plugins=default_plugins(enable_memory=True),
+async def main():
+    await run_persistent(
+        root_agent, 
+        app_name="my_agent", 
+        plugins=default_plugins()
     )
-)
+
+if __name__ == "__main__":
+    asyncio.run(main())
 ```
 
-## 5. Register and install
+---
 
-Add your agent to the root `pyproject.toml` workspace members, then run:
+## 5. Register in Workspace
 
+Add your new agent to the root `pyproject.toml` workspace members:
+
+```toml
+[tool.uv.workspace]
+members = ["core", "agents/*"]
+```
+
+Then install the workspace:
 ```bash
 make install
 ```
 
-## 6. Add tests
+---
 
-Create a `tests/` directory inside your agent package. All tool tests must be `async`:
+## 6. Testing
+
+Create a `tests/` directory and use `pytest-asyncio`. Mock external dependencies to keep tests fast and deterministic.
 
 ```python
+# agents/my-agent/tests/test_tools.py
+import pytest
+from unittest.mock import patch
+from my_agent.tools import get_status
+
 @pytest.mark.asyncio
 @patch("my_agent.tools._blocking_api_call")
 async def test_get_status_success(mock_api):
@@ -109,4 +150,4 @@ async def test_get_status_success(mock_api):
     assert result["status"] == "success"
 ```
 
-Mock all external dependencies — no test should require running infrastructure. See [CONTRIBUTING.md](https://github.com/BAHALLA/devops-agents/blob/main/CONTRIBUTING.md#testing-guidelines) for testing conventions.
+Refer to `agents/k8s-health/tests/` for more complex examples including Agent Evaluations.

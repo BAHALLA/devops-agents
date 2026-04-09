@@ -1,41 +1,87 @@
-# Getting Started
+# 🏁 Getting Started
 
-Welcome to the AI Agents platform for DevOps and SRE. After following the **Quick Start** on the home page, this guide will walk you through your first interaction with the agents.
+This guide will help you set up the AI Agents platform and perform your first interaction.
 
-## Your First Interaction
+## 📋 Prerequisites
 
-1.  **Start the Platform**: If you haven't already, run the infrastructure and the `devops-assistant`:
+Before you begin, ensure you have the following installed:
+- [Docker](https://docs.docker.com/get-docker/) & Docker Compose
+- [Python 3.11+](https://www.python.org/downloads/) (for local development)
+- [uv](https://docs.astral.sh/uv/) (Python package manager)
+- An API Key for one of the following:
+    - **Google Gemini** (Recommended): [Get a key from AI Studio](https://aistudio.google.com/apikey)
+    - **Anthropic Claude**: [Get a key from Anthropic Console](https://console.anthropic.com/)
+    - **OpenAI GPT-4**: [Get a key from OpenAI Platform](https://platform.openai.com/)
+
+---
+
+## 🚀 Quick Start (Docker)
+
+The fastest way to get running is using the pre-configured Docker stack.
+
+1.  **Clone the Repository**:
+    ```bash
+    git clone https://github.com/BAHALLA/devops-agents.git
+    cd devops-agents
+    ```
+
+2.  **Start the Services**:
+    Replace `your-api-key` with your actual Google AI Studio key.
+    ```bash
+    GOOGLE_API_KEY=your-api-key docker compose --profile demo up -d
+    ```
+
+3.  **Access the Web UI**:
+    Open your browser and navigate to `http://localhost:8000`.
+
+---
+
+## 🛠️ Local Development Setup
+
+If you want to modify agents or build your own, follow these steps:
+
+1.  **Install Dependencies**:
+    ```bash
+    make install
+    ```
+
+2.  **Start the Infrastructure**:
+    This launches Kafka, Prometheus, Loki, and other diagnostic tools.
     ```bash
     make infra-up
+    ```
+
+3.  **Run the Agent**:
+    Set your API key in your environment and run:
+    ```bash
+    export GOOGLE_API_KEY=your-api-key
     make run-devops
     ```
-2.  **Open the Web UI**: Visit `http://localhost:8000` in your browser.
-3.  **Ask a Question**: Type a request like:
-    *"Is my Kafka cluster healthy?"*
-4.  **Observe the Triage**: The agent will likely trigger the `incident_triage_agent`, which performs parallel health checks across all systems (Kafka, K8s, Docker, and Observability).
-5.  **Review the Report**: After the parallel checks finish, a synthesis agent will provide a concise triage report.
+    The agent will be available at `http://localhost:8000`.
 
 ---
 
-## Exploring Key Concepts
+## 💬 Your First Interaction
 
-### 1. Collaborative Triage
-When you ask for a system check, the **Coordinator Agent** delegates to specialist sub-agents. These sub-agents run in **Parallel**, significantly reducing the time needed to gather a complete system state.
+Once the platform is running, try these scenarios to see the agents in action:
 
-### 2. Human-in-the-Loop
-Try a mutating action like:
-*"Create a Kafka topic named 'test-topic' with 3 partitions."*
+### 1. System Triage
+Ask: *"Is my cluster healthy?"*
+**What happens:** The `devops-assistant` triggers a parallel health check across Kafka, K8s, and Docker. It then synthesizes the results into a single report.
 
-The agent will identify this as a **guarded operation** and pause. You will see a confirmation prompt asking for approval. This ensures no irreversible actions are taken without human oversight.
+### 2. Ad-hoc Query
+Ask: *"List all pods in the kube-system namespace."*
+**What happens:** The orchestrator routes the request directly to the `k8s-health` specialist agent.
 
-### 3. Specialist Delegation
-If you have a targeted query, such as *"How many pods are running in the 'kube-system' namespace?"*, the orchestrator will route your request directly to the `k8s_health_agent` using the **AgentTool** pattern.
+### 3. Guarded Operation
+Ask: *"Scale the 'web-app' deployment to 3 replicas."*
+**What happens:** The agent identifies this as a mutating operation. It will ask for your **explicit confirmation** before proceeding.
 
 ---
 
-## Next Steps
+## 📖 Next Steps
 
-- **[Set up Slack](integrations/slack.md)** to interact with your agents where your team already collaborates.
-- **[Configure Providers](config/general.md)** to switch from Gemini to Claude, OpenAI, or a local model.
-- **[Enable Cross-Session Memory](memory.md)** so agents recall past incidents and investigations.
-- **[Examine Metrics](metrics.md)** to see how your agents perform in real-time via Prometheus.
+- **[Configuration Guide](config/general.md)** — Deep dive into LLM providers and environment variables.
+- **[Slack Integration](integrations/slack.md)** — Bring your agents into your team's Slack channels.
+- **[Adding an Agent](adding-an-agent.md)** — Learn how to build your own specialist agents using our core library.
+- **[Metrics & Observability](metrics.md)** — Monitor your agents using the built-in Prometheus dashboard.
