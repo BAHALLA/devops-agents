@@ -133,6 +133,10 @@ nav:
       - "AEP-011: Deployment": enhancements/aep-011-deployment-hardening.md
       - "AEP-012: Custom Agents": enhancements/aep-012-custom-agents.md
       - "AEP-013: Security": enhancements/aep-013-security-hardening.md
+      - "AEP-014: Supply Chain Security": enhancements/aep-014-supply-chain-security.md
+      - "AEP-015: Cost Observability": enhancements/aep-015-cost-observability.md
+      - "AEP-016: Load & Chaos Testing": enhancements/aep-016-load-chaos-testing.md
+      - "AEP-017: Runbooks & On-Call": enhancements/aep-017-runbooks-oncall.md
   - Project:
     - Changelog: CHANGELOG.md
     - Contributing: CONTRIBUTING.md
