@@ -24,14 +24,17 @@ RUN mkdir -p core/ai_agents_core && touch core/ai_agents_core/__init__.py && \
     mkdir -p agents/ops-journal/ops_journal_agent && touch agents/ops-journal/ops_journal_agent/__init__.py && \
     mkdir -p agents/slack-bot/slack_bot && touch agents/slack-bot/slack_bot/__init__.py
 
-RUN uv sync --no-dev --frozen --extra postgres
+# Use cache mount for uv to speed up sync
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --no-dev --frozen --extra postgres
 
 # Copy actual source code
 COPY core/ core/
 COPY agents/ agents/
 
 # Reinstall workspace packages with real source
-RUN uv sync --no-dev --frozen --extra postgres
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --no-dev --frozen --extra postgres
 
 # ── Runtime stage ─────────────────────────────────────────────────────
 FROM python:3.11-slim-bookworm

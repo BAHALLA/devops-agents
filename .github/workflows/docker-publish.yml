@@ -4,6 +4,13 @@ on:
   push:
     branches: [main]
     tags: ["v*.*.*"]
+    paths:
+      - 'Dockerfile.prod'
+      - 'pyproject.toml'
+      - 'uv.lock'
+      - 'core/**'
+      - 'agents/**'
+      - '.github/workflows/docker-publish.yml'
   workflow_dispatch:
 
 env:
@@ -17,7 +24,7 @@ jobs:
     permissions:
       contents: read
       packages: write
-      id-token: write  # for future cosign keyless signing
+      id-token: write  # for cosign keyless signing
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -65,6 +72,23 @@ jobs:
           cache-to: type=gha,mode=max
           provenance: true
           sbom: true
+          add-hosts: |
+            host.docker.internal:host-gateway
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3
+
+      - name: Sign the images
+        if: github.event_name != 'pull_request'
+        env:
+          TAGS: ${{ steps.meta.outputs.tags }}
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          images=""
+          for tag in ${TAGS}; do
+            images+="${tag}@${DIGEST} "
+          done
+          cosign sign --yes ${images}
 
       - name: Image digest
         run: echo "Image digest -> ${{ steps.build.outputs.digest }}"
