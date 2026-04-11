@@ -8,7 +8,7 @@ on:
       - 'agents/**/README.md'
       - 'core/README.md'
       - 'mkdocs.yml'
-      - '.github/workflows/docs.yml'
+      - '.github/workflows/**'
       - 'CHANGELOG.md'
       - 'CONTRIBUTING.md'
       - 'SECURITY.md'
