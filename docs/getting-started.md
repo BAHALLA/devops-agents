@@ -1,23 +1,21 @@
 # 🏁 Getting Started
 
-This guide will help you set up the AI Agents platform and perform your first interaction.
+Welcome! This guide will help you set up the AI Agents platform and perform your first system triage in under 5 minutes.
 
 ## 📋 Prerequisites
 
 Before you begin, ensure you have the following installed:
-- [Docker](https://docs.docker.com/get-docker/) & Docker Compose
-- [Python 3.11+](https://www.python.org/downloads/) (for local development)
-- [uv](https://docs.astral.sh/uv/) (Python package manager)
-- An API Key for one of the following:
-    - **Google Gemini** (Recommended): [Get a key from AI Studio](https://aistudio.google.com/apikey)
-    - **Anthropic Claude**: [Get a key from Anthropic Console](https://console.anthropic.com/)
-    - **OpenAI GPT-4**: [Get a key from OpenAI Platform](https://platform.openai.com/)
+
+*   [Docker](https://docs.docker.com/get-docker/) & Docker Compose
+*   [Python 3.11+](https://www.python.org/downloads/) (for local development)
+*   [uv](https://docs.astral.sh/uv/) (Fast Python package manager)
+*   An LLM API Key (Google Gemini is recommended for the best experience)
 
 ---
 
 ## 🚀 Quick Start (Docker)
 
-The fastest way to get running is using the pre-configured Docker stack.
+The fastest way to experience the platform is using the pre-configured Docker stack. This launches Kafka (KRaft), PostgreSQL, and the full observability suite alongside the Agent.
 
 1.  **Clone the Repository**:
     ```bash
@@ -25,20 +23,23 @@ The fastest way to get running is using the pre-configured Docker stack.
     cd devops-agents
     ```
 
-2.  **Start the Services**:
-    Replace `your-api-key` with your actual Google AI Studio key.
+2.  **Start the Platform**:
+    Replace `your-api-key` with your [Google AI Studio](https://aistudio.google.com/apikey) key.
     ```bash
     GOOGLE_API_KEY=your-api-key docker compose --profile demo up -d
     ```
 
-3.  **Access the Web UI**:
-    Open your browser and navigate to `http://localhost:8000`.
+3.  **Access the Dashboard**:
+    Open your browser and navigate to [http://localhost:8000](http://localhost:8000).
+
+!!! success "Success"
+    You now have a full autonomous DevOps stack running locally!
 
 ---
 
 ## 🛠️ Local Development Setup
 
-If you want to modify agents or build your own, follow these steps:
+Follow these steps if you want to modify agents or contribute to the core library.
 
 1.  **Install Dependencies**:
     ```bash
@@ -46,23 +47,23 @@ If you want to modify agents or build your own, follow these steps:
     ```
 
 2.  **Configure Environment**:
-    Create a centralized `.env` file at the project root:
+    We use a centralized environment file at the root of the workspace.
     ```bash
     cp .env.example .env
-    # Edit .env and add your API keys
+    # Edit .env and add your GOOGLE_API_KEY
     ```
 
-3.  **Start the Infrastructure**:
-    This launches Kafka (KRaft), PostgreSQL, Prometheus, and other diagnostic tools.
+3.  **Start Infrastructure**:
+    Launch the supporting services (Kafka, Postgres, Prometheus).
     ```bash
     make infra-up
     ```
 
-4.  **Run the Agent**:
+4.  **Run the Orchestrator**:
     ```bash
     make run-devops
     ```
-    The agent will be available at `http://localhost:8000`.
+    The web interface will be available at [http://localhost:8000](http://localhost:8000).
 
 ---
 
@@ -70,23 +71,26 @@ If you want to modify agents or build your own, follow these steps:
 
 Once the platform is running, try these scenarios to see the agents in action:
 
-### 1. System Triage
-Ask: *"Is my cluster healthy?"*
-**What happens:** The `devops-assistant` triggers a parallel health check across Kafka, K8s, and Docker. It then synthesizes the results into a single report.
+### 1. Automated System Triage
+Ask: **"Is my cluster healthy?"**
 
-### 2. Ad-hoc Query
-Ask: *"List all pods in the kube-system namespace."*
-**What happens:** The orchestrator routes the request directly to the `k8s-health` specialist agent.
+**The "Magic":** The `devops-assistant` triggers a parallel health check across Kafka, K8s, and Docker. It correlates the data and synthesizes a single, high-level status report.
 
-### 3. Guarded Operation
-Ask: *"Scale the 'web-app' deployment to 3 replicas."*
-**What happens:** The agent identifies this as a mutating operation. It will ask for your **explicit confirmation** before proceeding.
+### 2. Targeted Investigation
+Ask: **"List all pods in the kube-system namespace."**
+
+**The "Magic":** The orchestrator identifies the intent and routes the request directly to the `k8s-health` specialist agent.
+
+### 3. Guarded Operations (Safety)
+Ask: **"Scale the 'web-app' deployment to 3 replicas."**
+
+**The "Magic":** The agent identifies this as a mutating operation. It will present an **interactive confirmation** prompt before executing any changes.
 
 ---
 
-## 📖 Next Steps
+## 📖 Explore Further
 
-- **[Configuration Guide](config/general.md)** — Deep dive into LLM providers and environment variables.
-- **[Slack Integration](integrations/slack.md)** — Bring your agents into your team's Slack channels.
-- **[Adding an Agent](adding-an-agent.md)** — Learn how to build your own specialist agents using our core library.
-- **[Metrics & Observability](metrics.md)** — Monitor your agents using the built-in Prometheus dashboard.
+*   ⚙️ **[General Configuration](config/general.md)** — Tune LLM providers and infrastructure.
+*   🛡️ **[Safety & RBAC](adr/001-rbac.md)** — Learn how we protect your production environment.
+*   🏗️ **[Adding an Agent](adding-an-agent.md)** — Build your own specialized DevOps expert.
+*   📊 **[Observability](metrics.md)** — Monitor agent performance with Prometheus.

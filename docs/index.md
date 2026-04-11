@@ -70,17 +70,17 @@ graph LR
 
     Learn how to build and test your own specialist agents using our core library.
 
--   :material-shield-lock:{ .lg .middle } __[RBAC & Safety](adr/001-rbac.md)__
+-   :material-shield-lock:{ .lg .middle } __[Safety & Governance](adr/001-rbac.md)__
 
     ---
 
     Understand how our 3-role hierarchy and guardrails protect your infrastructure.
 
--   :material-chart-bar:{ .lg .middle } __[Metrics & Monitoring](metrics.md)__
+-   :material-chart-bar:{ .lg .middle } __[Observability](metrics.md)__
 
     ---
 
-    Explore the built-in Prometheus metrics and how to track agent performance.
+    Explore built-in Prometheus metrics and how to track agent performance.
 
 </div>
 
@@ -102,4 +102,4 @@ graph LR
 | [**core**](core/README.md) | `core/` | Shared library: agent factories, plugin system, validation, and base configurations. |
 | [**agents**](agents/devops-assistant.md) | `agents/` | Specialist agent implementations (Kafka, K8s, Docker, etc.). |
 | [**infra**](config/general.md#infrastructure) | `infra/` | Local diagnostic stack (Prometheus, Loki, Kafka, Grafana). |
-| [**docs**](adr/001-rbac.md) | `docs/` | Architectural Decision Records (ADR) and Enhancement Proposals (AEP). |
+| [**roadmap**](enhancements/README.md) | `docs/enhancements/` | Ongoing development and enhancement proposals (AEP). |
