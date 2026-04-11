@@ -50,6 +50,11 @@ dependencies = [
     { name = "slack-bot" },
 ]
 
+[package.optional-dependencies]
+postgres = [
+    { name = "ai-agents-core", extra = ["postgres"] },
+]
+
 [package.dev-dependencies]
 dev = [
     { name = "mkdocs" },
@@ -68,6 +73,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "ai-agents-core", editable = "core" },
+    { name = "ai-agents-core", extras = ["postgres"], marker = "extra == 'postgres'", editable = "core" },
     { name = "devops-assistant", editable = "agents/devops-assistant" },
     { name = "docker-agent", editable = "agents/docker-agent" },
     { name = "k8s-health-agent", editable = "agents/k8s-health" },
@@ -76,6 +82,7 @@ requires-dist = [
     { name = "ops-journal", editable = "agents/ops-journal" },
     { name = "slack-bot", editable = "agents/slack-bot" },
 ]
+provides-extras = ["postgres"]
 
 [package.metadata.requires-dev]
 dev = [

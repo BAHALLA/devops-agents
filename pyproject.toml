@@ -16,6 +16,13 @@ dependencies = [
     "slack-bot",
 ]
 
+[project.optional-dependencies]
+# Propagate postgres extra from ai-agents-core to the workspace root.
+# Install with: uv sync --extra postgres
+postgres = [
+    "ai-agents-core[postgres]",
+]
+
 [tool.uv.sources]
 ai-agents-core = { workspace = true }
 docker-agent = { workspace = true }
