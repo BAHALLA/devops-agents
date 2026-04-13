@@ -14,7 +14,7 @@ from google.adk.tools.base_tool import BaseTool
 
 from .log import setup_logging
 
-logger = logging.getLogger("ai_agents.base")
+logger = logging.getLogger("orrery.base")
 
 
 def load_agent_env(agent_file: str | None = None) -> None:

@@ -120,8 +120,8 @@ async def exit_loop(tool_context: ToolContext) -> dict:
 
 | File | Change |
 |------|--------|
-| `core/ai_agents_core/base.py` | `create_loop_agent()` factory function |
-| `core/ai_agents_core/__init__.py` | Export `create_loop_agent` |
+| `core/orrery_core/base.py` | `create_loop_agent()` factory function |
+| `core/orrery_core/__init__.py` | Export `create_loop_agent` |
 | `agents/k8s-health/k8s_health_agent/tools.py` | `rollback_deployment` tool (`@destructive`) |
 | `agents/k8s-health/k8s_health_agent/agent.py` | Register `rollback_deployment` |
 | `agents/devops-assistant/devops_assistant/remediation.py` | New: `exit_loop`, actor, verifier, loop, summarizer, pipeline |

@@ -12,20 +12,20 @@ Kustomize or want to review the literal resources that Helm would render.
 kubectl apply -k deploy/k8s/
 
 # 2. Create secrets out-of-band (DO NOT kubectl apply secret.example.yaml)
-kubectl -n ai-agents create secret generic devops-assistant-secrets \
+kubectl -n orrery create secret generic devops-assistant-secrets \
   --from-literal=GOOGLE_API_KEY="$GOOGLE_API_KEY" \
   --from-literal=DATABASE_URL="postgresql+asyncpg://user:pass@host:5432/agents"
 
 # 3. Verify
-kubectl -n ai-agents get pods
-kubectl -n ai-agents logs -l app.kubernetes.io/name=devops-assistant
+kubectl -n orrery get pods
+kubectl -n orrery logs -l app.kubernetes.io/name=devops-assistant
 ```
 
 ## Resources
 
 | File                  | Purpose                                                          |
 |-----------------------|------------------------------------------------------------------|
-| `namespace.yaml`      | Creates the `ai-agents` namespace                                |
+| `namespace.yaml`      | Creates the `orrery` namespace                                |
 | `serviceaccount.yaml` | SA + read-only ClusterRole (write role is separate, optional)    |
 | `configmap.yaml`      | Non-sensitive config (model, endpoints, feature flags)           |
 | `secret.example.yaml` | **Template only** — do not commit real secrets                   |
@@ -47,12 +47,12 @@ Verify:
 
 ```bash
 # Trigger rollout
-kubectl -n ai-agents set image deployment/devops-assistant \
+kubectl -n orrery set image deployment/devops-assistant \
   devops-assistant=ghcr.io/bahalla/devops-agents:v0.1.2
 
 # Watch pods cycle with no downtime
-kubectl -n ai-agents rollout status deployment/devops-assistant
+kubectl -n orrery rollout status deployment/devops-assistant
 
 # Rollback if needed
-kubectl -n ai-agents rollout undo deployment/devops-assistant
+kubectl -n orrery rollout undo deployment/devops-assistant
 ```

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from ai_agents_core import LEVEL_DESTRUCTIVE
+from orrery_core import LEVEL_DESTRUCTIVE
 
 
 def build_confirmation_card(

@@ -1,5 +1,5 @@
-from ai_agents_core import create_agent, load_agent_env
-from ai_agents_core.guardrails import require_confirmation
+from orrery_core import create_agent, load_agent_env
+from orrery_core.guardrails import require_confirmation
 
 from .tools import (
     create_silence,

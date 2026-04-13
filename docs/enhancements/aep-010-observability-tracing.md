@@ -59,7 +59,7 @@ class TracingPlugin(BasePlugin):
 
     def __init__(self):
         super().__init__(name="tracing")
-        self.tracer = trace.get_tracer("ai-agents")
+        self.tracer = trace.get_tracer("orrery")
 
     async def before_agent_callback(self, *, agent, callback_context):
         span = self.tracer.start_span(f"agent.{agent.name}")
@@ -156,9 +156,9 @@ tool_duration.observe(
 
 | File | Change |
 |------|--------|
-| `core/ai_agents_core/tracing.py` | New: `TracingPlugin` with OpenTelemetry |
-| `core/ai_agents_core/plugins.py` | Add `TracingPlugin` to `default_plugins()` |
-| `core/ai_agents_core/log.py` | Add `request_id` to JSON log format |
+| `core/orrery_core/tracing.py` | New: `TracingPlugin` with OpenTelemetry |
+| `core/orrery_core/plugins.py` | Add `TracingPlugin` to `default_plugins()` |
+| `core/orrery_core/log.py` | Add `request_id` to JSON log format |
 | `core/pyproject.toml` | Add `opentelemetry-*` dependencies |
 | `infra/docker-compose.yml` | Add Tempo + Grafana services |
 | `infra/grafana-datasources.yml` | New: Grafana datasource config |

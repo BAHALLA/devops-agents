@@ -100,7 +100,7 @@ async def handle_streaming_events(self, runner, session, message):
 
 | File | Change |
 |------|--------|
-| `core/ai_agents_core/plugins.py` | Add `ProgressPlugin` |
+| `core/orrery_core/plugins.py` | Add `ProgressPlugin` |
 | `agents/devops-assistant/devops_assistant/agent.py` | Configure SSE support |
 | `agents/slack-bot/slack_bot/handler.py` | Stream events as Slack thread replies |
 | `Makefile` | Update `run-devops` to use `adk api_server` with SSE |

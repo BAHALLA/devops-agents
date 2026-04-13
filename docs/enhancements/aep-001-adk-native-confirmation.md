@@ -11,7 +11,7 @@
 ## Gap Analysis
 
 ### Current Implementation
-The project implements a confirmation system in `core/ai_agents_core/guardrails.py`:
+The project implements a confirmation system in `core/orrery_core/guardrails.py`:
 - `@confirm(reason)` and `@destructive(reason)` decorators attach metadata to tools
 - `require_confirmation()` callback factory gates guarded tools via `before_tool_callback` on each agent
 - Confirmations use an args-hash + TTL + invocation-ID mechanism to prevent bypass
@@ -36,8 +36,8 @@ Same-invocation bypass prevention: the callback tracks `invocation_id` in the pe
 
 | File | Change |
 |------|--------|
-| `core/ai_agents_core/guardrails.py` | `require_confirmation()` with invocation-ID tracking |
-| `core/ai_agents_core/plugins.py` | `GuardrailsPlugin` is RBAC-only; confirmation at agent level |
+| `core/orrery_core/guardrails.py` | `require_confirmation()` with invocation-ID tracking |
+| `core/orrery_core/plugins.py` | `GuardrailsPlugin` is RBAC-only; confirmation at agent level |
 | `agents/kafka-health/.../agent.py` | `before_tool_callback=require_confirmation()` |
 | `agents/k8s-health/.../agent.py` | `before_tool_callback=require_confirmation()` |
 | `agents/observability/.../agent.py` | `before_tool_callback=require_confirmation()` |

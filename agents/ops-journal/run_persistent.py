@@ -6,8 +6,8 @@ Usage:
 
 import asyncio
 
-from ai_agents_core import SecureMemoryService, default_plugins, run_persistent
 from ops_journal_agent.agent import root_agent
+from orrery_core import SecureMemoryService, default_plugins, run_persistent
 
 if __name__ == "__main__":
     asyncio.run(

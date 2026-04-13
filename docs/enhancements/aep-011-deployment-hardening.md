@@ -15,7 +15,7 @@ The project has basic deployment support:
 - `Dockerfile` and `Dockerfile.prod` for container builds
 - `docker-compose.yml` for local stack
 - `run_persistent.py` for CLI with SQLite persistence
-- `HealthServer` in `core/ai_agents_core/health.py`
+- `HealthServer` in `core/orrery_core/health.py`
 
 Already implemented:
 - Health probes: `/healthz` (liveness) and `/readyz` (readiness) via `HealthServer`
@@ -193,8 +193,8 @@ deploy/
 
 | File | Change |
 |------|--------|
-| `core/ai_agents_core/health.py` | Add `/ready` endpoint with dependency checks |
-| `core/ai_agents_core/runner.py` | Add graceful shutdown handler |
+| `core/orrery_core/health.py` | Add `/ready` endpoint with dependency checks |
+| `core/orrery_core/runner.py` | Add graceful shutdown handler |
 | `deploy/k8s/` | New: Kubernetes manifests |
 | `deploy/helm/` | New: Helm chart |
 | `docker-compose.prod.yml` | New: production compose with PostgreSQL |

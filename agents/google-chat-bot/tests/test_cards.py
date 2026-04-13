@@ -2,7 +2,7 @@
 
 from google_chat_bot.cards import build_confirmation_card
 
-from ai_agents_core import LEVEL_CONFIRM, LEVEL_DESTRUCTIVE
+from orrery_core import LEVEL_CONFIRM, LEVEL_DESTRUCTIVE
 
 
 def test_confirmation_card_structure():

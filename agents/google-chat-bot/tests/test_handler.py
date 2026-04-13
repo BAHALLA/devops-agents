@@ -130,7 +130,7 @@ class TestHandleEvent:
 
         # End-to-end: simulate ensure_default_role() running on the
         # resulting state. With the lock flag set, it must be a no-op.
-        from ai_agents_core import ensure_default_role
+        from orrery_core import ensure_default_role
 
         callback = ensure_default_role()
         fake_ctx = MagicMock()
@@ -315,7 +315,7 @@ class TestGoogleChatConfirmation:
         assert callback(tool=tool, args={}, tool_context=self._ctx()) is None
 
     def test_guarded_emits_card(self, store):
-        from ai_agents_core import confirm
+        from orrery_core import confirm
 
         callback = google_chat_confirmation(store)
 
@@ -349,7 +349,7 @@ class TestGoogleChatConfirmation:
         assert pending.space_name == "spaces/abc"
 
     def test_already_confirmed_proceeds(self, store):
-        from ai_agents_core import confirm
+        from orrery_core import confirm
 
         callback = google_chat_confirmation(store)
 

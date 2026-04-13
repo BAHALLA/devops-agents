@@ -28,7 +28,7 @@ helm.sh/chart: {{ include "devops-assistant.chart" . }}
 {{ include "devops-assistant.selectorLabels" . }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
-app.kubernetes.io/part-of: ai-agents
+app.kubernetes.io/part-of: orrery
 {{- end -}}
 
 {{- define "devops-assistant.selectorLabels" -}}

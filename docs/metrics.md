@@ -7,7 +7,7 @@ The platform exposes Prometheus metrics for every tool call across all agents. T
 Metrics are enabled automatically via `default_plugins()` — no per-agent wiring needed:
 
 ```python
-from ai_agents_core import MetricsPlugin, default_plugins
+from orrery_core import MetricsPlugin, default_plugins
 from google.adk.runners import Runner
 
 plugins = default_plugins()
@@ -29,19 +29,19 @@ metrics_plugin.start_server()
 
 ## Available Metrics
 
-All metrics use the `ai_agents_` namespace prefix following [Prometheus naming conventions](https://prometheus.io/docs/practices/naming/).
+All metrics use the `orrery_` namespace prefix following [Prometheus naming conventions](https://prometheus.io/docs/practices/naming/).
 
 | Metric | Type | Labels | Description |
 |--------|------|--------|-------------|
-| `ai_agents_tool_calls_total` | Counter | `agent`, `tool`, `status` | Total tool invocations with bounded status values |
-| `ai_agents_tool_duration_seconds` | Histogram | `agent`, `tool` | Tool execution latency (buckets: 50ms to 60s) |
-| `ai_agents_tool_errors_total` | Counter | `agent`, `tool`, `error_type` | Errors broken down by exception type |
-| `ai_agents_circuit_breaker_state` | Gauge | `tool` | Circuit breaker state: 0=closed, 1=open, 2=half_open |
-| `ai_agents_llm_tokens_total` | Counter | `agent`, `direction` | LLM token consumption (input/output) |
+| `orrery_tool_calls_total` | Counter | `agent`, `tool`, `status` | Total tool invocations with bounded status values |
+| `orrery_tool_duration_seconds` | Histogram | `agent`, `tool` | Tool execution latency (buckets: 50ms to 60s) |
+| `orrery_tool_errors_total` | Counter | `agent`, `tool`, `error_type` | Errors broken down by exception type |
+| `orrery_circuit_breaker_state` | Gauge | `tool` | Circuit breaker state: 0=closed, 1=open, 2=half_open |
+| `orrery_llm_tokens_total` | Counter | `agent`, `direction` | LLM token consumption (input/output) |
 
 ### Bounded Status Labels
 
-The `status` label on `ai_agents_tool_calls_total` is restricted to a fixed set of values to prevent [cardinality explosion](https://prometheus.io/docs/practices/naming/#labels):
+The `status` label on `orrery_tool_calls_total` is restricted to a fixed set of values to prevent [cardinality explosion](https://prometheus.io/docs/practices/naming/#labels):
 
 - `ok` — successful execution (default)
 - `success` — explicit success from tool response
@@ -62,12 +62,12 @@ Since plugins apply globally, metrics are automatically collected for every tool
 
 ## Circuit Breaker Integration
 
-`default_plugins()` automatically wires the `ResiliencePlugin`'s circuit breaker into `MetricsPlugin`, so the `ai_agents_circuit_breaker_state` gauge reflects state changes (closed/open/half_open) for each tool.
+`default_plugins()` automatically wires the `ResiliencePlugin`'s circuit breaker into `MetricsPlugin`, so the `orrery_circuit_breaker_state` gauge reflects state changes (closed/open/half_open) for each tool.
 
 For custom configurations:
 
 ```python
-from ai_agents_core import ResiliencePlugin, MetricsPlugin
+from orrery_core import ResiliencePlugin, MetricsPlugin
 
 resilience = ResiliencePlugin(failure_threshold=3)
 metrics = MetricsPlugin(circuit_breaker=resilience.circuit_breaker)
@@ -78,7 +78,7 @@ metrics = MetricsPlugin(circuit_breaker=resilience.circuit_breaker)
 Use `track_llm_tokens()` to record token consumption from custom LLM wrappers or model callbacks:
 
 ```python
-from ai_agents_core import track_llm_tokens
+from orrery_core import track_llm_tokens
 
 track_llm_tokens("my_agent", input_tokens=150, output_tokens=300)
 ```
@@ -124,27 +124,27 @@ The `docker-compose.yml` Prometheus service includes `extra_hosts: ["host.docker
 
 **Tool error rate (5m window):**
 ```promql
-rate(ai_agents_tool_errors_total[5m])
+rate(orrery_tool_errors_total[5m])
 ```
 
 **p95 tool latency by agent:**
 ```promql
-histogram_quantile(0.95, rate(ai_agents_tool_duration_seconds_bucket[5m]))
+histogram_quantile(0.95, rate(orrery_tool_duration_seconds_bucket[5m]))
 ```
 
 **Tool calls per minute by tool:**
 ```promql
-rate(ai_agents_tool_calls_total[1m]) * 60
+rate(orrery_tool_calls_total[1m]) * 60
 ```
 
 **Circuit breaker state (1 = open):**
 ```promql
-ai_agents_circuit_breaker_state == 1
+orrery_circuit_breaker_state == 1
 ```
 
 **LLM tokens consumed per agent (last hour):**
 ```promql
-increase(ai_agents_llm_tokens_total[1h])
+increase(orrery_llm_tokens_total[1h])
 ```
 
 ## Agents with Metrics Enabled

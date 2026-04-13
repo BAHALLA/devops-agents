@@ -83,7 +83,7 @@ Context caching reduces token usage and latency by caching static system instruc
 
 Context caching is enabled by default in the `devops-assistant` agent. You can tune the values via environment variables or disable it by not passing a `context_cache_config` to `run_persistent()`.
 
-Cache hit/miss events are exposed as the `ai_agents_context_cache_events_total` Prometheus counter on the `/metrics` endpoint.
+Cache hit/miss events are exposed as the `orrery_context_cache_events_total` Prometheus counter on the `/metrics` endpoint.
 
 ---
 

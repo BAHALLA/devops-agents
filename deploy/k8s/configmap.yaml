@@ -2,10 +2,10 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: devops-assistant-config
-  namespace: ai-agents
+  namespace: orrery
   labels:
     app.kubernetes.io/name: devops-assistant
-    app.kubernetes.io/part-of: ai-agents
+    app.kubernetes.io/part-of: orrery
 data:
   # ── LLM provider ──────────────────────────────────────────────────
   MODEL_PROVIDER: "gemini"

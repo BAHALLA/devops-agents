@@ -2,7 +2,7 @@ apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
   name: devops-assistant
-  namespace: ai-agents
+  namespace: orrery
   labels:
     app.kubernetes.io/name: devops-assistant
 spec:

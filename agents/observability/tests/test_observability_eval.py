@@ -14,7 +14,7 @@ import pytest
 from google.adk.evaluation.agent_evaluator import AgentEvaluator
 
 import observability_agent.tools as _tools_mod
-from ai_agents_core import load_agent_env
+from orrery_core import load_agent_env
 
 EVAL_DIR = os.path.join(os.path.dirname(__file__), "evals")
 

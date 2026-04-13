@@ -8,7 +8,7 @@ Wraps ADK's ``InMemoryMemoryService`` to add:
 
 Usage::
 
-    from ai_agents_core.memory import SecureMemoryService
+    from orrery_core.memory import SecureMemoryService
 
     memory = SecureMemoryService(max_entries_per_user=500)
     runner = Runner(app=app, session_service=..., memory_service=memory)
@@ -28,7 +28,7 @@ from google.adk.memory.in_memory_memory_service import InMemoryMemoryService
 from google.adk.sessions.session import Session
 from google.genai import types
 
-logger = logging.getLogger("ai_agents.memory")
+logger = logging.getLogger("orrery.memory")
 
 # ── Default redaction patterns ───────────────────────────────────────
 

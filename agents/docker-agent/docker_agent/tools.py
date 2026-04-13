@@ -5,8 +5,8 @@ import json
 import logging
 from typing import Any
 
-from ai_agents_core import confirm, destructive
-from ai_agents_core.validation import (
+from orrery_core import confirm, destructive
+from orrery_core.validation import (
     MAX_LOG_LINES,
     validate_path,
     validate_positive_int,

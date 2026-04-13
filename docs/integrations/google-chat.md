@@ -21,7 +21,7 @@ guarded tools.
 
 - Sign in to the [Google Cloud Console](https://console.cloud.google.com/)
   as a Workspace user.
-- Create a new project (e.g. `ai-agents-bot`) or reuse an existing one.
+- Create a new project (e.g. `orrery-bot`) or reuse an existing one.
 - Enable the **Google Chat API**.
 
 !!! note "One GCP project = one Chat app"

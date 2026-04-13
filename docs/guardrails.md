@@ -20,8 +20,8 @@ The decorator just attaches metadata — it doesn't change tool behavior at impo
 ## Authoring a tool
 
 ```python
-from ai_agents_core import confirm, destructive, with_retry
-from ai_agents_core.validation import validate_string
+from orrery_core import confirm, destructive, with_retry
+from orrery_core.validation import validate_string
 
 @with_retry(max_retries=3)
 async def list_topics() -> dict:
@@ -67,7 +67,7 @@ See [ADR-001 § Plugin execution order](adr/001-rbac.md#plugin-execution-order) 
 `GuardrailsPlugin` in its default `"confirm"` mode only does RBAC — it does **not** attach a confirmation gate. Confirmation is wired per-agent:
 
 ```python
-from ai_agents_core import create_agent, require_confirmation
+from orrery_core import create_agent, require_confirmation
 
 root_agent = create_agent(
     name="my_agent",
@@ -83,7 +83,7 @@ Rationale: confirmation needs to work identically whether the agent is called as
 ### Via `RolePolicy`
 
 ```python
-from ai_agents_core import RolePolicy, Role, default_plugins
+from orrery_core import RolePolicy, Role, default_plugins
 
 policy = RolePolicy(overrides={
     "list_sensitive_topics": Role.OPERATOR,   # read-only, but gated
@@ -95,7 +95,7 @@ plugins = default_plugins(role_policy=policy)
 ### Via `@requires_role`
 
 ```python
-from ai_agents_core import requires_role, Role
+from orrery_core import requires_role, Role
 
 @requires_role(Role.ADMIN)
 async def list_audit_log() -> dict:

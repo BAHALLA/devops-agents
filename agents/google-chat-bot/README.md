@@ -28,7 +28,7 @@ interactive Card v2 approvals for destructive operations.
 
 - Go to the [Google Cloud Console](https://console.cloud.google.com/) while
   signed in as a **Workspace user**.
-- Create a new project (e.g. `ai-agents-bot`) or reuse an existing one.
+- Create a new project (e.g. `orrery-bot`) or reuse an existing one.
 - Enable the **Google Chat API**.
 
 > [!NOTE]
@@ -125,7 +125,7 @@ User ADC from `gcloud auth application-default login` **will not work**. Google 
 
 Steps:
 
-1. **Create a service account** in IAM & Admin → Service Accounts (e.g. `ai-agents-chat-bot`). No project-level IAM roles are required — authorization is enforced by the Chat API based on the SA being the app's configured identity.
+1. **Create a service account** in IAM & Admin → Service Accounts (e.g. `orrery-chat-bot`). No project-level IAM roles are required — authorization is enforced by the Chat API based on the SA being the app's configured identity.
 2. **Create and download a JSON key** for the SA. Store it outside the repo (e.g. `~/.secrets/chat-bot-sa.json`).
 3. **Register the SA as the app identity** in the Google Chat API → *Configuration* tab, under *App authentication* (or the equivalent section — Google renames this periodically). Save.
 4. **Point the bot at the key** in your `.env`:

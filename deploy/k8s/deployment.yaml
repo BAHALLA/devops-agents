@@ -2,11 +2,11 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: devops-assistant
-  namespace: ai-agents
+  namespace: orrery
   labels:
     app.kubernetes.io/name: devops-assistant
     app.kubernetes.io/component: agent
-    app.kubernetes.io/part-of: ai-agents
+    app.kubernetes.io/part-of: orrery
 spec:
   replicas: 2
   revisionHistoryLimit: 5

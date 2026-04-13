@@ -6,7 +6,7 @@ import re
 
 import pytest
 
-from ai_agents_core.validation import (
+from orrery_core.validation import (
     K8S_NAME_PATTERN,
     KAFKA_TOPIC_PATTERN,
     validate_list,

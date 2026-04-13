@@ -1,6 +1,6 @@
 # 🛠️ Adding a New Specialist Agent
 
-This guide provides a step-by-step walkthrough for building a new specialist agent using the `ai-agents-core` library.
+This guide provides a step-by-step walkthrough for building a new specialist agent using the `orrery-core` library.
 
 ## 🏗️ Agent Design Patterns
 
@@ -44,8 +44,8 @@ Use **Guardrail Decorators** to mark tools that require human oversight:
 ```python
 # agents/my-agent/my_agent/tools.py
 import asyncio
-from ai_agents_core import with_retry, confirm, destructive
-from ai_agents_core.validation import validate_string
+from orrery_core import with_retry, confirm, destructive
+from orrery_core.validation import validate_string
 
 @with_retry(max_retries=3)
 async def get_status(name: str) -> dict:
@@ -79,7 +79,7 @@ In `agent.py`, use the `create_agent` factory. To enable the interactive confirm
 
 ```python
 # agents/my-agent/my_agent/agent.py
-from ai_agents_core import create_agent, load_agent_env, require_confirmation
+from orrery_core import create_agent, load_agent_env, require_confirmation
 from .tools import get_status, update_resource, delete_resource
 
 # Load local .env file
@@ -111,7 +111,7 @@ The `GuardrailsPlugin` enforces RBAC policies globally. It also calls `ensure_de
 ```python
 # agents/my-agent/my_agent/__main__.py
 import asyncio
-from ai_agents_core import run_persistent, default_plugins
+from orrery_core import run_persistent, default_plugins
 from .agent import root_agent
 
 async def main():

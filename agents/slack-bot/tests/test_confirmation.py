@@ -1,6 +1,6 @@
 """Tests for the Slack-aware confirmation callback."""
 
-from ai_agents_core import LEVEL_CONFIRM, LEVEL_DESTRUCTIVE, confirm, destructive
+from orrery_core import LEVEL_CONFIRM, LEVEL_DESTRUCTIVE, confirm, destructive
 from slack_bot.confirmation import (
     build_confirmation_blocks,
     slack_confirmation,

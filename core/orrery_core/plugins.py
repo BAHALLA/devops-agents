@@ -9,7 +9,7 @@ Usage::
 
     from google.adk.apps import App
     from google.adk.runners import Runner
-    from ai_agents_core.plugins import default_plugins
+    from orrery_core.plugins import default_plugins
 
     app = App(name="myapp", root_agent=root_agent, plugins=default_plugins())
     runner = Runner(app=app, session_service=session_service)
@@ -48,7 +48,7 @@ from .rbac import RolePolicy, ensure_default_role
 from .rbac import authorize as _authorize_factory
 from .resilience import CircuitBreaker
 
-logger = logging.getLogger("ai_agents.plugins")
+logger = logging.getLogger("orrery.plugins")
 
 
 # ── Guardrails Plugin ────────────────────────────────────────────────

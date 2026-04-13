@@ -6,7 +6,7 @@ readiness probe to return 200.
 
 Usage::
 
-    from ai_agents_core.health import HealthServer
+    from orrery_core.health import HealthServer
 
     health = HealthServer()
     health.register_check("kafka", lambda: kafka_admin_client is not None)
@@ -22,7 +22,7 @@ import threading
 from collections.abc import Callable
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
-logger = logging.getLogger("ai_agents.health")
+logger = logging.getLogger("orrery.health")
 
 _server_started = False
 _server_lock = threading.Lock()

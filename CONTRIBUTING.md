@@ -21,8 +21,8 @@ Thanks for your interest in contributing! This project aims to build a collectio
 ## Project Structure
 
 ```
-ai-agents/
-├── core/                  # Shared library (ai-agents-core)
+orrery/
+├── core/                  # Shared library (orrery-core)
 │   └── tests/             # Core tests (guardrails, audit, config)
 ├── agents/                # Each agent is a separate workspace package
 │   ├── kafka-health/
@@ -45,7 +45,7 @@ See [core/README.md](core/README.md) for the shared library API (agent factory, 
 This is the most impactful way to contribute. See the [Adding a New Agent](docs/adding-an-agent.md) guide for the step-by-step walkthrough. Key points:
 
 - Create a new directory under `agents/`
-- Use `create_agent()` from `ai_agents_core` — don't reinvent the factory
+- Use `create_agent()` from `orrery_core` — don't reinvent the factory
 - Define all tools as `async def` — use `asyncio.to_thread()` for blocking I/O
 - Mark destructive tools with `@destructive("reason")`
 - Separate tools (`tools.py`) from agent wiring (`agent.py`)
@@ -115,9 +115,9 @@ This is the most impactful way to contribute. See the [Adding a New Agent](docs/
 - Use type hints
 - Keep tools focused — one function per operation
 - Follow existing patterns (look at `kafka-health` as the reference)
-- **Validate all inputs** at the top of every tool function using validators from `ai_agents_core.validation`. Use the walrus operator for concise early-return:
+- **Validate all inputs** at the top of every tool function using validators from `orrery_core.validation`. Use the walrus operator for concise early-return:
   ```python
-  from ai_agents_core.validation import validate_string, validate_positive_int
+  from orrery_core.validation import validate_string, validate_positive_int
 
   async def my_tool(name: str, count: int = 10) -> dict:
       if err := validate_string(name, "name", max_len=200):

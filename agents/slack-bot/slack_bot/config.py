@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import os
 
-from ai_agents_core import AgentConfig
+from orrery_core import AgentConfig
 
 
 class SlackBotConfig(AgentConfig):

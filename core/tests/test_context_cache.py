@@ -5,8 +5,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from google.adk.agents.context_cache_config import ContextCacheConfig
 
-from ai_agents_core.metrics import CONTEXT_CACHE_EVENTS_TOTAL, track_cache_event
-from ai_agents_core.runner import create_context_cache_config
+from orrery_core.metrics import CONTEXT_CACHE_EVENTS_TOTAL, track_cache_event
+from orrery_core.runner import create_context_cache_config
 
 # ── create_context_cache_config ──────────────────────────────────────
 
@@ -70,12 +70,12 @@ class TestRunPersistentCacheConfig:
 
         with (
             patch(
-                "ai_agents_core.runner.DatabaseSessionService",
+                "orrery_core.runner.DatabaseSessionService",
                 return_value=mock_session_service,
             ),
-            patch("ai_agents_core.runner.App") as mock_app_cls,
-            patch("ai_agents_core.runner.Runner") as mock_runner_cls,
-            patch("ai_agents_core.runner.HealthServer"),
+            patch("orrery_core.runner.App") as mock_app_cls,
+            patch("orrery_core.runner.Runner") as mock_runner_cls,
+            patch("orrery_core.runner.HealthServer"),
         ):
             mock_runner = MagicMock()
             mock_runner.run_async = AsyncMock(return_value=iter([]))
@@ -83,7 +83,7 @@ class TestRunPersistentCacheConfig:
 
             # Simulate immediate quit to exit the input loop
             with patch("asyncio.to_thread", side_effect=EOFError):
-                from ai_agents_core.runner import run_persistent
+                from orrery_core.runner import run_persistent
 
                 await run_persistent(
                     mock_agent,
@@ -108,19 +108,19 @@ class TestRunPersistentCacheConfig:
 
         with (
             patch(
-                "ai_agents_core.runner.DatabaseSessionService",
+                "orrery_core.runner.DatabaseSessionService",
                 return_value=mock_session_service,
             ),
-            patch("ai_agents_core.runner.App") as mock_app_cls,
-            patch("ai_agents_core.runner.Runner") as mock_runner_cls,
-            patch("ai_agents_core.runner.HealthServer"),
+            patch("orrery_core.runner.App") as mock_app_cls,
+            patch("orrery_core.runner.Runner") as mock_runner_cls,
+            patch("orrery_core.runner.HealthServer"),
         ):
             mock_runner = MagicMock()
             mock_runner.run_async = AsyncMock(return_value=iter([]))
             mock_runner_cls.return_value = mock_runner
 
             with patch("asyncio.to_thread", side_effect=EOFError):
-                from ai_agents_core.runner import run_persistent
+                from orrery_core.runner import run_persistent
 
                 await run_persistent(
                     mock_agent,

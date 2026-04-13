@@ -1,5 +1,5 @@
 [project]
-name = "ai-agents-core"
+name = "orrery-core"
 version = "0.1.2"
 description = "Shared utilities for AI agents"
 requires-python = ">=3.11"
@@ -21,4 +21,4 @@ postgres = [
 ]
 
 [tool.setuptools.packages.find]
-include = ["ai_agents_core*"]
+include = ["orrery_core*"]

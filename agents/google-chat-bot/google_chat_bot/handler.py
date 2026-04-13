@@ -9,7 +9,7 @@ from typing import Any
 from google.adk.runners import Runner
 from google.genai import types
 
-from ai_agents_core import set_user_role
+from orrery_core import set_user_role
 
 from .chat_client import ChatClient
 from .config import GoogleChatBotConfig

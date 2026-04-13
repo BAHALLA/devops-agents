@@ -15,7 +15,7 @@ COPY agents/ops-journal/pyproject.toml agents/ops-journal/pyproject.toml
 COPY agents/slack-bot/pyproject.toml agents/slack-bot/pyproject.toml
 
 # Placeholder packages so uv sync can resolve the workspace
-RUN mkdir -p core/ai_agents_core && touch core/ai_agents_core/__init__.py && \
+RUN mkdir -p core/orrery_core && touch core/orrery_core/__init__.py && \
     mkdir -p agents/docker-agent/docker_agent && touch agents/docker-agent/docker_agent/__init__.py && \
     mkdir -p agents/kafka-health/kafka_health_agent && touch agents/kafka-health/kafka_health_agent/__init__.py && \
     mkdir -p agents/k8s-health/k8s_health_agent && touch agents/k8s-health/k8s_health_agent/__init__.py && \

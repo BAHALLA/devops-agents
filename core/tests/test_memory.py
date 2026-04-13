@@ -1,4 +1,4 @@
-"""Tests for SecureMemoryService (core/ai_agents_core/memory.py)."""
+"""Tests for SecureMemoryService (core/orrery_core/memory.py)."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from google.adk.memory.memory_entry import MemoryEntry
 from google.adk.sessions.session import Session
 from google.genai import types
 
-from ai_agents_core.memory import SecureMemoryService
+from orrery_core.memory import SecureMemoryService
 
 
 def _make_event(text: str, event_id: str = "evt-1", author: str = "user") -> Event:

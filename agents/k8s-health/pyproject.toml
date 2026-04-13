@@ -4,9 +4,9 @@ version = "0.1.2"
 description = "Agent for monitoring and managing Kubernetes clusters"
 requires-python = ">=3.11"
 dependencies = [
-    "ai-agents-core",
+    "orrery-core",
     "kubernetes>=31.0.0",
 ]
 
 [tool.uv.sources]
-ai-agents-core = { workspace = true }
+orrery-core = { workspace = true }

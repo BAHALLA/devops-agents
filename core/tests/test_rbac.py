@@ -1,11 +1,11 @@
-"""Tests for ai_agents_core.rbac."""
+"""Tests for orrery_core.rbac."""
 
 from __future__ import annotations
 
 import logging
 
-from ai_agents_core.guardrails import confirm, destructive
-from ai_agents_core.rbac import (
+from orrery_core.guardrails import confirm, destructive
+from orrery_core.rbac import (
     USER_ROLE_STATE_KEY,
     Role,
     RolePolicy,

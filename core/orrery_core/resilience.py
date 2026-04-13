@@ -45,7 +45,7 @@ from typing import Any, TypeVar
 from google.adk.agents.context import Context
 from google.adk.tools.base_tool import BaseTool
 
-logger = logging.getLogger("ai_agents.resilience")
+logger = logging.getLogger("orrery.resilience")
 
 F = TypeVar("F", bound=Callable[..., Any])
 

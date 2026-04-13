@@ -68,7 +68,7 @@ root_agent = create_agent(
 
 **After (mixed — sub-agents for workflows, AgentTool for specialists):**
 ```python
-from ai_agents_core import AgentTool
+from orrery_core import AgentTool
 
 root_agent = create_agent(
     name="devops_assistant",
@@ -105,6 +105,6 @@ root_agent = create_agent(
 
 ## Implementation
 
-- `core/ai_agents_core/base.py` — Widened `tools` type to `Sequence[Callable[..., Any] | BaseTool]`, re-exported `AgentTool`
-- `core/ai_agents_core/__init__.py` — Added `AgentTool` export
+- `core/orrery_core/base.py` — Widened `tools` type to `Sequence[Callable[..., Any] | BaseTool]`, re-exported `AgentTool`
+- `core/orrery_core/__init__.py` — Added `AgentTool` export
 - `agents/devops-assistant/devops_assistant/agent.py` — Converted 5 specialist agents from `sub_agents` to `AgentTool`

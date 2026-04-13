@@ -77,8 +77,8 @@ GRANT ALL PRIVILEGES ON DATABASE agents TO agents;
 Then expose the URL to the cluster via a Secret:
 
 ```bash
-kubectl -n ai-agents create secret generic devops-assistant-secrets \
-  --from-literal=DATABASE_URL="postgresql+asyncpg://agents:<pw>@postgres.ai-agents.svc.cluster.local:5432/agents" \
+kubectl -n orrery create secret generic devops-assistant-secrets \
+  --from-literal=DATABASE_URL="postgresql+asyncpg://agents:<pw>@postgres.orrery.svc.cluster.local:5432/agents" \
   --from-literal=GOOGLE_API_KEY="$GOOGLE_API_KEY"
 ```
 
@@ -102,7 +102,7 @@ helm show values deploy/helm/devops-assistant > my-values.yaml
 
 helm upgrade --install devops-assistant \
   deploy/helm/devops-assistant \
-  --namespace ai-agents --create-namespace \
+  --namespace orrery --create-namespace \
   -f my-values.yaml
 ```
 
@@ -147,22 +147,22 @@ ingress:
 
 ```bash
 # Pods come up and pass readiness
-kubectl -n ai-agents get pods -l app.kubernetes.io/name=devops-assistant
+kubectl -n orrery get pods -l app.kubernetes.io/name=devops-assistant
 
 # Tail logs
-kubectl -n ai-agents logs -l app.kubernetes.io/name=devops-assistant -f
+kubectl -n orrery logs -l app.kubernetes.io/name=devops-assistant -f
 
 # Health endpoints
-kubectl -n ai-agents port-forward svc/devops-assistant 8080:8080
+kubectl -n orrery port-forward svc/devops-assistant 8080:8080
 curl http://localhost:8080/healthz
 curl http://localhost:8080/readyz
 
 # Metrics endpoint (Prometheus scrape target)
-kubectl -n ai-agents port-forward svc/devops-assistant 9100:9100
+kubectl -n orrery port-forward svc/devops-assistant 9100:9100
 curl http://localhost:9100/metrics | head -40
 
 # ADK web UI
-kubectl -n ai-agents port-forward svc/devops-assistant 8000:8000
+kubectl -n orrery port-forward svc/devops-assistant 8000:8000
 open http://localhost:8000
 ```
 
@@ -183,18 +183,18 @@ Trigger a rollout:
 
 ```bash
 helm upgrade devops-assistant deploy/helm/devops-assistant \
-  -n ai-agents -f my-values.yaml \
+  -n orrery -f my-values.yaml \
   --set image.tag=v0.2.0
 
-kubectl -n ai-agents rollout status deployment/devops-assistant
+kubectl -n orrery rollout status deployment/devops-assistant
 ```
 
 Rollback:
 
 ```bash
-kubectl -n ai-agents rollout undo deployment/devops-assistant
+kubectl -n orrery rollout undo deployment/devops-assistant
 # or
-helm rollback devops-assistant -n ai-agents
+helm rollback devops-assistant -n orrery
 ```
 
 ---
@@ -258,3 +258,4 @@ hit rate. The most common cause is that context caching is disabled
 - AEP-013 — security hardening (JWT auth, PII redaction) — next up
 - AEP-014 — supply chain security (SBOM, cosign signing)
 - AEP-015 — cost observability and per-tenant budgets
+nd per-tenant budgets

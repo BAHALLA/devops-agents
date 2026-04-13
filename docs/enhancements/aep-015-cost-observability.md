@@ -12,7 +12,7 @@
 
 ### Current Implementation
 
-`MetricsPlugin` in `core/ai_agents_core/plugins.py` already tracks:
+`MetricsPlugin` in `core/orrery_core/plugins.py` already tracks:
 
 - `llm_tokens_total{provider,model,type=input|output}` — cumulative tokens
 - Tool call counts and latency histograms
@@ -53,7 +53,7 @@ humans respond to dollars, not tokens, and the price-per-token varies
 
 ### Step 1: A cost table
 
-Add `core/ai_agents_core/cost.py`:
+Add `core/orrery_core/cost.py`:
 
 ```python
 from __future__ import annotations
@@ -199,9 +199,9 @@ Ship a pre-built dashboard JSON under `infra/grafana-dashboards/llm-cost.json`.
 
 | File | Change |
 |------|--------|
-| `core/ai_agents_core/cost.py` | New — price table + `estimate_cost_usd()` |
-| `core/ai_agents_core/metrics.py` | Add `llm_cost_usd_total` counter |
-| `core/ai_agents_core/plugins.py` | Wire `BudgetPlugin` into `default_plugins()` behind env var |
+| `core/orrery_core/cost.py` | New — price table + `estimate_cost_usd()` |
+| `core/orrery_core/metrics.py` | Add `llm_cost_usd_total` counter |
+| `core/orrery_core/plugins.py` | Wire `BudgetPlugin` into `default_plugins()` behind env var |
 | `core/tests/test_cost.py` | New — unit tests for pricing math |
 | `infra/alert_rules.yml` | Add spend spike + budget exceeded alerts |
 | `infra/grafana-dashboards/llm-cost.json` | New dashboard |

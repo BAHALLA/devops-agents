@@ -1,15 +1,6 @@
 from google.adk.apps import App
 from google.adk.tools.preload_memory_tool import PreloadMemoryTool
 
-from ai_agents_core import (
-    AgentTool,
-    create_agent,
-    create_context_cache_config,
-    create_parallel_agent,
-    create_sequential_agent,
-    default_plugins,
-    load_agent_env,
-)
 from devops_assistant.remediation import remediation_pipeline
 from docker_agent.agent import root_agent as docker_agent_root
 from docker_agent.tools import (
@@ -40,6 +31,15 @@ from observability_agent.tools import (
 )
 from ops_journal_agent.agent import root_agent as journal_agent
 from ops_journal_agent.tools import log_operation, save_note
+from orrery_core import (
+    AgentTool,
+    create_agent,
+    create_context_cache_config,
+    create_parallel_agent,
+    create_sequential_agent,
+    default_plugins,
+    load_agent_env,
+)
 
 load_agent_env(__file__)
 

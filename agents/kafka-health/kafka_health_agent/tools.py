@@ -8,8 +8,8 @@ from typing import Any
 from confluent_kafka import ConsumerGroupTopicPartitions, KafkaException, TopicPartition
 from confluent_kafka.admin import AdminClient, NewPartitions, NewTopic, OffsetSpec
 
-from ai_agents_core import AgentConfig, confirm, destructive, with_retry
-from ai_agents_core.validation import (
+from orrery_core import AgentConfig, confirm, destructive, with_retry
+from orrery_core.validation import (
     KAFKA_TOPIC_PATTERN,
     MAX_PARTITIONS,
     MAX_REPLICATION_FACTOR,

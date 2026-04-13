@@ -28,7 +28,7 @@ ADMIN (2)    →  can also call @destructive tools (irreversible)
 
 3. **`authorize()` via `GuardrailsPlugin`** — RBAC is enforced by the `GuardrailsPlugin`, registered once on the `Runner` via `default_plugins()`. The plugin applies globally to every agent and tool:
    ```python
-   from ai_agents_core import default_plugins, RolePolicy
+   from orrery_core import default_plugins, RolePolicy
    plugins = default_plugins(role_policy=RolePolicy(overrides={"sensitive_read": Role.OPERATOR}))
    runner = Runner(agent=root_agent, ..., plugins=plugins)
    ```
@@ -72,7 +72,7 @@ ADMIN (2)    →  can also call @destructive tools (irreversible)
 
 ## Implementation
 
-- `core/ai_agents_core/rbac.py` — `Role` enum, `RolePolicy`, `authorize()`, `@requires_role`, `infer_minimum_role()`
+- `core/orrery_core/rbac.py` — `Role` enum, `RolePolicy`, `authorize()`, `@requires_role`, `infer_minimum_role()`
 - `core/tests/test_rbac.py` — 25 test cases
 
 ### Plugin-based enforcement (replaces per-agent callbacks)
@@ -82,7 +82,7 @@ ADMIN (2)    →  can also call @destructive tools (irreversible)
 ADK Plugins apply to every agent, tool, and LLM call managed by the Runner — including sub-agents. This eliminates the need to remember to add `authorize()` to each new agent.
 
 ```python
-from ai_agents_core import default_plugins
+from orrery_core import default_plugins
 from google.adk.runners import Runner
 
 runner = Runner(

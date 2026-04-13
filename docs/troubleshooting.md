@@ -45,7 +45,7 @@ If you're using AI Studio instead, set `GOOGLE_GENAI_USE_VERTEXAI=FALSE` and `GO
 Hot loop in a `LoopAgent`? Check `max_iterations` on `remediation_pipeline` (defaults to 3). For Gemini, enable context caching ([`CONTEXT_CACHE_MIN_TOKENS`](config/general.md#context-caching)) — it reduces input tokens per call dramatically for tool-heavy agents.
 
 ### LLM costs spike unexpectedly
-Check the `ai_agents_llm_tokens_total` Prometheus counter and the cache hit rate. Common cause: caching is disabled (Gemini-only feature) or `CONTEXT_CACHE_MIN_TOKENS` is set too high to ever trigger. See [Deployment → LLM costs](deployment.md#llm-costs-spike-unexpectedly).
+Check the `orrery_llm_tokens_total` Prometheus counter and the cache hit rate. Common cause: caching is disabled (Gemini-only feature) or `CONTEXT_CACHE_MIN_TOKENS` is set too high to ever trigger. See [Deployment → LLM costs](deployment.md#llm-costs-spike-unexpectedly).
 
 ---
 
@@ -93,7 +93,7 @@ The confirmation key is `args-hash + invocation-id`. If the LLM retries with sli
 `MetricsPlugin` registers the collector but **does not** auto-bind the HTTP server. The Slack and Google Chat bots call `metrics_plugin.start_server()` in their FastAPI lifespan; the persistent runner does it when `ENABLE_METRICS_SERVER=true`. For a custom integration, call it yourself — see [Metrics Quick Start](metrics.md#quick-start).
 
 ### Circuit breaker always open for a specific tool
-Check `ai_agents_circuit_breaker_state{tool="<name>"} == 1` — the breaker opens after 5 failures in a row (default) and stays open for 60 seconds. If the underlying system is genuinely down, you'll see it flip back to half-open on the next probe.
+Check `orrery_circuit_breaker_state{tool="<name>"} == 1` — the breaker opens after 5 failures in a row (default) and stays open for 60 seconds. If the underlying system is genuinely down, you'll see it flip back to half-open on the next probe.
 
 ---
 

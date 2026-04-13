@@ -2,7 +2,7 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: devops-assistant
-  namespace: ai-agents
+  namespace: orrery
   labels:
     app.kubernetes.io/name: devops-assistant
 spec:

@@ -21,7 +21,7 @@ from slowapi import Limiter
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 
-from ai_agents_core import MetricsPlugin, authorize, default_plugins
+from orrery_core import MetricsPlugin, authorize, default_plugins
 
 from .config import SlackBotConfig
 from .confirmation import ConfirmationStore, slack_confirmation

@@ -21,7 +21,7 @@ from google.adk.sessions.database_session_service import DatabaseSessionService
 from slack_bolt.adapter.socket_mode.async_handler import AsyncSocketModeHandler
 from slack_bolt.async_app import AsyncApp
 
-from ai_agents_core import authorize, default_plugins
+from orrery_core import authorize, default_plugins
 
 from .config import SlackBotConfig
 from .confirmation import ConfirmationStore, slack_confirmation

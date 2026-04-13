@@ -1,7 +1,7 @@
-site_name: AI Agents for DevOps & SRE
-site_url: https://bahalla.github.io/devops-agents/
-repo_url: https://github.com/BAHALLA/devops-agents
-repo_name: BAHALLA/devops-agents
+site_name: Orrery — AI Agents for DevOps & SRE
+site_url: https://bahalla.github.io/orrery/
+repo_url: https://github.com/BAHALLA/orrery
+repo_name: BAHALLA/orrery
 edit_uri: edit/main/docs/
 
 theme:
@@ -44,9 +44,9 @@ theme:
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/BAHALLA/devops-agents
+      link: https://github.com/BAHALLA/orrery
     - icon: fontawesome/brands/python
-      link: https://pypi.org/project/ai-agents-core/
+      link: https://pypi.org/project/orrery-core/
 
 copyright: Copyright &copy; 2026 Taoufiq &mdash; Built with Google ADK
 

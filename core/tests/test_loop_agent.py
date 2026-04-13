@@ -2,7 +2,7 @@
 
 from google.adk.agents import LoopAgent
 
-from ai_agents_core.base import create_agent, create_loop_agent
+from orrery_core.base import create_agent, create_loop_agent
 
 
 def _make_sub_agent(name: str):

@@ -19,8 +19,8 @@ The fastest way to experience the platform is using the pre-configured Docker st
 
 1.  **Clone the Repository**:
     ```bash
-    git clone https://github.com/BAHALLA/devops-agents.git
-    cd devops-agents
+    git clone https://github.com/BAHALLA/orrery.git
+    cd orrery
     ```
 
 2.  **Start the Platform**:

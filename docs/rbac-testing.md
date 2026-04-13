@@ -19,7 +19,7 @@ Before every agent turn, `GuardrailsPlugin.before_agent_callback` runs `ensure_d
 |---------|--------------|---------------|
 | ADK Web (`adk web`) | `viewer` | Edit session state: set `user_role` **and** `_role_set_by_server: true`, then start a **new session** |
 | ADK CLI (`adk run <agent>`) | `viewer` | No env-var knob — wrap the agent with `core.runner.run_persistent_cli()` or write a small script |
-| Persistent CLI (`make run-devops-persistent`) | `admin` (hard-coded) | Edit `core/ai_agents_core/runner.py:141` to change |
+| Persistent CLI (`make run-devops-persistent`) | `admin` (hard-coded) | Edit `core/orrery_core/runner.py:141` to change |
 | Slack bot | `viewer` unless mapped | Set `SLACK_ADMIN_USERS` / `SLACK_OPERATOR_USERS`; start a **new thread** |
 | Google Chat bot | `viewer` unless mapped | Set `GOOGLE_CHAT_ADMIN_EMAILS` / `GOOGLE_CHAT_OPERATOR_EMAILS`; start a **new thread** |
 | Custom `Runner` in Python | Whatever your code sets | Call `set_user_role(initial_state, role)` before `create_session()` |
@@ -85,14 +85,14 @@ Workarounds, ordered by convenience:
 make run-devops-persistent
 ```
 
-To test a non-admin role here, temporarily edit `core/ai_agents_core/runner.py` — change `set_user_role(initial_state, "admin")` at line 141 to `"operator"` or `"viewer"` and re-run.
+To test a non-admin role here, temporarily edit `core/orrery_core/runner.py` — change `set_user_role(initial_state, "admin")` at line 141 to `"operator"` or `"viewer"` and re-run.
 
 **B. Write a 10-line script** using the core helper directly. Save as `scripts/try_role.py`:
 
 ```python
 import asyncio
-from ai_agents_core import set_user_role
-from ai_agents_core.runner import run_persistent_cli
+from orrery_core import set_user_role
+from orrery_core.runner import run_persistent_cli
 from devops_assistant.agent import root_agent
 
 # Patch the initial state by monkey-patching set_user_role's default.
@@ -142,7 +142,7 @@ Google Chat resolves the role from the signed-in user's email claim in the token
 When building your own integration or writing an integration test, set the role explicitly at session creation:
 
 ```python
-from ai_agents_core import set_user_role, default_plugins
+from orrery_core import set_user_role, default_plugins
 from google.adk.apps import App
 from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
@@ -186,7 +186,7 @@ RBAC runs before the confirmation gate by design (see [ADR-001 § Plugin executi
 Add an explicit override:
 
 ```python
-from ai_agents_core import RolePolicy, Role, default_plugins
+from orrery_core import RolePolicy, Role, default_plugins
 
 policy = RolePolicy(overrides={"list_sensitive_topics": Role.OPERATOR})
 plugins = default_plugins(role_policy=policy)
@@ -195,7 +195,7 @@ plugins = default_plugins(role_policy=policy)
 Or annotate the tool directly:
 
 ```python
-from ai_agents_core import requires_role, Role
+from orrery_core import requires_role, Role
 
 @requires_role(Role.OPERATOR)
 async def list_sensitive_topics() -> dict: ...

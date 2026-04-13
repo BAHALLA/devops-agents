@@ -86,8 +86,8 @@ What the user / alert sees.
 Step-by-step commands to confirm the issue is real.
 
 \`\`\`bash
-kubectl -n ai-agents get pods -l app=devops-assistant
-kubectl -n ai-agents logs -l app=devops-assistant --tail=200
+kubectl -n orrery get pods -l app=devops-assistant
+kubectl -n orrery logs -l app=devops-assistant --tail=200
 \`\`\`
 
 ## Immediate mitigation
@@ -207,4 +207,4 @@ is a nice-to-have and can follow after the core runbooks land.
   go out of date instantly.
 - For the most dangerous incident class (LoopAgent storm), include a
   "break glass" command that scales the HPA to 0 immediately:
-  `kubectl -n ai-agents scale deploy/devops-assistant --replicas=0`
+  `kubectl -n orrery scale deploy/devops-assistant --replicas=0`

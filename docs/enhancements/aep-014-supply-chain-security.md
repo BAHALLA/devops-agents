@@ -162,7 +162,7 @@ expected workflow identity:
 apiVersion: policy.sigstore.dev/v1beta1
 kind: ClusterImagePolicy
 metadata:
-  name: ai-agents-images
+  name: orrery-images
 spec:
   images:
     - glob: "ghcr.io/bahalla/devops-agents*"

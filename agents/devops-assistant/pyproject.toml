@@ -4,7 +4,7 @@ version = "0.1.2"
 description = "DevOps orchestrator that delegates to specialized sub-agents"
 requires-python = ">=3.11"
 dependencies = [
-    "ai-agents-core",
+    "orrery-core",
     "docker-agent",
     "kafka-health-agent",
     "k8s-health-agent",
@@ -17,7 +17,7 @@ dependencies = [
 include = ["devops_assistant*"]
 
 [tool.uv.sources]
-ai-agents-core = { workspace = true }
+orrery-core = { workspace = true }
 docker-agent = { workspace = true }
 kafka-health-agent = { workspace = true }
 k8s-health-agent = { workspace = true }

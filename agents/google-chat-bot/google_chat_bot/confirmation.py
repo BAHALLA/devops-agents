@@ -23,7 +23,7 @@ from typing import Any
 from google.adk.agents.context import Context
 from google.adk.tools.base_tool import BaseTool
 
-from ai_agents_core import get_guard_level, get_guard_reason
+from orrery_core import get_guard_level, get_guard_reason
 
 from .cards import build_confirmation_card
 

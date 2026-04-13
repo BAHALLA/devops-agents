@@ -21,7 +21,7 @@ from typing import Any
 from google.adk.agents.context import Context
 from google.adk.tools.base_tool import BaseTool
 
-logger = logging.getLogger("ai_agents.audit")
+logger = logging.getLogger("orrery.audit")
 
 
 def audit_logger(log_path: str | Path | None = None) -> Callable:
@@ -30,7 +30,7 @@ def audit_logger(log_path: str | Path | None = None) -> Callable:
     Each log entry includes timestamp, agent, tool name, arguments,
     result status, and user/session IDs.
 
-    The entry is always emitted via ``logging.getLogger("ai_agents.audit")``.
+    The entry is always emitted via ``logging.getLogger("orrery.audit")``.
     When ``setup_logging()`` is active this produces structured JSON on
     stdout — ready for Loki, ELK, or Cloud Logging.
 

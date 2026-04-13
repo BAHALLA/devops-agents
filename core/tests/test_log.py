@@ -3,7 +3,7 @@
 import json
 import logging
 
-from ai_agents_core.log import JSONFormatter, setup_logging
+from orrery_core.log import JSONFormatter, setup_logging
 
 
 def test_json_formatter_basic():
@@ -29,7 +29,7 @@ def test_json_formatter_basic():
 def test_json_formatter_extra_fields():
     formatter = JSONFormatter()
     record = logging.LogRecord(
-        name="ai_agents.audit",
+        name="orrery.audit",
         level=logging.INFO,
         pathname="audit.py",
         lineno=1,
@@ -51,21 +51,21 @@ def test_json_formatter_extra_fields():
 
 
 def test_mask_dsn_sqlite():
-    from ai_agents_core.log import mask_dsn
+    from orrery_core.log import mask_dsn
 
     url = "sqlite+aiosqlite:///test.db"
     assert mask_dsn(url) == url
 
 
 def test_mask_dsn_postgres():
-    from ai_agents_core.log import mask_dsn
+    from orrery_core.log import mask_dsn
 
     url = "postgresql+asyncpg://user:pass123@localhost:5432/db"
     assert mask_dsn(url) == "postgresql+asyncpg://user:[REDACTED]@localhost:5432/db"
 
 
 def test_mask_dsn_complex():
-    from ai_agents_core.log import mask_dsn
+    from orrery_core.log import mask_dsn
 
     # Test with special characters in username/password
     url = "mysql://admin:secret-password_123@db-host.internal:3306/prod"
@@ -73,7 +73,7 @@ def test_mask_dsn_complex():
 
 
 def test_mask_dsn_no_auth():
-    from ai_agents_core.log import mask_dsn
+    from orrery_core.log import mask_dsn
 
     url = "postgresql://localhost/db"
     assert mask_dsn(url) == url

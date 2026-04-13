@@ -17,7 +17,7 @@ from typing import Any
 from google.adk.agents.context import Context
 from google.adk.tools.base_tool import BaseTool
 
-from ai_agents_core import (
+from orrery_core import (
     LEVEL_DESTRUCTIVE,
     get_guard_level,
     get_guard_reason,

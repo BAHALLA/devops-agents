@@ -1,4 +1,4 @@
-from ai_agents_core import create_agent, load_agent_env
+from orrery_core import create_agent, load_agent_env
 
 from .tools import (
     docker_compose_status,

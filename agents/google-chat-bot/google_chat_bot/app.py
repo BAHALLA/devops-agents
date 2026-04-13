@@ -11,8 +11,8 @@ from google.adk.apps import App
 from google.adk.runners import Runner
 from google.adk.sessions import DatabaseSessionService, InMemorySessionService
 
-from ai_agents_core.base import load_agent_env
-from ai_agents_core.plugins import default_plugins
+from orrery_core.base import load_agent_env
+from orrery_core.plugins import default_plugins
 
 from .auth import verify_google_chat_token
 from .chat_client import ChatClient

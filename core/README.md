@@ -1,4 +1,4 @@
-# ai-agents-core
+# orrery-core
 
 Shared library providing the foundation for all agents: agent factory, plugins, RBAC, guardrails, input validation, audit logging, resilience, and typed configuration.
 
@@ -11,7 +11,7 @@ Cross-cutting concerns are packaged as ADK `BasePlugin` subclasses and registere
 Creates the standard set of plugins in the correct registration order:
 
 ```python
-from ai_agents_core import default_plugins
+from orrery_core import default_plugins
 from google.adk.runners import Runner
 
 runner = Runner(
@@ -47,7 +47,7 @@ Parameters:
 Each plugin can also be instantiated independently for custom configurations:
 
 ```python
-from ai_agents_core import (
+from orrery_core import (
     GuardrailsPlugin, ResiliencePlugin, MetricsPlugin,
     AuditPlugin, ActivityPlugin, ErrorHandlerPlugin,
 )
@@ -74,7 +74,7 @@ Plugins registered on the `Runner` apply globally and run **before** any agent-l
 Creates an ADK Agent with sensible defaults. Since cross-cutting concerns are handled by plugins, agent definitions are simple:
 
 ```python
-from ai_agents_core import create_agent, load_agent_env
+from orrery_core import create_agent, load_agent_env
 
 load_agent_env(__file__)
 
@@ -103,7 +103,7 @@ Agent-level callback parameters (`before_tool_callback`, `after_tool_callback`, 
 Factory functions for structured multi-agent workflows that don't rely on LLM delegation.
 
 ```python
-from ai_agents_core import create_agent, create_sequential_agent, create_parallel_agent
+from orrery_core import create_agent, create_sequential_agent, create_parallel_agent
 
 # Run health checks in parallel
 health_checks = create_parallel_agent(
@@ -134,7 +134,7 @@ All tool functions must be `async def`. Use `asyncio.to_thread()` or `asyncio.cr
 
 ```python
 import asyncio
-from ai_agents_core import with_retry, destructive
+from orrery_core import with_retry, destructive
 
 @with_retry(max_retries=3, retryable=(ConnectionError, TimeoutError))
 async def list_topics() -> dict:
@@ -170,7 +170,7 @@ Per-tool circuit breaker applied globally via the `ResiliencePlugin`. When a too
 Decorator for async tool functions that adds retry with exponential backoff and jitter.
 
 ```python
-from ai_agents_core import with_retry
+from orrery_core import with_retry
 
 @with_retry(max_retries=3, retryable=(ConnectionError, TimeoutError))
 async def list_kafka_topics(timeout: int = 10) -> dict:
@@ -209,7 +209,7 @@ The underlying factories (`graceful_tool_error()`, `graceful_model_error()`) can
 Reusable validators for tool inputs. Each returns `None` on success or `{"status": "error", "message": ...}` on failure. Use the walrus operator for concise early-return:
 
 ```python
-from ai_agents_core.validation import validate_string, validate_positive_int, KAFKA_TOPIC_PATTERN
+from orrery_core.validation import validate_string, validate_positive_int, KAFKA_TOPIC_PATTERN
 
 async def create_kafka_topic(topic_name: str, num_partitions: int = 1) -> dict:
     if err := validate_string(topic_name, "topic_name", pattern=KAFKA_TOPIC_PATTERN):
@@ -250,7 +250,7 @@ Guardrails prevent destructive tools from executing without confirmation. They a
 ### Marking tools as destructive
 
 ```python
-from ai_agents_core import destructive
+from orrery_core import destructive
 
 @destructive("permanently deletes the topic and all its data")
 async def delete_kafka_topic(topic_name: str) -> dict:
@@ -298,7 +298,7 @@ RBAC is enforced globally by the `GuardrailsPlugin`. It runs before the confirma
 Maps tools to their minimum required role. By default, roles are inferred from `@destructive`/`@confirm` decorators. Use overrides for exceptions:
 
 ```python
-from ai_agents_core import RolePolicy, Role, default_plugins
+from orrery_core import RolePolicy, Role, default_plugins
 
 policy = RolePolicy(overrides={"sensitive_read": Role.OPERATOR})
 plugins = default_plugins(role_policy=policy)
@@ -309,7 +309,7 @@ plugins = default_plugins(role_policy=policy)
 Decorator for explicit role annotation on tools that don't use `@destructive`/`@confirm`:
 
 ```python
-from ai_agents_core import requires_role, Role
+from orrery_core import requires_role, Role
 
 @requires_role(Role.ADMIN)
 async def manage_users() -> dict:
@@ -321,7 +321,7 @@ async def manage_users() -> dict:
 Use `set_user_role()` to assign a role from trusted server-side code:
 
 ```python
-from ai_agents_core import set_user_role
+from orrery_core import set_user_role
 
 initial_state = {}
 set_user_role(initial_state, "admin")
@@ -343,7 +343,7 @@ For a hands-on guide to exercising `viewer` / `operator` / `admin` from ADK Web,
 Configures the root Python logger with a JSON formatter that outputs structured log lines to stdout — container-friendly and ready for Loki, ELK, Splunk, or Cloud Logging.
 
 ```python
-from ai_agents_core import setup_logging
+from orrery_core import setup_logging
 
 setup_logging()  # call once at startup
 ```
@@ -383,7 +383,7 @@ Records every tool call to `session_log` in session state via the `ActivityPlugi
 A pydantic-settings base class for typed, validated configuration. Replaces raw `os.getenv()` calls.
 
 ```python
-from ai_agents_core import AgentConfig, load_config
+from orrery_core import AgentConfig, load_config
 
 class KafkaConfig(AgentConfig):
     kafka_bootstrap_servers: str = "localhost:9092"
@@ -429,7 +429,7 @@ An async helper that runs an agent in a CLI loop with SQLite-backed sessions. Su
 
 ```python
 import asyncio
-from ai_agents_core import run_persistent, default_plugins
+from orrery_core import run_persistent, default_plugins
 from my_agent.agent import root_agent
 
 asyncio.run(run_persistent(root_agent, app_name="my_agent", plugins=default_plugins()))

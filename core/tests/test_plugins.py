@@ -1,4 +1,4 @@
-"""Tests for ADK Plugins (core/ai_agents_core/plugins.py)."""
+"""Tests for ADK Plugins (core/orrery_core/plugins.py)."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from ai_agents_core.plugins import (
+from orrery_core.plugins import (
     ActivityPlugin,
     AuditPlugin,
     ErrorHandlerPlugin,
@@ -16,7 +16,7 @@ from ai_agents_core.plugins import (
     ResiliencePlugin,
     default_plugins,
 )
-from ai_agents_core.rbac import Role, RolePolicy
+from orrery_core.rbac import Role, RolePolicy
 
 # Fixtures for ADK mock objects
 
@@ -77,7 +77,7 @@ async def test_guardrails_plugin_rbac_blocks(base_tool, tool_context):
 async def test_guardrails_plugin_confirm_mode_skips_gate(base_tool, tool_context):
     """In confirm mode, GuardrailsPlugin handles RBAC only — confirmation is
     handled at the agent level via before_tool_callback."""
-    from ai_agents_core.guardrails import confirm
+    from orrery_core.guardrails import confirm
 
     @confirm("testing")
     def my_guarded_func():
@@ -100,7 +100,7 @@ async def test_guardrails_plugin_confirm_mode_skips_gate(base_tool, tool_context
 @pytest.mark.asyncio
 async def test_guardrails_plugin_dry_run_blocks(base_tool, tool_context):
     """Verify dry_run mode still blocks guarded tools at the plugin level."""
-    from ai_agents_core.guardrails import destructive
+    from orrery_core.guardrails import destructive
 
     @destructive("deletes data")
     def my_destructive_func():

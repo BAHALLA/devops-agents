@@ -1,8 +1,8 @@
-"""Tests for ai_agents_core.guardrails."""
+"""Tests for orrery_core.guardrails."""
 
 import time
 
-from ai_agents_core.guardrails import (
+from orrery_core.guardrails import (
     _CONFIRMATION_TTL,
     _hash_args,
     confirm,

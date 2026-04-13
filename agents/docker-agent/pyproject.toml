@@ -5,8 +5,8 @@ description = "Agent for managing Docker containers and images"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "ai-agents-core",
+    "orrery-core",
 ]
 
 [tool.uv.sources]
-ai-agents-core = { workspace = true }
+orrery-core = { workspace = true }

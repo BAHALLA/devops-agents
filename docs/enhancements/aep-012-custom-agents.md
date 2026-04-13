@@ -120,7 +120,7 @@ class CanaryAgent(BaseAgent):
 ### Step 4: Add Factory Functions to Core
 
 ```python
-# core/ai_agents_core/base.py
+# core/orrery_core/base.py
 def create_runbook_agent(name, runbook_steps, **kwargs):
     return RunbookAgent(name=name, runbook_steps=runbook_steps, **kwargs)
 
@@ -133,9 +133,9 @@ def create_escalation_agent(name, inner_agent, threshold, **kwargs):
 
 | File | Change |
 |------|--------|
-| `core/ai_agents_core/custom_agents.py` | New: RunbookAgent, EscalationAgent, CanaryAgent |
-| `core/ai_agents_core/base.py` | Add factory functions for custom agents |
-| `core/ai_agents_core/__init__.py` | Export new agent classes |
+| `core/orrery_core/custom_agents.py` | New: RunbookAgent, EscalationAgent, CanaryAgent |
+| `core/orrery_core/base.py` | Add factory functions for custom agents |
+| `core/orrery_core/__init__.py` | Export new agent classes |
 | `core/tests/test_custom_agents.py` | New: tests for custom agents |
 | `docs/adding-an-agent.md` | Document custom agent patterns |
 

@@ -25,7 +25,7 @@ from .health import HealthServer
 from .log import mask_dsn
 from .rbac import set_user_role
 
-logger = logging.getLogger("ai_agents.runner")
+logger = logging.getLogger("orrery.runner")
 
 
 def create_context_cache_config(

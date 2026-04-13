@@ -11,11 +11,6 @@ destructive actions inside the loop.
 
 from google.adk.tools.tool_context import ToolContext
 
-from ai_agents_core import (
-    create_agent,
-    create_loop_agent,
-    create_sequential_agent,
-)
 from k8s_health_agent.tools import (
     describe_pod,
     get_deployment_status,
@@ -28,6 +23,11 @@ from k8s_health_agent.tools import (
 )
 from kafka_health_agent.tools import get_consumer_lag, get_kafka_cluster_health
 from ops_journal_agent.tools import log_operation
+from orrery_core import (
+    create_agent,
+    create_loop_agent,
+    create_sequential_agent,
+)
 
 # ── Exit loop tool ────────────────────────────────────────────────────
 

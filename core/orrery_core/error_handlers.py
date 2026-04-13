@@ -21,7 +21,7 @@ from google.adk.models.llm_response import LlmResponse
 from google.adk.tools.base_tool import BaseTool
 from google.genai import types
 
-logger = logging.getLogger("ai_agents.errors")
+logger = logging.getLogger("orrery.errors")
 
 
 def graceful_tool_error() -> Callable:

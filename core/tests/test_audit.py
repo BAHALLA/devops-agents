@@ -1,10 +1,10 @@
-"""Tests for ai_agents_core.audit."""
+"""Tests for orrery_core.audit."""
 
 import json
 import logging
 from pathlib import Path
 
-from ai_agents_core.audit import _sanitize, _sanitize_args, audit_logger
+from orrery_core.audit import _sanitize, _sanitize_args, audit_logger
 
 
 def test_audit_logger_writes_jsonl(tmp_path: Path, fake_tool, fake_ctx):
@@ -142,7 +142,7 @@ def test_audit_logger_emits_to_logging(fake_tool, fake_ctx, caplog):
     tool = fake_tool(name="get_nodes")
     ctx = fake_ctx()
 
-    with caplog.at_level(logging.INFO, logger="ai_agents.audit"):
+    with caplog.at_level(logging.INFO, logger="orrery.audit"):
         callback(
             tool=tool,
             args={"namespace": "default"},
@@ -165,7 +165,7 @@ def test_audit_logger_no_file_when_path_is_none(tmp_path, fake_tool, fake_ctx, c
     tool = fake_tool(name="my_tool")
     ctx = fake_ctx()
 
-    with caplog.at_level(logging.INFO, logger="ai_agents.audit"):
+    with caplog.at_level(logging.INFO, logger="orrery.audit"):
         callback(tool=tool, args={}, tool_context=ctx, tool_response={"status": "ok"})
 
     # No .jsonl file should exist anywhere in tmp_path

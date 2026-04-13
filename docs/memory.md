@@ -53,7 +53,7 @@ You can also supply custom patterns:
 
 ```python
 import re
-from ai_agents_core import SecureMemoryService
+from orrery_core import SecureMemoryService
 
 memory = SecureMemoryService(
     sensitive_patterns=[
@@ -80,7 +80,7 @@ Memory is scoped by `app_name` and `user_id` — inherited from ADK's design. Us
 
 ```python
 import asyncio
-from ai_agents_core import SecureMemoryService, default_plugins, run_persistent
+from orrery_core import SecureMemoryService, default_plugins, run_persistent
 from my_agent.agent import root_agent
 
 asyncio.run(
@@ -104,7 +104,7 @@ For the agent to actively use memory, add `PreloadMemoryTool` to its tools:
 
 ```python
 from google.adk.tools.preload_memory_tool import PreloadMemoryTool
-from ai_agents_core import create_agent
+from orrery_core import create_agent
 
 root_agent = create_agent(
     name="my_agent",

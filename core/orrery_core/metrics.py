@@ -7,7 +7,7 @@ scraping.
 
 Usage::
 
-    from ai_agents_core.metrics import MetricsCollector
+    from orrery_core.metrics import MetricsCollector
 
     metrics = MetricsCollector()
 
@@ -41,46 +41,46 @@ from prometheus_client import (
     start_http_server,
 )
 
-logger = logging.getLogger("ai_agents.metrics")
+logger = logging.getLogger("orrery.metrics")
 
 # ── Metric definitions ────────────────────────────────────────────────
 # Naming follows https://prometheus.io/docs/practices/naming/
-#   namespace: ai_agents
+#   namespace: orrery
 #   subsystem: tool / circuit_breaker / llm
 
 TOOL_CALLS_TOTAL = Counter(
-    "ai_agents_tool_calls_total",
+    "orrery_tool_calls_total",
     "Total number of tool invocations",
     ["agent", "tool", "status"],
 )
 
 TOOL_DURATION_SECONDS = Histogram(
-    "ai_agents_tool_duration_seconds",
+    "orrery_tool_duration_seconds",
     "Tool execution duration in seconds",
     ["agent", "tool"],
     buckets=(0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0, 60.0),
 )
 
 TOOL_ERRORS_TOTAL = Counter(
-    "ai_agents_tool_errors_total",
+    "orrery_tool_errors_total",
     "Tool errors broken down by exception type",
     ["agent", "tool", "error_type"],
 )
 
 CIRCUIT_BREAKER_STATE = Gauge(
-    "ai_agents_circuit_breaker_state",
+    "orrery_circuit_breaker_state",
     "Circuit breaker state: 0=closed, 1=open, 2=half_open",
     ["tool"],
 )
 
 LLM_TOKENS_TOTAL = Counter(
-    "ai_agents_llm_tokens_total",
+    "orrery_llm_tokens_total",
     "Total LLM tokens consumed",
     ["agent", "direction"],
 )
 
 CONTEXT_CACHE_EVENTS_TOTAL = Counter(
-    "ai_agents_context_cache_events_total",
+    "orrery_context_cache_events_total",
     "Context cache hit/miss events",
     ["event"],  # "hit" or "miss"
 )

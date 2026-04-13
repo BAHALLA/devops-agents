@@ -42,7 +42,7 @@ The project has **no cross-session memory**. For a DevOps platform, this means:
 
 ### Step 1: Add MemoryService to Core Runner
 
-Extend `run_persistent()` in `core/ai_agents_core/runner.py`:
+Extend `run_persistent()` in `core/orrery_core/runner.py`:
 
 ```python
 from google.adk.memory import InMemoryMemoryService
@@ -139,9 +139,9 @@ class PostgresMemoryService(BaseMemoryService):
 
 | File | Change |
 |------|--------|
-| `core/ai_agents_core/runner.py` | Add `memory_service` parameter to `run_persistent()` |
-| `core/ai_agents_core/plugins.py` | Add `MemoryPlugin` for auto-save |
-| `core/ai_agents_core/base.py` | Update `create_agent()` to accept memory tools |
+| `core/orrery_core/runner.py` | Add `memory_service` parameter to `run_persistent()` |
+| `core/orrery_core/plugins.py` | Add `MemoryPlugin` for auto-save |
+| `core/orrery_core/base.py` | Update `create_agent()` to accept memory tools |
 | `agents/devops-assistant/devops_assistant/agent.py` | Add `PreloadMemoryTool` |
 | `agents/ops-journal/ops_journal_agent/agent.py` | Add `load_memory` tool |
 | `agents/devops-assistant/run_persistent.py` | Wire up memory service |

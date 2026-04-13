@@ -176,7 +176,7 @@ agent = create_agent(
 Replace environment variables with a secrets manager:
 
 ```python
-# core/ai_agents_core/secrets.py
+# core/orrery_core/secrets.py
 class SecretsManager:
     """Pluggable secrets management."""
 
@@ -192,11 +192,11 @@ class SecretsManager:
 
 | File | Change |
 |------|--------|
-| `core/ai_agents_core/auth.py` | New: JWT verification, AuthPlugin |
-| `core/ai_agents_core/pii.py` | New: PIIRedactionPlugin |
-| `core/ai_agents_core/safety.py` | New: SafetyScreenPlugin |
-| `core/ai_agents_core/secrets.py` | New: SecretsManager |
-| `core/ai_agents_core/plugins.py` | Add auth/PII/safety plugins to `default_plugins()` |
+| `core/orrery_core/auth.py` | New: JWT verification, AuthPlugin |
+| `core/orrery_core/pii.py` | New: PIIRedactionPlugin |
+| `core/orrery_core/safety.py` | New: SafetyScreenPlugin |
+| `core/orrery_core/secrets.py` | New: SecretsManager |
+| `core/orrery_core/plugins.py` | Add auth/PII/safety plugins to `default_plugins()` |
 | `agents/slack-bot/slack_bot/app.py` | Add Slack signature verification |
 | `core/tests/test_auth.py` | New: auth tests |
 | `core/tests/test_pii.py` | New: PII redaction tests |

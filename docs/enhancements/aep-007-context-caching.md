@@ -65,10 +65,10 @@ cache_misses = Counter("agent_context_cache_misses_total", "Context cache misses
 
 | File | Change |
 |------|--------|
-| `core/ai_agents_core/runner.py` | `create_context_cache_config()` factory + `context_cache_config` param on `run_persistent()` |
+| `core/orrery_core/runner.py` | `create_context_cache_config()` factory + `context_cache_config` param on `run_persistent()` |
 | `agents/devops-assistant/run_persistent.py` | Configure context caching via `create_context_cache_config()` |
-| `core/ai_agents_core/metrics.py` | `CONTEXT_CACHE_EVENTS_TOTAL` counter + `track_cache_event()` helper |
-| `core/ai_agents_core/__init__.py` | Export `create_context_cache_config`, `track_cache_event`, `CONTEXT_CACHE_EVENTS_TOTAL` |
+| `core/orrery_core/metrics.py` | `CONTEXT_CACHE_EVENTS_TOTAL` counter + `track_cache_event()` helper |
+| `core/orrery_core/__init__.py` | Export `create_context_cache_config`, `track_cache_event`, `CONTEXT_CACHE_EVENTS_TOTAL` |
 | `core/tests/test_context_cache.py` | 9 tests: factory defaults, env vars, explicit overrides, App wiring, metrics |
 
 ## Acceptance Criteria

@@ -12,7 +12,7 @@ from typing import Any
 
 from google.adk.tools import ToolContext
 
-from ai_agents_core.validation import validate_string, validate_url
+from orrery_core.validation import validate_string, validate_url
 
 # ── Session State: tracks what happened in this conversation ───────────
 
