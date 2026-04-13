@@ -109,19 +109,18 @@ run-observability: ## Launch observability-agent in ADK Dev UI
 	cd agents/observability && uv run adk web
 
 run-observability-cli: ## Run observability-agent in terminal
-	run-assistant run-assistant-cli run-assistant-persistent \
-	...
-	# ── orrery-assistant ───────────────────────────────────
+	cd agents/observability && uv run adk run observability_agent
 
-	run-assistant: ## Launch orrery-assistant in ADK Dev UI
+# ── orrery-assistant ───────────────────────────────────
+
+run-assistant: ## Launch orrery-assistant in ADK Dev UI
 	cd agents/orrery-assistant && ENABLE_METRICS_SERVER=true uv run adk web
 
-	run-assistant-cli: ## Run orrery-assistant in terminal
+run-assistant-cli: ## Run orrery-assistant in terminal
 	cd agents/orrery-assistant && ENABLE_METRICS_SERVER=true uv run adk run orrery_assistant
 
-	run-assistant-persistent: ## Run orrery-assistant with SQLite persistence
+run-assistant-persistent: ## Run orrery-assistant with SQLite persistence
 	cd agents/orrery-assistant && ENABLE_METRICS_SERVER=true uv run python run_persistent.py
-
 
 # ── ops-journal ────────────────────────────────────────
 
@@ -146,4 +145,3 @@ run-slack-bot-socket: ## Run the Slack bot in Socket Mode (no public URL needed)
 
 run-google-chat: ## Run the Google Chat bot (FastAPI on :3001)
 	cd agents/google-chat-bot && uv run uvicorn google_chat_bot.app:api --host 0.0.0.0 --port 3001
-ort 3001
