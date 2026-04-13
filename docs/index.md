@@ -58,7 +58,7 @@ graph LR
     end
 
     subgraph Orchestrator
-        ROOT[DevOps Assistant]
+        ROOT[Orrery Assistant]
     end
 
     subgraph Specialists
@@ -149,3 +149,4 @@ graph LR
 | [**agents**](agents/orrery-assistant.md) | `agents/` | Specialist agent implementations (Kafka, K8s, Docker, etc.). |
 | [**infra**](config/general.md#infrastructure) | `infra/` | Local diagnostic stack (Prometheus, Loki, Kafka, Grafana). |
 | [**roadmap**](enhancements/README.md) | `docs/enhancements/` | Ongoing development and enhancement proposals (AEP). |
+s (AEP). |

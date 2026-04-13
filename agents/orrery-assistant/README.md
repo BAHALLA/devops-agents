@@ -88,9 +88,9 @@ uv run adk run orrery_assistant   # Terminal mode
 Or from the repo root:
 
 ```bash
-make run-devops              # ADK Dev UI (in-memory state)
-make run-devops-cli          # Terminal mode (in-memory state)
-make run-devops-persistent   # Terminal with SQLite persistence
+make run-assistant              # ADK Dev UI (in-memory state)
+make run-assistant-cli          # Terminal mode (in-memory state)
+make run-assistant-persistent   # Terminal with SQLite persistence
 ```
 
 ### Persistent Mode

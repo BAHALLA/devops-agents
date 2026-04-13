@@ -20,7 +20,7 @@ Guarded tools → Block Kit buttons [Approve] [Deny]
 
 ## Setup
 
-For quick setup using the app manifest, see the [main README](../index.md#slack-bot).
+For quick setup using the app manifest, see the [Slack integration guide](../integrations/slack.md).
 
 ### Manual setup (if not using manifest)
 
