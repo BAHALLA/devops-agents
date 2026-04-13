@@ -53,7 +53,7 @@ CI publishes multi-arch images to GHCR automatically via
 docker buildx build \
   --platform linux/amd64,linux/arm64 \
   -f Dockerfile.prod \
-  -t ghcr.io/bahalla/devops-agents:v0.1.0 \
+  -t ghcr.io/bahalla/orrery:v0.1.0 \
   --push .
 ```
 
@@ -110,7 +110,7 @@ Recommended override file:
 
 ```yaml
 image:
-  repository: ghcr.io/bahalla/devops-agents
+  repository: ghcr.io/bahalla/orrery
   tag: "v0.1.0"
 
 # Use the Secret created in Step 2 instead of storing values in the chart.

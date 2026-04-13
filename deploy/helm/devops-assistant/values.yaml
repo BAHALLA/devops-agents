@@ -2,7 +2,7 @@
 ## Override with `helm install ... -f my-values.yaml` or `--set key=value`.
 
 image:
-  repository: ghcr.io/bahalla/devops-agents
+  repository: ghcr.io/bahalla/orrery
   tag: ""  # defaults to .Chart.appVersion
   pullPolicy: IfNotPresent
   pullSecrets: []

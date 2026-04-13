@@ -71,4 +71,4 @@ The role is resolved when a new thread starts. To test a different role, change 
 
 For a side-by-side walk-through of exercising each role from Slack, ADK Web, and the CLI, see [Testing RBAC across surfaces](../rbac-testing.md).
 
-See the full [Slack Bot README](https://github.com/BAHALLA/devops-agents/blob/main/agents/slack-bot/README.md) for webhook mode, Docker deployment, and configuration reference.
+See the full [Slack Bot README](https://github.com/BAHALLA/orrery/blob/main/agents/slack-bot/README.md) for webhook mode, Docker deployment, and configuration reference.

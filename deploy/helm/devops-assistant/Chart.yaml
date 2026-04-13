@@ -14,8 +14,8 @@ keywords:
   - agents
   - llm
   - kubernetes
-home: https://github.com/BAHALLA/devops-agents
+home: https://github.com/BAHALLA/orrery
 sources:
-  - https://github.com/BAHALLA/devops-agents
+  - https://github.com/BAHALLA/orrery
 maintainers:
   - name: Taoufiq Bahalla

@@ -21,5 +21,5 @@ resources:
   - networkpolicy.yaml
 
 images:
-  - name: ghcr.io/bahalla/devops-agents
+  - name: ghcr.io/bahalla/orrery
     newTag: v0.1.2

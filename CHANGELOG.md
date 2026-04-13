@@ -101,7 +101,7 @@ First public release of the AI Agents for DevOps & SRE platform.
 - Guardrail confirmation bypass fixed with args-hash + TTL tracking
 - Server-side role enforcement prevents privilege escalation
 
-[Unreleased]: https://github.com/BAHALLA/devops-agents/compare/v0.1.2...HEAD
-[0.1.2]: https://github.com/BAHALLA/devops-agents/compare/v0.1.1...v0.1.2
-[0.1.1]: https://github.com/BAHALLA/devops-agents/compare/v0.1.0...v0.1.1
-[0.1.0]: https://github.com/BAHALLA/devops-agents/releases/tag/v0.1.0
+[Unreleased]: https://github.com/BAHALLA/orrery/compare/v0.1.2...HEAD
+[0.1.2]: https://github.com/BAHALLA/orrery/compare/v0.1.1...v0.1.2
+[0.1.1]: https://github.com/BAHALLA/orrery/compare/v0.1.0...v0.1.1
+[0.1.0]: https://github.com/BAHALLA/orrery/releases/tag/v0.1.0

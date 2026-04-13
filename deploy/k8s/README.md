@@ -48,7 +48,7 @@ Verify:
 ```bash
 # Trigger rollout
 kubectl -n orrery set image deployment/devops-assistant \
-  devops-assistant=ghcr.io/bahalla/devops-agents:v0.1.2
+  devops-assistant=ghcr.io/bahalla/orrery:v0.1.2
 
 # Watch pods cycle with no downtime
 kubectl -n orrery rollout status deployment/devops-assistant

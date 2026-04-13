@@ -117,7 +117,7 @@ Extend `infra/alert_rules.yml`:
     severity: warning
   annotations:
     summary: "{{ $labels.tool }} error rate > 10%"
-    runbook_url: "https://github.com/BAHALLA/devops-agents/blob/main/docs/runbooks/high-error-rate.md"
+    runbook_url: "https://github.com/BAHALLA/orrery/blob/main/docs/runbooks/high-error-rate.md"
 
 - alert: CircuitBreakerOpen
   expr: circuit_breaker_state == 1
@@ -126,7 +126,7 @@ Extend `infra/alert_rules.yml`:
     severity: critical
   annotations:
     summary: "Circuit breaker open for {{ $labels.tool }}"
-    runbook_url: "https://github.com/BAHALLA/devops-agents/blob/main/docs/runbooks/circuit-breaker-open.md"
+    runbook_url: "https://github.com/BAHALLA/orrery/blob/main/docs/runbooks/circuit-breaker-open.md"
 ```
 
 ### Step 4: Priority runbooks to write first

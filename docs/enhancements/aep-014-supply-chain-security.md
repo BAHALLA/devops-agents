@@ -39,7 +39,7 @@ of what an enterprise procurement review will ask for:
 
 - **Sigstore / cosign**: keyless (OIDC) signing in GitHub Actions — no
   key material to rotate. Images are signed against the workflow
-  identity (`https://github.com/BAHALLA/devops-agents/.github/workflows/docker-publish.yml@refs/tags/v0.2.0`).
+  identity (`https://github.com/BAHALLA/orrery/.github/workflows/docker-publish.yml@refs/tags/v0.2.0`).
 - **Trivy**: industry-standard container + filesystem scanner, works as
   a GitHub Action and as a Kubernetes admission controller.
 - **Grype + Syft**: alternative SBOM / scan stack from Anchore.
@@ -112,9 +112,9 @@ Verify from the command line:
 
 ```bash
 cosign verify \
-  --certificate-identity-regexp "https://github.com/BAHALLA/devops-agents/.*" \
+  --certificate-identity-regexp "https://github.com/BAHALLA/orrery/.*" \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com \
-  ghcr.io/bahalla/devops-agents:v0.2.0
+  ghcr.io/bahalla/orrery:v0.2.0
 ```
 
 ### Step 4: Scan images with Trivy as a CI gate
@@ -165,13 +165,13 @@ metadata:
   name: orrery-images
 spec:
   images:
-    - glob: "ghcr.io/bahalla/devops-agents*"
+    - glob: "ghcr.io/bahalla/orrery*"
   authorities:
     - keyless:
         url: https://fulcio.sigstore.dev
         identities:
           - issuer: https://token.actions.githubusercontent.com
-            subjectRegExp: "https://github.com/BAHALLA/devops-agents/.*"
+            subjectRegExp: "https://github.com/BAHALLA/orrery/.*"
 ```
 
 ## Affected Files

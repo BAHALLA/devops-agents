@@ -101,4 +101,4 @@ Check `orrery_circuit_breaker_state{tool="<name>"} == 1` — the breaker opens a
 
 - Structured logs: every agent emits JSON to stdout. `docker logs -f devops-assistant | jq` is the fastest way to see what's happening.
 - Audit trail: `AuditPlugin` writes one line per tool call with RBAC decisions, args (redacted), and latency.
-- File an issue: [github.com/BAHALLA/devops-agents/issues](https://github.com/BAHALLA/devops-agents/issues).
+- File an issue: [github.com/BAHALLA/orrery/issues](https://github.com/BAHALLA/orrery/issues).
