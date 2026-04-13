@@ -11,7 +11,7 @@ __pycache__
 agents/*/.env
 agents/*/kafka_health_agent/.env
 agents/*/k8s_health_agent/.env
-agents/*/devops_assistant/.env
+agents/*/orrery_assistant/.env
 agents/*/ops_journal_agent/.env
 **/tests/
 **/assets/

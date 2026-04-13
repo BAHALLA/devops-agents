@@ -37,7 +37,7 @@ jobs:
             --extra-search-path agents/kafka-health \
             --extra-search-path agents/k8s-health \
             --extra-search-path agents/observability \
-            --extra-search-path agents/devops-assistant \
+            --extra-search-path agents/orrery-assistant \
             --extra-search-path agents/ops-journal \
             --extra-search-path agents/slack-bot \
             .

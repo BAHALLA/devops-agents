@@ -44,7 +44,7 @@ jobs:
             --extra-search-path agents/kafka-health \
             --extra-search-path agents/k8s-health \
             --extra-search-path agents/observability \
-            --extra-search-path agents/devops-assistant \
+            --extra-search-path agents/orrery-assistant \
             --extra-search-path agents/ops-journal \
             --extra-search-path agents/slack-bot \
             .
@@ -84,7 +84,7 @@ jobs:
             type=sha,prefix=sha-,format=short
             type=raw,value=latest,enable={{is_default_branch}}
           labels: |
-            org.opencontainers.image.title=devops-assistant
+            org.opencontainers.image.title=orrery-assistant
             org.opencontainers.image.description=AI-powered DevOps/SRE agent platform
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
 
@@ -135,10 +135,10 @@ jobs:
           version: v3.16.0
 
       - name: Lint chart
-        run: helm lint deploy/helm/devops-assistant
+        run: helm lint deploy/helm/orrery-assistant
 
       - name: Template chart (smoke test)
-        run: helm template test deploy/helm/devops-assistant --debug > /tmp/rendered.yaml
+        run: helm template test deploy/helm/orrery-assistant --debug > /tmp/rendered.yaml
 
       - name: Validate rendered manifests (kubeconform)
         uses: azure/setup-kubectl@v5
