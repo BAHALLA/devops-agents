@@ -4,13 +4,13 @@ Release: {{ .Release.Name }}
 Namespace: {{ .Release.Namespace }}
 
 1. Verify the pods are running:
-   kubectl -n {{ .Release.Namespace }} get pods -l app.kubernetes.io/name={{ include "devops-assistant.name" . }}
+   kubectl -n {{ .Release.Namespace }} get pods -l app.kubernetes.io/name={{ include "orrery-assistant.name" . }}
 
 2. Tail logs:
-   kubectl -n {{ .Release.Namespace }} logs -l app.kubernetes.io/name={{ include "devops-assistant.name" . }} -f
+   kubectl -n {{ .Release.Namespace }} logs -l app.kubernetes.io/name={{ include "orrery-assistant.name" . }} -f
 
 3. Port-forward the ADK web UI:
-   kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "devops-assistant.fullname" . }} 8000:{{ .Values.service.httpPort }}
+   kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "orrery-assistant.fullname" . }} 8000:{{ .Values.service.httpPort }}
 
 {{- if not .Values.existingSecret }}
 

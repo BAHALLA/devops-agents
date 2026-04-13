@@ -93,14 +93,14 @@ To test a non-admin role here, temporarily edit `core/orrery_core/runner.py` —
 import asyncio
 from orrery_core import set_user_role
 from orrery_core.runner import run_persistent_cli
-from devops_assistant.agent import root_agent
+from orrery_assistant.agent import root_agent
 
 # Patch the initial state by monkey-patching set_user_role's default.
 # Simpler: just spin up your own Runner — see the "Custom Runner" section below.
 
 asyncio.run(run_persistent_cli(
     agent=root_agent,
-    app_name="devops_assistant",
+    app_name="orrery_assistant",
     user_id="taoufiq@example.com",
 ))
 ```
@@ -147,20 +147,20 @@ from google.adk.apps import App
 from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
 
-from devops_assistant.agent import root_agent
+from orrery_assistant.agent import root_agent
 
 session_service = InMemorySessionService()
 initial_state = {}
 set_user_role(initial_state, "operator")          # ← this is the trusted entry point
 
 session = await session_service.create_session(
-    app_name="devops_assistant",
+    app_name="orrery_assistant",
     user_id="test@example.com",
     state=initial_state,
 )
 
 runner = Runner(
-    app=App(name="devops_assistant", root_agent=root_agent, plugins=default_plugins()),
+    app=App(name="orrery_assistant", root_agent=root_agent, plugins=default_plugins()),
     session_service=session_service,
 )
 ```

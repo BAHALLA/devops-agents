@@ -211,7 +211,7 @@ If you see `401 Unauthorized` with a message about an invalid identity, add the 
 
 - **FastAPI**: serves the webhook endpoint.
 - **google-auth**: verifies ID tokens from the Chat system account.
-- **ADK Runner**: executes the `devops-assistant` agent with `auto_create_session=True`.
+- **ADK Runner**: executes the `orrery-assistant` agent with `auto_create_session=True`.
 - **ConfirmationStore**: in-memory store of pending actions.
 - **PostgreSQL** *(optional)*: set `DATABASE_URL` to persist cross-session
   state across restarts; otherwise an in-memory session service is used.

@@ -1,12 +1,12 @@
 {{/*
-Common helpers for the devops-assistant chart.
+Common helpers for the orrery-assistant chart.
 */}}
 
-{{- define "devops-assistant.name" -}}
+{{- define "orrery-assistant.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
-{{- define "devops-assistant.fullname" -}}
+{{- define "orrery-assistant.fullname" -}}
 {{- if .Values.fullnameOverride -}}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" -}}
 {{- else -}}
@@ -19,40 +19,40 @@ Common helpers for the devops-assistant chart.
 {{- end -}}
 {{- end -}}
 
-{{- define "devops-assistant.chart" -}}
+{{- define "orrery-assistant.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
-{{- define "devops-assistant.labels" -}}
-helm.sh/chart: {{ include "devops-assistant.chart" . }}
-{{ include "devops-assistant.selectorLabels" . }}
+{{- define "orrery-assistant.labels" -}}
+helm.sh/chart: {{ include "orrery-assistant.chart" . }}
+{{ include "orrery-assistant.selectorLabels" . }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 app.kubernetes.io/part-of: orrery
 {{- end -}}
 
-{{- define "devops-assistant.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "devops-assistant.name" . }}
+{{- define "orrery-assistant.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "orrery-assistant.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end -}}
 
-{{- define "devops-assistant.serviceAccountName" -}}
+{{- define "orrery-assistant.serviceAccountName" -}}
 {{- if .Values.serviceAccount.create -}}
-{{- default (include "devops-assistant.fullname" .) .Values.serviceAccount.name -}}
+{{- default (include "orrery-assistant.fullname" .) .Values.serviceAccount.name -}}
 {{- else -}}
 {{- default "default" .Values.serviceAccount.name -}}
 {{- end -}}
 {{- end -}}
 
-{{- define "devops-assistant.secretName" -}}
+{{- define "orrery-assistant.secretName" -}}
 {{- if .Values.existingSecret -}}
 {{- .Values.existingSecret -}}
 {{- else -}}
-{{- include "devops-assistant.fullname" . -}}
+{{- include "orrery-assistant.fullname" . -}}
 {{- end -}}
 {{- end -}}
 
-{{- define "devops-assistant.image" -}}
+{{- define "orrery-assistant.image" -}}
 {{- $tag := default .Chart.AppVersion .Values.image.tag -}}
 {{- printf "%s:%s" .Values.image.repository $tag -}}
 {{- end -}}

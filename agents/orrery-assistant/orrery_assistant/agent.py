@@ -1,7 +1,7 @@
 from google.adk.apps import App
 from google.adk.tools.preload_memory_tool import PreloadMemoryTool
 
-from devops_assistant.remediation import remediation_pipeline
+from orrery_assistant.remediation import remediation_pipeline
 from docker_agent.agent import root_agent as docker_agent_root
 from docker_agent.tools import (
     docker_compose_status,
@@ -144,7 +144,7 @@ incident_triage_agent = create_sequential_agent(
 # ── Root orchestrator ─────────────────────────────────────────────────
 
 root_agent = create_agent(
-    name="devops_assistant",
+    name="orrery_assistant",
     description="DevOps orchestrator that delegates to specialized agents.",
     instruction=(
         "You are a DevOps assistant that coordinates specialized agents. "
@@ -192,7 +192,7 @@ root_agent = create_agent(
 
 # ADK web/api_server picks up `app` (with context caching) over bare `root_agent`.
 app = App(
-    name="devops_assistant",
+    name="orrery_assistant",
     root_agent=root_agent,
     plugins=default_plugins(enable_memory=True),
     context_cache_config=create_context_cache_config(),

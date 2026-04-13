@@ -124,16 +124,16 @@ async def exit_loop(tool_context: ToolContext) -> dict:
 | `core/orrery_core/__init__.py` | Export `create_loop_agent` |
 | `agents/k8s-health/k8s_health_agent/tools.py` | `rollback_deployment` tool (`@destructive`) |
 | `agents/k8s-health/k8s_health_agent/agent.py` | Register `rollback_deployment` |
-| `agents/devops-assistant/devops_assistant/remediation.py` | New: `exit_loop`, actor, verifier, loop, summarizer, pipeline |
-| `agents/devops-assistant/devops_assistant/agent.py` | Expose `remediation_pipeline` as AgentTool on root agent |
+| `agents/orrery-assistant/orrery_assistant/remediation.py` | New: `exit_loop`, actor, verifier, loop, summarizer, pipeline |
+| `agents/orrery-assistant/orrery_assistant/agent.py` | Expose `remediation_pipeline` as AgentTool on root agent |
 | `core/tests/test_loop_agent.py` | 5 tests for `create_loop_agent` factory |
 | `agents/k8s-health/tests/test_k8s_tools.py` | 4 tests for `rollback_deployment` |
-| `agents/devops-assistant/tests/test_devops_remediation.py` | 11 tests for exit_loop + agent wiring |
+| `agents/orrery-assistant/tests/test_devops_remediation.py` | 11 tests for exit_loop + agent wiring |
 
 ## Acceptance Criteria
 
 - [x] `create_loop_agent()` factory function added to core
-- [x] Remediation loop integrated into devops-assistant (as AgentTool)
+- [x] Remediation loop integrated into orrery-assistant (as AgentTool)
 - [x] Loop exits on successful remediation (via `exit_loop` tool)
 - [x] Loop respects `max_iterations` safety limit (default: 3)
 - [x] Remediation actions are logged to ops journal (`log_operation` tool)

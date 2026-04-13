@@ -1,4 +1,4 @@
-## Default values for devops-assistant.
+## Default values for orrery-assistant.
 ## Override with `helm install ... -f my-values.yaml` or `--set key=value`.
 
 image:
@@ -45,7 +45,7 @@ command:
   - 0.0.0.0
   - --port
   - "8000"
-  - agents/devops-assistant
+  - agents/orrery-assistant
 
 service:
   type: ClusterIP
@@ -156,5 +156,5 @@ affinity:
         podAffinityTerm:
           labelSelector:
             matchLabels:
-              app.kubernetes.io/name: devops-assistant
+              app.kubernetes.io/name: orrery-assistant
           topologyKey: kubernetes.io/hostname

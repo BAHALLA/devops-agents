@@ -1,5 +1,5 @@
 [project]
-name = "devops-assistant"
+name = "orrery-assistant"
 version = "0.1.2"
 description = "DevOps orchestrator that delegates to specialized sub-agents"
 requires-python = ">=3.11"
@@ -14,7 +14,7 @@ dependencies = [
 ]
 
 [tool.setuptools.packages.find]
-include = ["devops_assistant*"]
+include = ["orrery_assistant*"]
 
 [tool.uv.sources]
 orrery-core = { workspace = true }

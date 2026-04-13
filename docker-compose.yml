@@ -136,9 +136,9 @@ services:
 
   # ── Agent services (use: docker compose --profile demo up) ─────────
 
-  devops-assistant:
+  orrery-assistant:
     build: .
-    container_name: devops-assistant
+    container_name: orrery-assistant
     profiles: [demo]
     restart: unless-stopped
     depends_on:
@@ -191,7 +191,7 @@ services:
     volumes:
       - devops-data:/app/data
       - /var/run/docker.sock:/var/run/docker.sock:ro
-    command: ["adk", "web", "--host", "0.0.0.0", "--port", "8000", "agents/devops-assistant"]
+    command: ["adk", "web", "--host", "0.0.0.0", "--port", "8000", "agents/orrery-assistant"]
 
   # ── Slack bot (use: docker compose --profile slack up) ────────────
 
@@ -248,5 +248,5 @@ volumes:
   postgres-data:
   prometheus-data:
   loki-data:
-  devops-data:
+  assistant-data:
   slack-data:

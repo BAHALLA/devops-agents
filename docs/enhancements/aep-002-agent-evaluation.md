@@ -130,7 +130,7 @@ Writing effective agent evals requires attention to LLM behavior:
 
 ### Phase 2: Orchestrator Routing Evaluation
 
-Critical for the devops-assistant: verify the root agent delegates to the correct specialist:
+Critical for the orrery-assistant: verify the root agent delegates to the correct specialist:
 
 ```json
 {

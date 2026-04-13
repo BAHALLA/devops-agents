@@ -254,7 +254,7 @@ on the first message of a new Chat thread.
 - **FastAPI** serves the webhook endpoint.
 - **google-auth** verifies ID tokens from the Chat system account or
   the Workspace Add-ons service agent.
-- **ADK Runner** executes the `devops-assistant` agent with
+- **ADK Runner** executes the `orrery-assistant` agent with
   `auto_create_session=True`.
 - **ConfirmationStore** is an in-memory store of pending actions.
   Swap to Redis if your bot handles high volumes or runs across

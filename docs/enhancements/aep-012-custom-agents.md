@@ -145,7 +145,7 @@ def create_escalation_agent(name, inner_agent, threshold, **kwargs):
 - [ ] `EscalationAgent` monitors severity and escalates to humans
 - [ ] Factory functions available in core for creating custom agents
 - [ ] Custom agents integrate with existing plugins (RBAC, metrics, audit)
-- [ ] At least one custom agent used in the devops-assistant workflow
+- [ ] At least one custom agent used in the orrery-assistant workflow
 - [ ] Tests cover happy path and escalation/rollback scenarios
 
 ## Notes

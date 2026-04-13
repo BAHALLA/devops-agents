@@ -6,8 +6,8 @@ import pytest
 from google.adk.agents import LoopAgent
 
 # Importing agent validates that the full module loads without errors
-from devops_assistant.agent import root_agent  # noqa: F401
-from devops_assistant.remediation import (
+from orrery_assistant.agent import root_agent  # noqa: F401
+from orrery_assistant.remediation import (
     exit_loop,
     remediation_actor,
     remediation_loop,

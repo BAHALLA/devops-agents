@@ -66,7 +66,7 @@ open http://localhost:8000
 
 | Agent | Expertise |
 |-------|-----------|
-| [**devops-assistant**](https://bahalla.github.io/orrery/agents/devops-assistant/) | Root orchestrator, incident triage, and remediation. |
+| [**orrery-assistant**](https://bahalla.github.io/orrery/agents/orrery-assistant/) | Root orchestrator, incident triage, and remediation. |
 | [**k8s-health**](https://bahalla.github.io/orrery/agents/k8s-health/) | Nodes, Pods, Deployments, Logs, Events, and Rollbacks. |
 | [**kafka-health**](https://bahalla.github.io/orrery/agents/kafka-health/) | Brokers, Topics, Consumer Groups, and Lag monitoring. |
 | [**observability**](https://bahalla.github.io/orrery/agents/observability/) | Prometheus metrics, Loki logs, and Alertmanager silences. |

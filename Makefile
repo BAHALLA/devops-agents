@@ -5,7 +5,7 @@
        run-kafka-health run-kafka-health-cli \
        run-k8s run-k8s-cli \
        run-observability run-observability-cli \
-       run-devops run-devops-cli run-devops-persistent \
+       run-assistant run-assistant-cli run-assistant-persistent \
        run-journal run-journal-cli run-journal-persistent \
        run-slack-bot run-slack-bot-socket \
        run-google-chat
@@ -35,7 +35,7 @@ type-check: ## Run type checks (ty)
 		--extra-search-path agents/kafka-health \
 		--extra-search-path agents/k8s-health \
 		--extra-search-path agents/observability \
-		--extra-search-path agents/devops-assistant \
+		--extra-search-path agents/orrery-assistant \
 		--extra-search-path agents/ops-journal \
 		--extra-search-path agents/slack-bot \
 		--extra-search-path agents/google-chat-bot \
@@ -71,9 +71,9 @@ docs-deploy: ## Deploy documentation to GitHub Pages
 # ── Docker ────────────────────────────────────────────
 
 docker-build: ## Build the agent Docker image
-	docker compose build devops-assistant
+	docker compose build orrery-assistant
 
-docker-demo: ## Start full demo (infra + devops-assistant web UI on :8000)
+docker-demo: ## Start full demo (infra + orrery-assistant web UI on :8000)
 	docker compose --profile demo up -d --build
 
 docker-down: ## Stop all services (infra + agents)
@@ -109,18 +109,19 @@ run-observability: ## Launch observability-agent in ADK Dev UI
 	cd agents/observability && uv run adk web
 
 run-observability-cli: ## Run observability-agent in terminal
-	cd agents/observability && uv run adk run observability_agent
+	run-assistant run-assistant-cli run-assistant-persistent \
+	...
+	# ── orrery-assistant ───────────────────────────────────
 
-# ── devops-assistant ───────────────────────────────────
+	run-assistant: ## Launch orrery-assistant in ADK Dev UI
+	cd agents/orrery-assistant && ENABLE_METRICS_SERVER=true uv run adk web
 
-run-devops: ## Launch devops-assistant in ADK Dev UI
-	cd agents/devops-assistant && ENABLE_METRICS_SERVER=true uv run adk web
+	run-assistant-cli: ## Run orrery-assistant in terminal
+	cd agents/orrery-assistant && ENABLE_METRICS_SERVER=true uv run adk run orrery_assistant
 
-run-devops-cli: ## Run devops-assistant in terminal
-	cd agents/devops-assistant && ENABLE_METRICS_SERVER=true uv run adk run devops_assistant
+	run-assistant-persistent: ## Run orrery-assistant with SQLite persistence
+	cd agents/orrery-assistant && ENABLE_METRICS_SERVER=true uv run python run_persistent.py
 
-run-devops-persistent: ## Run devops-assistant with SQLite persistence
-	cd agents/devops-assistant && ENABLE_METRICS_SERVER=true uv run python run_persistent.py
 
 # ── ops-journal ────────────────────────────────────────
 
@@ -145,3 +146,4 @@ run-slack-bot-socket: ## Run the Slack bot in Socket Mode (no public URL needed)
 
 run-google-chat: ## Run the Google Chat bot (FastAPI on :3001)
 	cd agents/google-chat-bot && uv run uvicorn google_chat_bot.app:api --host 0.0.0.0 --port 3001
+ort 3001

@@ -164,7 +164,7 @@ async def main() -> None:
     bolt_app, handler_ref = _create_bolt_app()
 
     # Initialize ADK
-    from devops_assistant.agent import root_agent
+    from orrery_assistant.agent import root_agent
 
     session_service = DatabaseSessionService(db_url=config.slack_db_url)
 

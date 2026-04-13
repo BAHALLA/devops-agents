@@ -159,7 +159,7 @@ For Gemini models, enable content safety filters:
 from google.genai import types
 
 agent = create_agent(
-    name="devops_assistant",
+    name="orrery_assistant",
     generate_content_config=types.GenerateContentConfig(
         safety_settings=[
             types.SafetySetting(

@@ -6,7 +6,7 @@
 
 ## Context
 
-The devops-assistant root orchestrator composes six specialist agents. Two distinct delegation patterns exist in Google ADK:
+The orrery-assistant root orchestrator composes six specialist agents. Two distinct delegation patterns exist in Google ADK:
 
 1. **Sub-agents** (`sub_agents=[]`) — Agents listed as structural children of a parent. Used with `SequentialAgent`, `ParallelAgent`, and `LoopAgent` for deterministic, orchestrator-driven workflows.
 
@@ -53,7 +53,7 @@ Convert the five LLM-routed specialist agents from `sub_agents` to `AgentTool`. 
 **Before (all sub-agents):**
 ```python
 root_agent = create_agent(
-    name="devops_assistant",
+    name="orrery_assistant",
     tools=[],
     sub_agents=[
         incident_triage_agent,  # deterministic workflow
@@ -71,7 +71,7 @@ root_agent = create_agent(
 from orrery_core import AgentTool
 
 root_agent = create_agent(
-    name="devops_assistant",
+    name="orrery_assistant",
     tools=[
         AgentTool(agent=kafka_agent),
         AgentTool(agent=k8s_agent),
@@ -107,4 +107,4 @@ root_agent = create_agent(
 
 - `core/orrery_core/base.py` — Widened `tools` type to `Sequence[Callable[..., Any] | BaseTool]`, re-exported `AgentTool`
 - `core/orrery_core/__init__.py` — Added `AgentTool` export
-- `agents/devops-assistant/devops_assistant/agent.py` — Converted 5 specialist agents from `sub_agents` to `AgentTool`
+- `agents/orrery-assistant/orrery_assistant/agent.py` — Converted 5 specialist agents from `sub_agents` to `AgentTool`

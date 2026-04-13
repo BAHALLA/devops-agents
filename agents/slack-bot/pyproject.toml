@@ -5,7 +5,7 @@ description = "Slack bot integration for the DevOps agent platform"
 requires-python = ">=3.11"
 dependencies = [
     "orrery-core",
-    "devops-assistant",
+    "orrery-assistant",
     "slack-bolt>=1.18.0",
     "fastapi>=0.115.0",
     "uvicorn>=0.34.0",
@@ -16,4 +16,4 @@ dependencies = [
 
 [tool.uv.sources]
 orrery-core = { workspace = true }
-devops-assistant = { workspace = true }
+orrery-assistant = { workspace = true }

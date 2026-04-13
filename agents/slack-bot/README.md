@@ -8,7 +8,7 @@ Slack bot that connects the DevOps agent platform to Slack. Messages in threads 
 Slack message / @mention
   → Socket Mode (WebSocket) or HTTP webhook
     → slack-bolt event handler
-      → ADK Runner (devops-assistant root_agent)
+      → ADK Runner (orrery-assistant root_agent)
         → AgentTools (kafka, k8s, docker, observability, journal)
         → sub-agents (incident triage workflow)
       → response posted in-thread

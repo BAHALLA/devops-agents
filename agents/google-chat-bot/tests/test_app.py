@@ -12,7 +12,7 @@ def client(monkeypatch):
     """FastAPI TestClient without running lifespan.
 
     Using the client without a context manager means the real ``lifespan``
-    (which would try to import devops_assistant and build an ADK Runner)
+    (which would try to import orrery_assistant and build an ADK Runner)
     is skipped. We inject a mock handler directly.
     """
     fake = MagicMock()

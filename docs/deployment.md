@@ -1,6 +1,6 @@
 # Production Deployment Guide
 
-This guide covers deploying the `devops-assistant` agent platform to
+This guide covers deploying the `orrery-assistant` agent platform to
 Kubernetes with a shared Postgres session store, rolling updates, and
 autoscaling. For local development, see [`getting-started.md`](getting-started.md)
 and the `make docker-demo` target instead.
@@ -25,7 +25,7 @@ and the `make docker-demo` target instead.
                    └──────────┬───────────┘
                               │
                   ┌───────────┴──────────┐
-                  │  devops-assistant    │  (2-6 replicas, HPA)
+                  │  orrery-assistant    │  (2-6 replicas, HPA)
                   │    Deployment        │
                   └──────────┬───────────┘
                              │
@@ -61,7 +61,7 @@ docker buildx build \
 
 ## Step 2 — Provision Postgres
 
-The Slack bot and the devops-assistant share a `DatabaseSessionService`
+The Slack bot and the orrery-assistant share a `DatabaseSessionService`
 instance. For multi-replica deployments, **SQLite is not an option** —
 it does not support concurrent writers and will silently corrupt
 sessions under load.
@@ -77,7 +77,7 @@ GRANT ALL PRIVILEGES ON DATABASE agents TO agents;
 Then expose the URL to the cluster via a Secret:
 
 ```bash
-kubectl -n orrery create secret generic devops-assistant-secrets \
+kubectl -n orrery create secret generic orrery-assistant-secrets \
   --from-literal=DATABASE_URL="postgresql+asyncpg://agents:<pw>@postgres.orrery.svc.cluster.local:5432/agents" \
   --from-literal=GOOGLE_API_KEY="$GOOGLE_API_KEY"
 ```
@@ -96,12 +96,12 @@ migration step.
 
 ```bash
 # Pull options
-helm show values deploy/helm/devops-assistant > my-values.yaml
+helm show values deploy/helm/orrery-assistant > my-values.yaml
 
 # Edit my-values.yaml — at minimum set image.tag and existingSecret
 
-helm upgrade --install devops-assistant \
-  deploy/helm/devops-assistant \
+helm upgrade --install orrery-assistant \
+  deploy/helm/orrery-assistant \
   --namespace orrery --create-namespace \
   -f my-values.yaml
 ```
@@ -114,7 +114,7 @@ image:
   tag: "v0.1.0"
 
 # Use the Secret created in Step 2 instead of storing values in the chart.
-existingSecret: devops-assistant-secrets
+existingSecret: orrery-assistant-secrets
 
 config:
   MODEL_PROVIDER: gemini
@@ -147,22 +147,22 @@ ingress:
 
 ```bash
 # Pods come up and pass readiness
-kubectl -n orrery get pods -l app.kubernetes.io/name=devops-assistant
+kubectl -n orrery get pods -l app.kubernetes.io/name=orrery-assistant
 
 # Tail logs
-kubectl -n orrery logs -l app.kubernetes.io/name=devops-assistant -f
+kubectl -n orrery logs -l app.kubernetes.io/name=orrery-assistant -f
 
 # Health endpoints
-kubectl -n orrery port-forward svc/devops-assistant 8080:8080
+kubectl -n orrery port-forward svc/orrery-assistant 8080:8080
 curl http://localhost:8080/healthz
 curl http://localhost:8080/readyz
 
 # Metrics endpoint (Prometheus scrape target)
-kubectl -n orrery port-forward svc/devops-assistant 9100:9100
+kubectl -n orrery port-forward svc/orrery-assistant 9100:9100
 curl http://localhost:9100/metrics | head -40
 
 # ADK web UI
-kubectl -n orrery port-forward svc/devops-assistant 8000:8000
+kubectl -n orrery port-forward svc/orrery-assistant 8000:8000
 open http://localhost:8000
 ```
 
@@ -182,19 +182,19 @@ ensures:
 Trigger a rollout:
 
 ```bash
-helm upgrade devops-assistant deploy/helm/devops-assistant \
+helm upgrade orrery-assistant deploy/helm/orrery-assistant \
   -n orrery -f my-values.yaml \
   --set image.tag=v0.2.0
 
-kubectl -n orrery rollout status deployment/devops-assistant
+kubectl -n orrery rollout status deployment/orrery-assistant
 ```
 
 Rollback:
 
 ```bash
-kubectl -n orrery rollout undo deployment/devops-assistant
+kubectl -n orrery rollout undo deployment/orrery-assistant
 # or
-helm rollback devops-assistant -n orrery
+helm rollback orrery-assistant -n orrery
 ```
 
 ---

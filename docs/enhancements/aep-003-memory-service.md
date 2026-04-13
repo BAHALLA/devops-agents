@@ -61,14 +61,14 @@ def run_persistent(agent, app_name, ...):
 
 ### Step 2: Add Memory Tools to Key Agents
 
-Give the devops-assistant and ops-journal agents memory tools:
+Give the orrery-assistant and ops-journal agents memory tools:
 
 ```python
 from google.adk.tools import load_memory
 from google.adk.tools.preload_memory_tool import PreloadMemoryTool
 
 root_agent = create_agent(
-    name="devops_assistant",
+    name="orrery_assistant",
     instruction="...",
     tools=[..., PreloadMemoryTool()],  # Auto-load relevant context
 )
@@ -142,9 +142,9 @@ class PostgresMemoryService(BaseMemoryService):
 | `core/orrery_core/runner.py` | Add `memory_service` parameter to `run_persistent()` |
 | `core/orrery_core/plugins.py` | Add `MemoryPlugin` for auto-save |
 | `core/orrery_core/base.py` | Update `create_agent()` to accept memory tools |
-| `agents/devops-assistant/devops_assistant/agent.py` | Add `PreloadMemoryTool` |
+| `agents/orrery-assistant/orrery_assistant/agent.py` | Add `PreloadMemoryTool` |
 | `agents/ops-journal/ops_journal_agent/agent.py` | Add `load_memory` tool |
-| `agents/devops-assistant/run_persistent.py` | Wire up memory service |
+| `agents/orrery-assistant/run_persistent.py` | Wire up memory service |
 | `core/pyproject.toml` | Add memory-related dependencies if needed |
 
 ## Acceptance Criteria

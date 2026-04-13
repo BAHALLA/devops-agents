@@ -6,7 +6,7 @@ This document analyzes the platform's architecture against the [Google Cloud Age
 
 | Pattern Category | Key Patterns | Implementation in this Project |
 | :--- | :--- | :--- |
-| **Multi-Agent (MAS)** | Coordinator | `devops_assistant` (Root Agent) uses `AgentTool` to route requests. |
+| **Multi-Agent (MAS)** | Coordinator | `orrery_assistant` (Root Agent) uses `AgentTool` to route requests. |
 | | Sequential | `incident_triage_agent` runs a fixed pipeline: Triage → Summarize → Save. |
 | | Parallel | `health_check_agent` runs K8s, Kafka, and Docker checks concurrently. |
 | | Hierarchical | Root Orchestrator → Workflow Agents → Specialist Workers. |
@@ -22,7 +22,7 @@ This document analyzes the platform's architecture against the [Google Cloud Age
 
 ### 1. Multi-Agent Systems (MAS)
 
-The project leverages the **Coordinator Pattern** as its primary entry point. The root `devops_assistant` does not perform technical tasks itself; instead, it analyzes user intent and delegates to specialized agents.
+The project leverages the **Coordinator Pattern** as its primary entry point. The root `orrery_assistant` does not perform technical tasks itself; instead, it analyzes user intent and delegates to specialized agents.
 
 *   **LLM-Driven Routing (AgentTool):** As defined in [ADR-002](adr/002-agent-tool-vs-sub-agents.md), specialists like `kafka_agent` and `k8s_agent` are exposed as tools. The LLM decides when to invoke them based on their descriptions.
 *   **Deterministic Workflows (Sub-agents):** For complex, repeatable tasks like incident triage, the system switches to **Sequential** and **Parallel** patterns. The `incident_triage_agent` ensures that all systems are checked simultaneously before a summary is generated, providing a predictable and high-quality output that pure LLM routing might miss.

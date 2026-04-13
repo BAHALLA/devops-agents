@@ -9,7 +9,7 @@ COPY core/pyproject.toml core/pyproject.toml
 COPY agents/docker-agent/pyproject.toml agents/docker-agent/pyproject.toml
 COPY agents/kafka-health/pyproject.toml agents/kafka-health/pyproject.toml
 COPY agents/k8s-health/pyproject.toml agents/k8s-health/pyproject.toml
-COPY agents/devops-assistant/pyproject.toml agents/devops-assistant/pyproject.toml
+COPY agents/orrery-assistant/pyproject.toml agents/orrery-assistant/pyproject.toml
 COPY agents/observability/pyproject.toml agents/observability/pyproject.toml
 COPY agents/ops-journal/pyproject.toml agents/ops-journal/pyproject.toml
 COPY agents/slack-bot/pyproject.toml agents/slack-bot/pyproject.toml
@@ -19,7 +19,7 @@ RUN mkdir -p core/orrery_core && touch core/orrery_core/__init__.py && \
     mkdir -p agents/docker-agent/docker_agent && touch agents/docker-agent/docker_agent/__init__.py && \
     mkdir -p agents/kafka-health/kafka_health_agent && touch agents/kafka-health/kafka_health_agent/__init__.py && \
     mkdir -p agents/k8s-health/k8s_health_agent && touch agents/k8s-health/k8s_health_agent/__init__.py && \
-    mkdir -p agents/devops-assistant/devops_assistant && touch agents/devops-assistant/devops_assistant/__init__.py && \
+    mkdir -p agents/orrery-assistant/orrery_assistant && touch agents/orrery-assistant/orrery_assistant/__init__.py && \
     mkdir -p agents/observability/observability_agent && touch agents/observability/observability_agent/__init__.py && \
     mkdir -p agents/ops-journal/ops_journal_agent && touch agents/ops-journal/ops_journal_agent/__init__.py && \
     mkdir -p agents/slack-bot/slack_bot && touch agents/slack-bot/slack_bot/__init__.py
@@ -52,8 +52,8 @@ USER appuser
 
 ENV PATH="/app/.venv/bin:$PATH"
 
-# Default: run the devops-assistant orchestrator with web UI
+# Default: run the orrery-assistant orchestrator with web UI
 EXPOSE 8000 8080
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8080/healthz')" || exit 1
-CMD ["adk", "web", "--host", "0.0.0.0", "--port", "8000", "agents/devops-assistant"]
+CMD ["adk", "web", "--host", "0.0.0.0", "--port", "8000", "agents/orrery-assistant"]

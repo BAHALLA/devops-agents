@@ -1,4 +1,4 @@
-# devops-assistant
+# orrery-assistant
 
 A multi-agent orchestrator that routes user requests to specialist agents. Uses two delegation patterns (see [ADR-002](../../docs/adr/002-agent-tool-vs-sub-agents.md)):
 - **AgentTool** for LLM-routed specialists (the LLM decides which agent to call)
@@ -7,7 +7,7 @@ A multi-agent orchestrator that routes user requests to specialist agents. Uses 
 ## Agent Graph
 
 ```text
-devops_assistant (orchestrator)
+orrery_assistant (orchestrator)
 ├── [sub-agent] incident_triage_agent (SequentialAgent)
 │   ├── health_check_agent (ParallelAgent)
 │   │   ├── kafka_health_checker      — Kafka cluster health + lag
@@ -23,9 +23,9 @@ devops_assistant (orchestrator)
 └── [AgentTool] ops_journal_agent     — Notes, preferences, session tracking
 ```
 
-![DevOps Assistant — agent graph and container inspection](assets/devops-assistant-graph.png)
+![DevOps Assistant — agent graph and container inspection](assets/orrery-assistant-graph.png)
 
-*The ADK Dev UI showing the agent graph: `devops_assistant` delegates to specialist agents via AgentTool and deterministic sub-agent workflows.*
+*The ADK Dev UI showing the agent graph: `orrery_assistant` delegates to specialist agents via AgentTool and deterministic sub-agent workflows.*
 
 ## Specialist Agents (AgentTool)
 
@@ -80,9 +80,9 @@ For targeted queries, the LLM invokes the appropriate AgentTool based on the use
 ## Running
 
 ```bash
-cd agents/devops-assistant
+cd agents/orrery-assistant
 uv run adk web                    # ADK Dev UI
-uv run adk run devops_assistant   # Terminal mode
+uv run adk run orrery_assistant   # Terminal mode
 ```
 
 Or from the repo root:

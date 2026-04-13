@@ -94,7 +94,7 @@ async def get_report(filename: str, tool_context: ToolContext) -> dict:
 | `agents/kafka-health/kafka_health_agent/tools.py` | Save health snapshots as artifacts |
 | `agents/k8s-health/k8s_health_agent/tools.py` | Save pod logs/events as artifacts |
 | `agents/observability/observability_agent/tools.py` | Save query results as artifacts |
-| `agents/devops-assistant/devops_assistant/agent.py` | Add report generation tool |
+| `agents/orrery-assistant/orrery_assistant/agent.py` | Add report generation tool |
 | `agents/ops-journal/ops_journal_agent/tools.py` | Add artifact retrieval tool |
 
 ## Acceptance Criteria

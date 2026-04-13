@@ -98,7 +98,7 @@ class GracefulShutdown:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: devops-assistant
+  name: orrery-assistant
 spec:
   replicas: 2
   strategy:
@@ -110,8 +110,8 @@ spec:
     spec:
       terminationGracePeriodSeconds: 60
       containers:
-      - name: devops-assistant
-        image: devops-assistant:latest
+      - name: orrery-assistant
+        image: orrery-assistant:latest
         ports:
         - containerPort: 8000
         resources:
@@ -177,7 +177,7 @@ async def run_agent(request: Request):
 ```
 deploy/
   helm/
-    devops-assistant/
+    orrery-assistant/
       Chart.yaml
       values.yaml
       templates/
@@ -210,7 +210,7 @@ deploy/
 - [x] Kubernetes manifests with probes, resource limits, rolling update (`deploy/k8s/` — deployment, service, HPA, PDB, NetworkPolicy, RBAC-scoped ServiceAccount)
 - [x] PostgreSQL session service for multi-instance (`runner.py` honors `DATABASE_URL`; `postgres` extra in `core/pyproject.toml` adds `asyncpg`/`psycopg2-binary`; Slack bot updated via `SlackBotConfig.resolve_db_url()`)
 - [x] Rate limiting on HTTP endpoints (`slowapi` on the Slack bot `/slack/events` webhook, configurable via `SLACK_RATE_LIMIT`)
-- [x] Helm chart with configurable values (`deploy/helm/devops-assistant/` — deployment, service, configmap, secret, HPA, PDB, NetworkPolicy, ingress, NOTES)
+- [x] Helm chart with configurable values (`deploy/helm/orrery-assistant/` — deployment, service, configmap, secret, HPA, PDB, NetworkPolicy, ingress, NOTES)
 - [x] HPA (Horizontal Pod Autoscaler) configuration (CPU 70%, memory 80%, 2-6 replicas, scale-up rate-limited to protect LLM spend)
 - [x] Root `.env.example` with all required/optional variables documented
 - [x] Production deployment documentation (`docs/deployment.md`)

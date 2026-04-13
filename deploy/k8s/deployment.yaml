@@ -1,10 +1,10 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: devops-assistant
+  name: orrery-assistant
   namespace: orrery
   labels:
-    app.kubernetes.io/name: devops-assistant
+    app.kubernetes.io/name: orrery-assistant
     app.kubernetes.io/component: agent
     app.kubernetes.io/part-of: orrery
 spec:
@@ -17,11 +17,11 @@ spec:
       maxUnavailable: 0
   selector:
     matchLabels:
-      app.kubernetes.io/name: devops-assistant
+      app.kubernetes.io/name: orrery-assistant
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: devops-assistant
+        app.kubernetes.io/name: orrery-assistant
         app.kubernetes.io/component: agent
       annotations:
         # Force rollout when ConfigMap/Secret changes by updating this annotation.
@@ -30,7 +30,7 @@ spec:
         prometheus.io/port: "9100"
         prometheus.io/path: "/metrics"
     spec:
-      serviceAccountName: devops-assistant
+      serviceAccountName: orrery-assistant
       # Give in-flight LLM calls time to finish on SIGTERM.
       terminationGracePeriodSeconds: 60
       securityContext:
@@ -41,7 +41,7 @@ spec:
         seccompProfile:
           type: RuntimeDefault
       containers:
-        - name: devops-assistant
+        - name: orrery-assistant
           image: ghcr.io/bahalla/orrery:latest
           imagePullPolicy: IfNotPresent
           args:
@@ -51,7 +51,7 @@ spec:
             - "0.0.0.0"
             - "--port"
             - "8000"
-            - "agents/devops-assistant"
+            - "agents/orrery-assistant"
           ports:
             - name: http
               containerPort: 8000
@@ -64,9 +64,9 @@ spec:
               protocol: TCP
           envFrom:
             - configMapRef:
-                name: devops-assistant-config
+                name: orrery-assistant-config
             - secretRef:
-                name: devops-assistant-secrets
+                name: orrery-assistant-secrets
           resources:
             requests:
               memory: "512Mi"

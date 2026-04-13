@@ -37,11 +37,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Kafka KRaft Migration**: Removed Zookeeper dependency. Kafka now runs in KRaft mode for improved startup reliability and simplified architecture.
 - **PostgreSQL Service**: Added a dedicated PostgreSQL container to `docker-compose.yml` for persistent session storage.
 - **Centralized Configuration**: Merged per-agent `.env` files into a single root `.env` file. Updated core library to prioritize the root configuration while maintaining legacy override support.
-- **Cross-Session Memory**: Enabled `MemoryPlugin` in the `devops-assistant` agent, allowing it to remember past interactions and save session highlights to the persistent store.
+- **Cross-Session Memory**: Enabled `MemoryPlugin` in the `orrery-assistant` agent, allowing it to remember past interactions and save session highlights to the persistent store.
 - **Kafka Partition Scaling**: Added `update_kafka_partitions` tool to the Kafka health agent with full unit test coverage.
 - **Production deployment hardening** (AEP-011) — complete Kubernetes deployment story
   - Kustomize manifests under `deploy/k8s/` (Deployment, Service, HPA, PDB, NetworkPolicy, ServiceAccount with scoped ClusterRoles)
-  - Helm chart under `deploy/helm/devops-assistant/` with configurable values, NOTES, and `existingSecret` support for out-of-band secret management
+  - Helm chart under `deploy/helm/orrery-assistant/` with configurable values, NOTES, and `existingSecret` support for out-of-band secret management
   - GHCR CD pipeline (`.github/workflows/docker-publish.yml`) publishing multi-arch (amd64/arm64) images with SBOM and provenance attestation on merges to `main` and `v*.*.*` tags
   - PostgreSQL session store support — `runner.py` honors `DATABASE_URL` (async driver `postgresql+asyncpg://…`) for multi-instance deployments; `core[postgres]` extra adds `asyncpg` and `psycopg2-binary`
   - Rate limiting on the Slack bot `/slack/events` webhook via `slowapi` (configurable via `SLACK_RATE_LIMIT`, default `60/minute`)
@@ -69,7 +69,7 @@ First public release of the AI Agents for DevOps & SRE platform.
 
 ### Added
 
-- **Multi-agent orchestrator** — `devops-assistant` root agent delegates to 5 specialist agents via `AgentTool` and deterministic sub-agent workflows ([ADR-002](docs/adr/002-agent-tool-vs-sub-agents.md))
+- **Multi-agent orchestrator** — `orrery-assistant` root agent delegates to 5 specialist agents via `AgentTool` and deterministic sub-agent workflows ([ADR-002](docs/adr/002-agent-tool-vs-sub-agents.md))
 - **Specialist agents** — Kafka health, K8s health, Observability (Prometheus/Loki/Alertmanager), Docker, and Ops Journal
 - **Slack bot** — Thread-based sessions with interactive Approve/Deny buttons for guarded operations
 - **Incident triage pipeline** — `SequentialAgent` + `ParallelAgent` for parallel health checks across all systems, triage summary, and journal recording

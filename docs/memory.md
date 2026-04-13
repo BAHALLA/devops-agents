@@ -72,7 +72,7 @@ memory = SecureMemoryService(max_entries_per_user=1000)
 
 ### User Isolation
 
-Memory is scoped by `app_name` and `user_id` — inherited from ADK's design. User A cannot search User B's memory, and the `devops_assistant` app cannot see memories from the `ops_journal` app.
+Memory is scoped by `app_name` and `user_id` — inherited from ADK's design. User A cannot search User B's memory, and the `orrery_assistant` app cannot see memories from the `ops_journal` app.
 
 ## Setup
 

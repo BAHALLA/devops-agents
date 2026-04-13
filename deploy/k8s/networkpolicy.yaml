@@ -1,14 +1,14 @@
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: devops-assistant
+  name: orrery-assistant
   namespace: orrery
   labels:
-    app.kubernetes.io/name: devops-assistant
+    app.kubernetes.io/name: orrery-assistant
 spec:
   podSelector:
     matchLabels:
-      app.kubernetes.io/name: devops-assistant
+      app.kubernetes.io/name: orrery-assistant
   policyTypes:
     - Ingress
     - Egress

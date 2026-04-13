@@ -29,7 +29,7 @@ orrery/
 │   │   └── tests/         # Kafka tools tests
 │   ├── k8s-health/
 │   │   └── tests/         # Kubernetes tools tests
-│   ├── devops-assistant/
+│   ├── orrery-assistant/
 │   │   └── tests/         # Docker tools tests
 │   └── ops-journal/
 │       └── tests/         # Journal & state tools tests

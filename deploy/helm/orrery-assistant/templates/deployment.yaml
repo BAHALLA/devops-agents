@@ -1,9 +1,9 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "devops-assistant.fullname" . }}
+  name: {{ include "orrery-assistant.fullname" . }}
   labels:
-    {{- include "devops-assistant.labels" . | nindent 4 }}
+    {{- include "orrery-assistant.labels" . | nindent 4 }}
 spec:
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
@@ -16,11 +16,11 @@ spec:
       maxUnavailable: 0
   selector:
     matchLabels:
-      {{- include "devops-assistant.selectorLabels" . | nindent 6 }}
+      {{- include "orrery-assistant.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        {{- include "devops-assistant.selectorLabels" . | nindent 8 }}
+        {{- include "orrery-assistant.selectorLabels" . | nindent 8 }}
       annotations:
         checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
         {{- if and (not .Values.existingSecret) .Values.secrets }}
@@ -30,7 +30,7 @@ spec:
         {{- toYaml . | nindent 8 }}
         {{- end }}
     spec:
-      serviceAccountName: {{ include "devops-assistant.serviceAccountName" . }}
+      serviceAccountName: {{ include "orrery-assistant.serviceAccountName" . }}
       terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
       {{- with .Values.image.pullSecrets }}
       imagePullSecrets:
@@ -40,7 +40,7 @@ spec:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
         - name: {{ .Chart.Name }}
-          image: {{ include "devops-assistant.image" . }}
+          image: {{ include "orrery-assistant.image" . }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           args:
             {{- toYaml .Values.command | nindent 12 }}
@@ -56,9 +56,9 @@ spec:
               protocol: TCP
           envFrom:
             - configMapRef:
-                name: {{ include "devops-assistant.fullname" . }}
+                name: {{ include "orrery-assistant.fullname" . }}
             - secretRef:
-                name: {{ include "devops-assistant.secretName" . }}
+                name: {{ include "orrery-assistant.secretName" . }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           livenessProbe:

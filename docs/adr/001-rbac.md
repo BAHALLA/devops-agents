@@ -87,7 +87,7 @@ from google.adk.runners import Runner
 
 runner = Runner(
     agent=root_agent,
-    app_name="devops_assistant",
+    app_name="orrery_assistant",
     session_service=session_service,
     plugins=default_plugins(),  # includes GuardrailsPlugin with RBAC
 )

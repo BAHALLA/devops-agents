@@ -13,7 +13,7 @@
 ### Current Implementation
 All agents run **in-process** within the same Python runtime:
 - Sub-agents communicate via shared `session.state` and `output_key`
-- The devops-assistant orchestrator uses `AgentTool` for LLM-routed delegation
+- The orrery-assistant orchestrator uses `AgentTool` for LLM-routed delegation
 - No network boundary exists between agents
 
 This works for a single deployment but doesn't support:
@@ -54,7 +54,7 @@ server.run(port=8001)
 
 ### Step 2: Consume Remote Agents in the Orchestrator
 
-The devops-assistant uses `RemoteA2aAgent` instead of importing agents directly:
+The orrery-assistant uses `RemoteA2aAgent` instead of importing agents directly:
 
 ```python
 from google.adk.a2a import RemoteA2aAgent
@@ -66,7 +66,7 @@ kafka_remote = RemoteA2aAgent(
 )
 
 root_agent = create_agent(
-    name="devops_assistant",
+    name="orrery_assistant",
     sub_agents=[kafka_remote, k8s_remote, ...],
 )
 ```
@@ -103,8 +103,8 @@ services:
     ports: ["8002:8002"]
     command: python serve.py
 
-  devops-assistant:
-    build: agents/devops-assistant
+  orrery-assistant:
+    build: agents/orrery-assistant
     ports: ["8000:8000"]
     environment:
       KAFKA_AGENT_URL: http://kafka-agent:8001
@@ -117,7 +117,7 @@ services:
 Support both local and remote agents:
 
 ```python
-def create_devops_assistant():
+def create_orrery_assistant():
     kafka_agent_url = os.getenv("KAFKA_AGENT_URL")
 
     if kafka_agent_url:
@@ -126,7 +126,7 @@ def create_devops_assistant():
         from kafka_health_agent.agent import root_agent as kafka
         kafka = AgentTool(agent=kafka)
 
-    return create_agent(name="devops_assistant", sub_agents=[kafka, ...])
+    return create_agent(name="orrery_assistant", sub_agents=[kafka, ...])
 ```
 
 ## Affected Files
@@ -136,7 +136,7 @@ def create_devops_assistant():
 | `agents/kafka-health/serve.py` | New: A2A server entrypoint |
 | `agents/k8s-health/serve.py` | New: A2A server entrypoint |
 | `agents/observability/serve.py` | New: A2A server entrypoint |
-| `agents/devops-assistant/devops_assistant/agent.py` | Support remote agents via env vars |
+| `agents/orrery-assistant/orrery_assistant/agent.py` | Support remote agents via env vars |
 | `infra/agent-registry.yml` | New: agent discovery config |
 | `docker-compose.a2a.yml` | New: multi-agent deployment |
 | `Makefile` | Add `make run-a2a` target |
@@ -144,7 +144,7 @@ def create_devops_assistant():
 ## Acceptance Criteria
 
 - [ ] Each agent can be deployed as an independent A2A server
-- [ ] Devops-assistant can consume agents locally or remotely (env var toggle)
+- [ ] Orrery-assistant can consume agents locally or remotely (env var toggle)
 - [ ] Docker Compose config for multi-agent deployment
 - [ ] Agent discovery via registry config
 - [ ] Inter-agent communication works over HTTP

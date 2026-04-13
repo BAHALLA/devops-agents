@@ -43,7 +43,7 @@ Use ADK's `/run_sse` endpoint instead of the batch `/run` endpoint for the web U
 
 ```python
 # The ADK API server already supports this
-# adk api_server agents/devops-assistant --port 8000
+# adk api_server agents/orrery-assistant --port 8000
 # Client connects to /run_sse for streaming
 ```
 
@@ -101,7 +101,7 @@ async def handle_streaming_events(self, runner, session, message):
 | File | Change |
 |------|--------|
 | `core/orrery_core/plugins.py` | Add `ProgressPlugin` |
-| `agents/devops-assistant/devops_assistant/agent.py` | Configure SSE support |
+| `agents/orrery-assistant/orrery_assistant/agent.py` | Configure SSE support |
 | `agents/slack-bot/slack_bot/handler.py` | Stream events as Slack thread replies |
 | `Makefile` | Update `run-devops` to use `adk api_server` with SSE |
 

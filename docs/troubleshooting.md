@@ -99,6 +99,6 @@ Check `orrery_circuit_breaker_state{tool="<name>"} == 1` — the breaker opens a
 
 ## Still stuck?
 
-- Structured logs: every agent emits JSON to stdout. `docker logs -f devops-assistant | jq` is the fastest way to see what's happening.
+- Structured logs: every agent emits JSON to stdout. `docker logs -f orrery-assistant | jq` is the fastest way to see what's happening.
 - Audit trail: `AuditPlugin` writes one line per tool call with RBAC decisions, args (redacted), and latency.
 - File an issue: [github.com/BAHALLA/orrery/issues](https://github.com/BAHALLA/orrery/issues).

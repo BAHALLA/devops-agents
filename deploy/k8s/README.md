@@ -1,7 +1,7 @@
 # Kubernetes Manifests
 
-Raw Kustomize manifests for deploying `devops-assistant` to a Kubernetes
-cluster. For most users, the Helm chart at `deploy/helm/devops-assistant/`
+Raw Kustomize manifests for deploying `orrery-assistant` to a Kubernetes
+cluster. For most users, the Helm chart at `deploy/helm/orrery-assistant/`
 is the preferred install path — this directory exists for users who prefer
 Kustomize or want to review the literal resources that Helm would render.
 
@@ -12,13 +12,13 @@ Kustomize or want to review the literal resources that Helm would render.
 kubectl apply -k deploy/k8s/
 
 # 2. Create secrets out-of-band (DO NOT kubectl apply secret.example.yaml)
-kubectl -n orrery create secret generic devops-assistant-secrets \
+kubectl -n orrery create secret generic orrery-assistant-secrets \
   --from-literal=GOOGLE_API_KEY="$GOOGLE_API_KEY" \
   --from-literal=DATABASE_URL="postgresql+asyncpg://user:pass@host:5432/agents"
 
 # 3. Verify
 kubectl -n orrery get pods
-kubectl -n orrery logs -l app.kubernetes.io/name=devops-assistant
+kubectl -n orrery logs -l app.kubernetes.io/name=orrery-assistant
 ```
 
 ## Resources
@@ -47,12 +47,12 @@ Verify:
 
 ```bash
 # Trigger rollout
-kubectl -n orrery set image deployment/devops-assistant \
-  devops-assistant=ghcr.io/bahalla/orrery:v0.1.2
+kubectl -n orrery set image deployment/orrery-assistant \
+  orrery-assistant=ghcr.io/bahalla/orrery:v0.1.2
 
 # Watch pods cycle with no downtime
-kubectl -n orrery rollout status deployment/devops-assistant
+kubectl -n orrery rollout status deployment/orrery-assistant
 
 # Rollback if needed
-kubectl -n orrery rollout undo deployment/devops-assistant
+kubectl -n orrery rollout undo deployment/orrery-assistant
 ```

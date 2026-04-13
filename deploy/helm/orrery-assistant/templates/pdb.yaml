@@ -2,12 +2,12 @@
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: {{ include "devops-assistant.fullname" . }}
+  name: {{ include "orrery-assistant.fullname" . }}
   labels:
-    {{- include "devops-assistant.labels" . | nindent 4 }}
+    {{- include "orrery-assistant.labels" . | nindent 4 }}
 spec:
   minAvailable: {{ .Values.podDisruptionBudget.minAvailable }}
   selector:
     matchLabels:
-      {{- include "devops-assistant.selectorLabels" . | nindent 6 }}
+      {{- include "orrery-assistant.selectorLabels" . | nindent 6 }}
 {{- end }}

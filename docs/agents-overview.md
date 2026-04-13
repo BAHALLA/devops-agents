@@ -2,13 +2,13 @@
 
 A quick tour of every agent shipped with the platform — what it does, the tools it exposes, and the role required to invoke the mutating ones.
 
-For how agents are composed inside `devops-assistant`, see [ADR-002: Agent Composition](adr/002-agent-tool-vs-sub-agents.md). For how to build your own, see [Adding a new agent](adding-an-agent.md).
+For how agents are composed inside `orrery-assistant`, see [ADR-002: Agent Composition](adr/002-agent-tool-vs-sub-agents.md). For how to build your own, see [Adding a new agent](adding-an-agent.md).
 
 ## At a glance
 
 | Agent | Package | Tools | Guarded tools | Primary use |
 |-------|---------|-------|---------------|-------------|
-| [`devops-assistant`](#devops-assistant) | `agents/devops-assistant` | *orchestrator* | delegates | Top-level entry point — routes to specialists and runs triage / remediation workflows |
+| [`orrery-assistant`](#orrery-assistant) | `agents/orrery-assistant` | *orchestrator* | delegates | Top-level entry point — routes to specialists and runs triage / remediation workflows |
 | [`kafka-health`](#kafka-health) | `agents/kafka-health` | 9 | 3 | Kafka cluster health, topic ops, consumer lag |
 | [`k8s-health`](#k8s-health) | `agents/k8s-health` | 12 | 3 | Kubernetes diagnostics, scaling, rollouts |
 | [`observability`](#observability) | `agents/observability` | 12 | 2 | Prometheus queries, Loki logs, Alertmanager silences |
@@ -20,7 +20,7 @@ For how agents are composed inside `devops-assistant`, see [ADR-002: Agent Compo
 
 ---
 
-## devops-assistant
+## orrery-assistant
 
 The root orchestrator. Analyzes user intent and delegates to specialists via either **AgentTool** (LLM-routed) or **SequentialAgent / ParallelAgent / LoopAgent** sub-agents (deterministic pipelines).
 
@@ -139,5 +139,5 @@ If you're writing a new workflow and need to decide which specialist(s) to call:
 | *"What are the active alerts? Show me logs matching {job=\"api\"}"* | `observability` |
 | *"What containers are up? Restart the web service."* | `docker-agent` |
 | *"Remember this incident / recall last week's postmortem."* | `ops-journal` + [memory](memory.md) |
-| *"Run a full triage and file the report."* | `devops-assistant` (uses `incident_triage_agent`) |
-| *"The pod is still unhealthy — try to fix it."* | `devops-assistant` → `remediation_pipeline` |
+| *"Run a full triage and file the report."* | `orrery-assistant` (uses `incident_triage_agent`) |
+| *"The pod is still unhealthy — try to fix it."* | `orrery-assistant` → `remediation_pipeline` |

@@ -1,15 +1,15 @@
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: devops-assistant
+  name: orrery-assistant
   namespace: orrery
   labels:
-    app.kubernetes.io/name: devops-assistant
+    app.kubernetes.io/name: orrery-assistant
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: devops-assistant
+    name: orrery-assistant
   minReplicas: 2
   maxReplicas: 6
   metrics:

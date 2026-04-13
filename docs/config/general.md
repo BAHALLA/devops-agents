@@ -81,7 +81,7 @@ Context caching reduces token usage and latency by caching static system instruc
 | `CONTEXT_CACHE_TTL_SECONDS` | `600` | Cache lifetime in seconds (10 minutes) |
 | `CONTEXT_CACHE_INTERVALS` | `10` | Max invocations before cache refresh |
 
-Context caching is enabled by default in the `devops-assistant` agent. You can tune the values via environment variables or disable it by not passing a `context_cache_config` to `run_persistent()`.
+Context caching is enabled by default in the `orrery-assistant` agent. You can tune the values via environment variables or disable it by not passing a `context_cache_config` to `run_persistent()`.
 
 Cache hit/miss events are exposed as the `orrery_context_cache_events_total` Prometheus counter on the `/metrics` endpoint.
 
@@ -114,5 +114,5 @@ make infra-reset  # stop and wipe volumes
 | Command | What it starts |
 |---------|---------------|
 | `docker compose up -d` | Infrastructure only |
-| `docker compose --profile demo up -d` | Infrastructure + devops-assistant web UI on `:8000` |
+| `docker compose --profile demo up -d` | Infrastructure + orrery-assistant web UI on `:8000` |
 | `docker compose --profile slack up -d` | Infrastructure + Slack bot on `:3000` |

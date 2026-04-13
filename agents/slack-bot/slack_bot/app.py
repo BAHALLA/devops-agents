@@ -97,7 +97,7 @@ async def lifespan(app: FastAPI):
     global _handler
 
     # Import agent here to avoid circular imports at module level
-    from devops_assistant.agent import root_agent
+    from orrery_assistant.agent import root_agent
 
     session_service = DatabaseSessionService(db_url=config.resolve_db_url())
 

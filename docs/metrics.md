@@ -102,7 +102,7 @@ The `infra/prometheus.yml` includes a pre-configured scrape job. For **local dev
   static_configs:
     - targets: ["host.docker.internal:9100"]
       labels:
-        service: "devops-assistant"
+        service: "orrery-assistant"
 ```
 
 For **Docker deployment** (agent and Prometheus both in containers):
@@ -110,9 +110,9 @@ For **Docker deployment** (agent and Prometheus both in containers):
 ```yaml
 - job_name: "agents"
   static_configs:
-    - targets: ["devops-assistant:9100"]
+    - targets: ["orrery-assistant:9100"]
       labels:
-        service: "devops-assistant"
+        service: "orrery-assistant"
     - targets: ["slack-bot:9100"]
       labels:
         service: "slack-bot"

@@ -12,7 +12,7 @@
 
 ### Current Implementation
 Tools are defined as flat lists of async functions in each agent's `tools.py` file.
-When the devops-assistant loads all sub-agents, the LLM sees 50+ tools simultaneously.
+When the orrery-assistant loads all sub-agents, the LLM sees 50+ tools simultaneously.
 This can cause:
 - Tool selection confusion (the LLM picks the wrong tool)
 - Context window bloat (all tool descriptions loaded at once)
@@ -35,7 +35,7 @@ this creates unnecessary context pressure and increases the chance of tool misse
 ### Step 1: Organize Tools as Skills
 
 ```
-agents/devops-assistant/skills/
+agents/orrery-assistant/skills/
   kafka_diagnostics/
     SKILL.md           # "Kafka cluster diagnostics and management"
     references/
@@ -89,7 +89,7 @@ k8s_skill = load_skill_from_dir(Path(__file__).parent / "skills" / "k8s_operatio
 skill_toolset = SkillToolset(skills=[kafka_skill, k8s_skill])
 
 root_agent = create_agent(
-    name="devops_assistant",
+    name="orrery_assistant",
     tools=[skill_toolset],  # Skills loaded on-demand
 )
 ```
@@ -98,8 +98,8 @@ root_agent = create_agent(
 
 | File | Change |
 |------|--------|
-| `agents/devops-assistant/skills/` | New: skill definitions |
-| `agents/devops-assistant/devops_assistant/agent.py` | Use `SkillToolset` |
+| `agents/orrery-assistant/skills/` | New: skill definitions |
+| `agents/orrery-assistant/orrery_assistant/agent.py` | Use `SkillToolset` |
 | `docs/adding-an-agent.md` | Update guide with skills pattern |
 
 ## Acceptance Criteria

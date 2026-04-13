@@ -32,11 +32,11 @@ scrape_configs:
       # Local development (agent running on host)
       - targets: ["host.docker.internal:9100"]
         labels:
-          service: "devops-assistant"
+          service: "orrery-assistant"
       # Docker deployment (agent running in container)
-      # - targets: ["devops-assistant:9100"]
+      # - targets: ["orrery-assistant:9100"]
       #   labels:
-      #     service: "devops-assistant"
+      #     service: "orrery-assistant"
       # - targets: ["slack-bot:9100"]
       #   labels:
       #     service: "slack-bot"

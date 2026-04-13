@@ -36,7 +36,7 @@ only a summary — there's no `runbook_url` annotation pointing to
 
 A platform that touches production infrastructure (restarts pods,
 rolls back deployments, silences alerts) is itself oncallable. When
-the devops-assistant's circuit breaker opens because Kafka is down,
+the orrery-assistant's circuit breaker opens because Kafka is down,
 the on-call engineer needs to know within 30 seconds whether:
 
 1. This is expected behavior (Kafka is a real incident, breaker is
@@ -86,8 +86,8 @@ What the user / alert sees.
 Step-by-step commands to confirm the issue is real.
 
 \`\`\`bash
-kubectl -n orrery get pods -l app=devops-assistant
-kubectl -n orrery logs -l app=devops-assistant --tail=200
+kubectl -n orrery get pods -l app=orrery-assistant
+kubectl -n orrery logs -l app=orrery-assistant --tail=200
 \`\`\`
 
 ## Immediate mitigation
@@ -207,4 +207,4 @@ is a nice-to-have and can follow after the core runbooks land.
   go out of date instantly.
 - For the most dangerous incident class (LoopAgent storm), include a
   "break glass" command that scales the HPA to 0 immediately:
-  `kubectl -n orrery scale deploy/devops-assistant --replicas=0`
+  `kubectl -n orrery scale deploy/orrery-assistant --replicas=0`

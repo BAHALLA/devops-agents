@@ -24,7 +24,7 @@ ADK has **Context Caching** (since v1.15.0) for Gemini models:
 
 ### Gap
 DevOps agents have **long, static system instructions** (agent definitions with detailed
-tool descriptions) that are re-sent with every request. For the devops-assistant with 5
+tool descriptions) that are re-sent with every request. For the orrery-assistant with 5
 sub-agents and 50+ tools, this is significant token overhead.
 
 ## Proposed Solution
@@ -36,7 +36,7 @@ from google.adk.apps.app import App
 from google.adk.agents.context_cache_config import ContextCacheConfig
 
 app = App(
-    name="devops-assistant",
+    name="orrery-assistant",
     root_agent=root_agent,
     context_cache_config=ContextCacheConfig(
         min_tokens=2048,    # Only cache if context > 2048 tokens
@@ -66,14 +66,14 @@ cache_misses = Counter("agent_context_cache_misses_total", "Context cache misses
 | File | Change |
 |------|--------|
 | `core/orrery_core/runner.py` | `create_context_cache_config()` factory + `context_cache_config` param on `run_persistent()` |
-| `agents/devops-assistant/run_persistent.py` | Configure context caching via `create_context_cache_config()` |
+| `agents/orrery-assistant/run_persistent.py` | Configure context caching via `create_context_cache_config()` |
 | `core/orrery_core/metrics.py` | `CONTEXT_CACHE_EVENTS_TOTAL` counter + `track_cache_event()` helper |
 | `core/orrery_core/__init__.py` | Export `create_context_cache_config`, `track_cache_event`, `CONTEXT_CACHE_EVENTS_TOTAL` |
 | `core/tests/test_context_cache.py` | 9 tests: factory defaults, env vars, explicit overrides, App wiring, metrics |
 
 ## Acceptance Criteria
 
-- [x] Context caching enabled for devops-assistant
+- [x] Context caching enabled for orrery-assistant
 - [ ] Token usage reduced by measurable amount (track before/after)
 - [x] Cache TTL and intervals configurable via environment variables
 - [x] Cache metrics exposed on `/metrics` endpoint

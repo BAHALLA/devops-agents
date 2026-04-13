@@ -41,7 +41,7 @@ async def lifespan(app: FastAPI):
     session_service = DatabaseSessionService(db_url=db_url) if db_url else InMemorySessionService()
 
     # 2. Import the root agent here to avoid circular imports at module load.
-    from devops_assistant.agent import root_agent
+    from orrery_assistant.agent import root_agent
 
     # 3. Google Chat surface has its own approval flow via interactive cards,
     #    so skip the plugin-level confirmation gate. RBAC still runs via the
@@ -54,7 +54,7 @@ async def lifespan(app: FastAPI):
     # guarded root-level tool posts a card instead of blocking on stdin.
     #
     # NOTE: ``root_agent`` is a module-level singleton imported from
-    # ``devops_assistant.agent``. Assigning ``before_tool_callback`` here
+    # ``orrery_assistant.agent``. Assigning ``before_tool_callback`` here
     # mutates that shared object for the lifetime of the Python process.
     # That is safe in our deployment because the Google Chat bot owns its
     # own process, but it would interfere with any hypothetical single
@@ -62,7 +62,7 @@ async def lifespan(app: FastAPI):
     root_agent.before_tool_callback = google_chat_confirmation(_store)
 
     agent_app = App(
-        name="devops_assistant_gchat",
+        name="orrery_assistant_gchat",
         root_agent=root_agent,
         plugins=plugins,
     )

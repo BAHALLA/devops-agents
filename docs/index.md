@@ -146,6 +146,6 @@ graph LR
 | Component | Path | Description |
 |-----------|------|-------------|
 | [**core**](core/README.md) | `core/` | Shared library: agent factories, plugin system, validation, and base configurations. |
-| [**agents**](agents/devops-assistant.md) | `agents/` | Specialist agent implementations (Kafka, K8s, Docker, etc.). |
+| [**agents**](agents/orrery-assistant.md) | `agents/` | Specialist agent implementations (Kafka, K8s, Docker, etc.). |
 | [**infra**](config/general.md#infrastructure) | `infra/` | Local diagnostic stack (Prometheus, Loki, Kafka, Grafana). |
 | [**roadmap**](enhancements/README.md) | `docs/enhancements/` | Ongoing development and enhancement proposals (AEP). |
