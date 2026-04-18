@@ -6,6 +6,19 @@ The Orrery platform ships a Google Chat integration that supports **thread-based
 
 Google Chat supports two ways of connecting to your bot. Choose the one that best fits your infrastructure:
 
+```mermaid
+flowchart LR
+    subgraph HTTP["HTTP Webhook — public URL required"]
+        GC1[Google Chat] -->|POST + JWT| ING[Public Ingress]
+        ING --> B1[orrery-bot]
+    end
+    subgraph PS["Pub/Sub Pull — private network friendly"]
+        GC2[Google Chat] -->|publish| T[Pub-Sub Topic]
+        T --> S[Subscription]
+        B2[orrery-bot<br/>private network] -->|pull| S
+    end
+```
+
 <div class="grid cards" markdown>
 
 -   :material-webhook:{ .lg .middle } __[HTTP Webhook Setup](google-chat-webhook.md)__

@@ -46,7 +46,17 @@ A REST/SSE interface for embedding agents into internal developer portals (IDP).
 
 ## Architecture of an Integration
 
-Every integration follows the **Host Pattern**:
+Every integration follows the same four-step **Host Pattern**:
+
+```mermaid
+flowchart LR
+    U[User] -->|message| EC[Event Capture<br/>HTTP / Socket / Pub-Sub]
+    EC --> IR[Identity Resolution<br/>map platform ID → role]
+    IR --> RN[Runner.run_async<br/>ADK agent loop]
+    RN -->|text| OUT1[Chat message]
+    RN -->|confirm| OUT2[Interactive card / buttons]
+    RN -->|artifact| OUT3[File attachment / link]
+```
 
 1.  **Event Capture**: The integration layer listens for user input (HTTP POST, Socket Mode, Pub/Sub).
 2.  **Identity Resolution**: It resolves the user's platform-specific ID (e.g., Slack ID, Email) and maps it to a `viewer`, `operator`, or `admin` role.

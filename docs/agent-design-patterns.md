@@ -16,6 +16,37 @@ This document analyzes the platform's architecture against the [Google Cloud Age
 | **Specialized** | Human-in-the-Loop | `GuardrailsPlugin` gates tools with `@confirm` and `@destructive`. |
 | | Custom Logic | Enforced via `SequentialAgent` and `ParallelAgent` factory functions. |
 
+## Composition at a Glance
+
+```mermaid
+graph TD
+    ROOT[orrery_assistant<br/>Coordinator — LLM routing]
+
+    ROOT -->|sub-agent| TRIAGE[incident_triage_agent<br/>SequentialAgent]
+    ROOT -->|AgentTool| KAFKA[kafka_health_agent]
+    ROOT -->|AgentTool| K8S[k8s_health_agent]
+    ROOT -->|AgentTool| OBS[observability_agent]
+    ROOT -->|AgentTool| DOCKER[docker_agent]
+    ROOT -->|AgentTool| JOURNAL[ops_journal_agent]
+    ROOT -->|AgentTool| REM[remediation_pipeline<br/>LoopAgent, max=3]
+
+    TRIAGE --> HC[health_check_agent<br/>ParallelAgent]
+    HC --> HC1[kafka_checker]
+    HC --> HC2[k8s_checker]
+    HC --> HC3[docker_checker]
+    HC --> HC4[obs_checker]
+    TRIAGE --> SUM[triage_summarizer]
+    TRIAGE --> JW[journal_writer]
+
+    REM --> ACT[remediation_actor]
+    REM --> VER[remediation_verifier]
+```
+
+Deterministic workflows (triage, remediation) live under `sub_agents` —
+their execution order is fixed. Specialists live behind `AgentTool` so
+the root LLM picks them based on the user's intent. See
+[ADR-002](adr/002-agent-tool-vs-sub-agents.md) for the rationale.
+
 ---
 
 ## Detailed Analysis

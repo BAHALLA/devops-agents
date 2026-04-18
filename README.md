@@ -22,6 +22,47 @@ DevOps and SRE teams often face a "wall of alerts" and repetitive manual triage.
 - **Don't just restart blindly:** Self-healing loops verify if an action worked and retry with a different strategy if it didn't.
 - **Stay in control:** Destructive operations always require human approval via a secure confirmation flow.
 
+## 🏗️ Architecture at a Glance
+
+```mermaid
+graph LR
+    subgraph Frontends
+        WEB[Web UI / CLI]
+        SLACK[Slack]
+        GCHAT[Google Chat]
+    end
+
+    ROOT[Orrery Assistant<br/>Coordinator]
+
+    subgraph Specialists
+        KAFKA[Kafka]
+        K8S[K8s]
+        OBS[Observability]
+        DOCKER[Docker]
+        JOURNAL[Ops Journal]
+        REM[Remediation Loop]
+    end
+
+    subgraph Plugins
+        P1[RBAC & Guardrails]
+        P2[Metrics & Audit]
+        P3[Memory & Resilience]
+    end
+
+    WEB --> ROOT
+    SLACK --> ROOT
+    GCHAT --> ROOT
+    ROOT --> KAFKA
+    ROOT --> K8S
+    ROOT --> OBS
+    ROOT --> DOCKER
+    ROOT --> JOURNAL
+    ROOT --> REM
+    ROOT -.-> P1
+    ROOT -.-> P2
+    ROOT -.-> P3
+```
+
 ## ✨ Key Features
 
 ### 🧩 Intelligence & Orchestration
@@ -72,8 +113,9 @@ open http://localhost:8000
 | [**observability**](https://bahalla.github.io/orrery/agents/observability/) | Prometheus metrics, Loki logs, and Alertmanager silences. |
 | [**docker-agent**](https://bahalla.github.io/orrery/agents/docker-agent/) | Container health, stats, logs, and Compose projects. |
 | [**slack-bot**](https://bahalla.github.io/orrery/agents/slack-bot/) | Interactive Slack integration with confirmation buttons. |
-| [**google-chat-bot**](https://bahalla.github.io/orrery/integrations/google-chat/) | Google Chat integration with interactive Cards v2. |
+| [**google-chat-bot**](https://bahalla.github.io/orrery/agents/google-chat-bot/) | Google Chat integration with interactive Cards v2. |
 | [**ops-journal**](https://bahalla.github.io/orrery/agents/ops-journal/) | Persistent notes and session-level bookmarks. |
+| **remediation-pipeline** | Closed-loop LoopAgent (act → verify → retry, max 3) exposed to the orchestrator. |
 
 ## 📚 Documentation
 

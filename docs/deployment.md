@@ -19,28 +19,18 @@ and the `make docker-demo` target instead.
 
 ## Architecture
 
-```
-                   ┌──────────────────────┐
-                   │  Ingress (nginx/GLB) │
-                   └──────────┬───────────┘
-                              │
-                  ┌───────────┴──────────┐
-                  │  orrery-assistant    │  (2-6 replicas, HPA)
-                  │    Deployment        │
-                  └──────────┬───────────┘
-                             │
-             ┌───────────────┼────────────────────┐
-             ▼               ▼                    ▼
-       ┌──────────┐   ┌───────────────┐   ┌────────────────┐
-       │ Postgres │   │ Prometheus +  │   │ LLM providers  │
-       │ (shared  │   │ Loki + Tempo  │   │ (egress HTTPS) │
-       │ sessions)│   │ (scrape :9100)│   │                │
-       └──────────┘   └───────────────┘   └────────────────┘
+```mermaid
+graph TD
+    ING[Ingress<br/>nginx / GLB]
+    ING --> DEP[orrery-assistant Deployment<br/>2-6 replicas, HPA]
+    DEP --> PG[(Postgres<br/>shared sessions)]
+    DEP --> OBS[Prometheus + Loki + Tempo<br/>scrape :9100]
+    DEP --> LLM[LLM providers<br/>egress HTTPS]
 ```
 
-The Slack bot and ADK web UI run as separate Deployments (same image,
-different entry points) so they can be scaled independently. Both share
-the Postgres session store.
+The Slack bot, Google Chat bot, and ADK web UI run as separate
+Deployments (same image, different entry points) so they can be scaled
+independently. All share the Postgres session store.
 
 ---
 
@@ -258,4 +248,3 @@ hit rate. The most common cause is that context caching is disabled
 - AEP-013 — security hardening (JWT auth, PII redaction) — next up
 - AEP-014 — supply chain security (SBOM, cosign signing)
 - AEP-015 — cost observability and per-tenant budgets
-nd per-tenant budgets

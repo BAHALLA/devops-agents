@@ -4,16 +4,16 @@ A single agent with tools for monitoring and managing a Kafka cluster.
 
 ## Tools
 
-| Tool | Description |
-|------|-------------|
-| `get_kafka_cluster_health` | Check broker connectivity and cluster status |
-| `list_kafka_topics` | List all topics |
-| `create_kafka_topic` | Create a topic with configurable partitions and replication |
-| `delete_kafka_topic` | Delete a topic |
-| `get_topic_metadata` | Get partition details, leaders, replicas, and ISRs |
-| `list_consumer_groups` | List all consumer groups |
-| `describe_consumer_groups` | Get members, assignments, and state of consumer groups |
-| `get_consumer_lag` | Calculate per-partition lag for a consumer group |
+| Tool | Description | Guardrail |
+|------|-------------|-----------|
+| `get_kafka_cluster_health` | Check broker connectivity and cluster status | — |
+| `list_kafka_topics` | List all topics | — |
+| `get_topic_metadata` | Get partition details, leaders, replicas, and ISRs | — |
+| `list_consumer_groups` | List all consumer groups | — |
+| `describe_consumer_groups` | Get members, assignments, and state of consumer groups | — |
+| `get_consumer_lag` | Calculate per-partition lag for a consumer group | — |
+| `create_kafka_topic` | Create a topic with configurable partitions and replication | `@confirm` |
+| `delete_kafka_topic` | Delete a topic (irreversible — all data lost) | `@destructive` |
 
 ## Environment Variables
 
