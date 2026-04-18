@@ -56,7 +56,7 @@ The Pub/Sub worker runs as a separate process:
 
 ```bash
 # Local (requires GOOGLE_APPLICATION_CREDENTIALS pointing to a SA key)
-python -m google_chat_bot.pubsub_worker
+make run-google-chat-pubsub
 
 # In-cluster (enabled via Helm)
 # pubsubWorker.enabled: true

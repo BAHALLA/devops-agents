@@ -33,7 +33,7 @@ ngrok http 3001
 # Requires a real subscription and service account credentials
 GOOGLE_CHAT_PUBSUB_SUBSCRIPTION=orrery-chat-events-sub \
 GOOGLE_CHAT_PUBSUB_PROJECT=your-project-id \
-python -m google_chat_bot.pubsub_worker
+make run-google-chat-pubsub
 ```
 
 ## Configuration Summary
