@@ -20,6 +20,12 @@ variable "k8s_service_account" {
   default     = "orrery-chat-bot"
 }
 
+variable "vertex_ai_project_id" {
+  description = "GCP project where Vertex AI (Gemini) is called. Defaults to var.project_id."
+  type        = string
+  default     = null
+}
+
 
 variable "ack_deadline_seconds" {
   description = <<-EOT

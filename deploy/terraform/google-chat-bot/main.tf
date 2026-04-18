@@ -136,6 +136,13 @@ resource "google_pubsub_subscription_iam_member" "bot_subscriber" {
   member       = "serviceAccount:${google_service_account.bot.email}"
 }
 
+# Allow the bot to call Vertex AI (Gemini). Mandatory for agent execution.
+resource "google_project_iam_member" "vertex_ai_user" {
+  project = coalesce(var.vertex_ai_project_id, var.project_id)
+  role    = "roles/aiplatform.user"
+  member  = "serviceAccount:${google_service_account.bot.email}"
+}
+
 # ── Workload Identity binding ─────────────────────────────────────────
 # Allow the in-cluster KSA to impersonate this GSA. The Chat bot pod's
 # google-auth library picks this up automatically through the GKE
