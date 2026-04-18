@@ -86,6 +86,9 @@ def make_callback(
     """
 
     def callback(message: Any) -> None:
+        # 0. Log receipt for debugging.
+        logger.info("Received Pub/Sub message_id=%s", getattr(message, "message_id", "?"))
+
         # 1. Decode payload. Malformed messages are unrecoverable —
         #    redelivery would just re-raise — so we ack and drop.
         try:
@@ -166,8 +169,15 @@ async def run() -> None:
         config.google_chat_pubsub_handler_timeout_seconds,
     )
 
-    # Block on a stop_event toggled by SIGINT / SIGTERM so kubectl can
-    # drain the pod cleanly during a rolling restart.
+    # 3. Heartbeat task to prove the worker is alive in the logs.
+    async def _heartbeat():
+        while True:
+            logger.info("Pub/Sub worker heartbeat: waiting for messages...")
+            await asyncio.sleep(60)
+
+    heartbeat_task = asyncio.create_task(_heartbeat())
+
+    # Block on a stop_event toggled by SIGINT / SIGTERM
     stop_event = asyncio.Event()
 
     def _request_shutdown(signame: str) -> None:
@@ -181,6 +191,7 @@ async def run() -> None:
         await stop_event.wait()
     finally:
         logger.info("Cancelling streaming pull")
+        heartbeat_task.cancel()
         streaming_pull_future.cancel()
         # ``result()`` is blocking; offload to a thread so we keep the
         # event loop responsive during shutdown.

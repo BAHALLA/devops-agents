@@ -84,6 +84,8 @@ class GoogleChatHandler:
 
         Supports standard Chat API events and Workspace Add-ons events.
         """
+        logger.info("Processing Google Chat event: %s", event)
+
         # 1. Standard Chat API uses top-level 'type'.
         event_type = event.get("type")
 
@@ -94,14 +96,16 @@ class GoogleChatHandler:
 
         # Detect MESSAGE
         if event_type == "MESSAGE" or chat.get("messagePayload"):
+            logger.info("Detected MESSAGE event")
             if self._should_defer("MESSAGE"):
+                logger.info("Deferring MESSAGE to background task")
                 self._spawn_background(self._handle_message_async(event))
                 return empty_ack()
             return await self._handle_message(event)
 
         # Detect ADDED_TO_SPACE
         if event_type == "ADDED_TO_SPACE" or (chat.get("space") and not chat.get("messagePayload")):
-            # Note: Add-ons often receive space info during the first interaction.
+            logger.info("Detected ADDED_TO_SPACE event")
             return self._wrap_for_addons("Thanks for adding me! Mention me to start investigating.")
 
         # Detect CARD_CLICKED. Add-ons payloads don't carry a top-level "type",
@@ -112,7 +116,9 @@ class GoogleChatHandler:
             "confirm_action",
             "deny_action",
         ):
+            logger.info("Detected CARD_CLICKED event")
             if self._should_defer("CARD_CLICKED"):
+                logger.info("Deferring CARD_CLICKED to background task")
                 self._spawn_background(self._handle_card_click_async(event))
                 return empty_ack()
             return await self._handle_card_click(event)
@@ -174,6 +180,7 @@ class GoogleChatHandler:
         extra_state: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Drive a single agent turn and collect text + any buffered cards."""
+        logger.info("Starting agent run (session_id=%s, user_id=%s)", session_id, user_id)
         # NOTE: use ``set_user_role`` rather than a raw ``user_role`` write.
         # ``GuardrailsPlugin`` runs ``ensure_default_role()`` as a
         # before_agent_callback; it resets any ``user_role`` that wasn't
@@ -204,6 +211,10 @@ class GoogleChatHandler:
                     for part in run_event.content.parts:
                         if part.text:
                             response_text += part.text
+            logger.info("Agent run complete. Collected %d characters of text.", len(response_text))
+        except Exception:
+            logger.exception("Agent runner failed during turn")
+            raise
         finally:
             end_request_buffer(token)
 
@@ -233,12 +244,14 @@ class GoogleChatHandler:
             return
 
         try:
+            logger.info("Posting async reply to %s", space_name)
             await self.chat_client.create_message(
                 space_name,
                 text=reply.get("text") or None,
                 cards_v2=reply.get("cardsV2"),
                 thread_name=thread_name,
             )
+            logger.info("Successfully posted async reply")
         except Exception:
             logger.exception("Failed to post async reply to %s", space_name)
 
@@ -278,7 +291,14 @@ class GoogleChatHandler:
 
     async def _handle_message_async(self, event: dict[str, Any]) -> None:
         """Background-task counterpart to ``_handle_message``."""
+        logger.info("Background task started for MESSAGE event")
         user_text, user_email, space_name, thread_name = self._parse_message_event(event)
+        logger.info(
+            "Parsed: user_text='%s', user_email='%s', space_name='%s'",
+            user_text,
+            user_email,
+            space_name,
+        )
         try:
             if not user_text:
                 await self._post_async_reply(
