@@ -34,8 +34,8 @@ provider exists for them):
 module "orrery_chat_bot" {
   source = "../../deploy/terraform/google-chat-bot"
 
-  project_id          = "project_id"
-  k8s_namespace       = "namespace_name"
+  project_id          = "your-project-id"
+  k8s_namespace       = "orrery"
   k8s_service_account = "orrery-chat-bot"
 
   # Optional overrides:
@@ -43,11 +43,6 @@ module "orrery_chat_bot" {
   # enable_dead_letter  = true            # default
   # max_delivery_attempts = 5
 
-  # Override if your org enforces Domain Restricted Sharing (IAM policy).
-  # For Workspace Add-ons, use the project's service agent identity:
-  # chat_publisher_email = "service-<PROJECT_NUMBER>@gcp-sa-gsuiteaddons.iam.gserviceaccount.com"
-}
-```
   # If your Chat app is a Workspace Add-on, or your org policy
   # (`constraints/iam.allowedPolicyMemberDomains`) blocks the default
   # `chat-api-push@system.gserviceaccount.com`, copy the exact SA shown
