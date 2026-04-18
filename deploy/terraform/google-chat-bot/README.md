@@ -34,8 +34,8 @@ provider exists for them):
 module "orrery_chat_bot" {
   source = "../../deploy/terraform/google-chat-bot"
 
-  project_id          = "vg1np-pf-phenix-devag-d1"
-  k8s_namespace       = "dev-tba"
+  project_id          = "project_id"
+  k8s_namespace       = "namespace_name"
   k8s_service_account = "orrery-chat-bot"
 
   # Optional overrides:
