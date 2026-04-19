@@ -79,7 +79,7 @@ Both `make run-devops` (ADK Dev UI) and `docker compose --profile demo up -d` bi
 ## Confirmation flow
 
 ### Guarded tool runs without asking for confirmation
-- Is the agent running under `default_plugins()`? `GuardrailsPlugin` handles RBAC, but confirmation is wired at the **agent level** via `before_tool_callback=require_confirmation()`. If you're building a new agent, see [Adding a new agent → Wiring](adding-an-agent.md#3-wire-up-the-agent).
+- Is the agent running under `default_plugins()`? `GuardrailsPlugin` handles RBAC, but confirmation is wired at the **agent level** via `before_tool_callback=require_confirmation()`. If you're building a new agent, see [Adding a new agent → Wiring](adding-an-agent.md#wiring).
 - Is the tool actually decorated? `@confirm("reason")` and `@destructive("reason")` both attach the metadata the callback reads.
 
 ### Confirmation loops / agent keeps asking

@@ -141,7 +141,7 @@ Split when **any** of these holds:
 2. Tools span **different privilege tiers** (viewer / operator / admin) — splitting
    mirrors RBAC cleanly (see [ADR-001](adr/001-rbac.md)).
 3. Tools touch **different external systems** with distinct failure modes — per-system
-   circuit breakers ([resilience](../core/orrery_core/resilience.py)) work better when
+   circuit breakers ([resilience](https://github.com/BAHALLA/orrery/blob/main/core/orrery_core/resilience.py)) work better when
    isolated.
 4. The system prompt starts containing *"if the user asks X use tool Y; if Z use tool W"* —
    that routing belongs in sub-agent selection, not prose.

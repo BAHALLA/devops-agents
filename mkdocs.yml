@@ -104,6 +104,7 @@ nav:
   - Platform Features:
     - Agents Overview: agents-overview.md
     - Guardrails & RBAC: guardrails.md
+    - Structured Tool Results: tool-results.md
     - Testing RBAC: rbac-testing.md
     - Cross-Session Memory: memory.md
     - Observability & Metrics: metrics.md

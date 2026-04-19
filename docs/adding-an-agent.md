@@ -61,7 +61,6 @@ async def get_status(name: str) -> dict:
         return ToolResult.ok(data=result).to_dict()
     except Exception as e:
         return ToolResult.error(f"Failed to get status: {e}").to_dict()
-```
 
 @confirm("This will modify the resource state.")
 async def update_resource(name: str, value: str) -> dict:
@@ -76,7 +75,7 @@ async def delete_resource(name: str) -> dict:
 
 ---
 
-## 3. Wire Up the Agent
+## 3. Wire Up the Agent {: #wiring }
 
 In `agent.py`, use the `create_agent` factory. To enable the interactive confirmation flow for guarded tools, pass `require_confirmation()` to `before_tool_callback`.
 
