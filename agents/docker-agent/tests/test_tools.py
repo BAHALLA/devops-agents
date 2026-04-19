@@ -391,7 +391,7 @@ async def test_restart_container_rejects_empty_name():
 async def test_list_images_success(mock_run):
     images = [
         {"Repository": "nginx", "Tag": "latest", "Size": "187MB"},
-        {"Repository": "python", "Tag": "3.11-slim", "Size": "125MB"},
+        {"Repository": "python", "Tag": "3.14-slim", "Size": "125MB"},
     ]
     mock_run.return_value = (True, "\n".join(json.dumps(i) for i in images))
 

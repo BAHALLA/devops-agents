@@ -15,9 +15,10 @@ For local development (modifying agents or the core library) you'll additionally
 
 ## 🚀 Quick Start (Docker — no clone required)
 
-Orrery publishes multi-arch images (`linux/amd64` and `linux/arm64`) to GitHub Container Registry. For a fast test drive, just pull and run.
+The fastest way to try Orrery is to pull the pre-built image from GHCR — no
+clone required.
 
-### Option 1 — Single container (30 seconds)
+### Kick the tires (single container, ~30 seconds)
 
 The quickest way to open the web UI and chat with the agent:
 
@@ -29,14 +30,14 @@ docker run --rm -p 8000:8000 \
   ghcr.io/bahalla/orrery:latest
 ```
 
-Then open [http://localhost:8000](http://localhost:8000).
+Open [http://localhost:8000](http://localhost:8000).
 
 !!! info "What you get"
     The UI boots with in-memory session state. Tools that need external systems
     (Kafka, Kubernetes, Prometheus) will report that those systems aren't
-    reachable — use Option 2 for the full experience.
+    reachable — use the Full stack option below for the complete experience.
 
-### Option 2 — Full stack (Kafka + Postgres + Prometheus + Loki + Alertmanager)
+### Full stack (Kafka + Postgres + Prometheus + Loki + Alertmanager)
 
 Download the compose file and start everything. Still no clone required:
 
@@ -46,7 +47,7 @@ curl -O https://raw.githubusercontent.com/BAHALLA/orrery/main/docker-compose.yml
 GOOGLE_API_KEY=your-api-key docker compose --profile demo up -d
 ```
 
-The compose file pulls `ghcr.io/bahalla/orrery:latest` by default, so the agent container starts from the published image instead of rebuilding.
+The compose file pulls `ghcr.io/bahalla/orrery:latest` by default.
 
 Open [http://localhost:8000](http://localhost:8000).
 
