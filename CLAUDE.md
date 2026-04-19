@@ -37,7 +37,7 @@ make run-devops-cli   # Terminal mode
 
 ## Architecture
 
-This is a **DevOps/SRE agent platform** built on **Google ADK** (Agent Development Kit). It uses a **uv workspace** with Python 3.11.
+This is a **DevOps/SRE agent platform** built on **Google ADK** (Agent Development Kit). It uses a **uv workspace** with Python 3.14.
 
 ### Workspace Layout
 
@@ -100,7 +100,7 @@ orrery_assistant (root orchestrator)
 
 ## Code Style
 
-- **Ruff** for linting and formatting (line-length: 100, target: py311)
+- **Ruff** for linting and formatting (line-length: 100, target: py314)
 - Lint rules: E, W, F, I (isort), UP, B, SIM
 - Known first-party packages configured in `[tool.ruff.lint.isort]`
 - CI runs both `ruff check` and `ruff format --check`

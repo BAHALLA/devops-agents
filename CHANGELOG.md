@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [0.1.7] - 2026-04-19
+
+### Added
+- **Zero-clone Docker quick-start**: The README and `docs/getting-started.md` now lead with `docker pull ghcr.io/bahalla/orrery:latest` + `docker run` for a 30-second single-container test drive, followed by a `curl`-the-compose-file path for the full Kafka/Postgres/Prometheus stack — no repository clone required.
+- **`ORRERY_IMAGE` override**: `docker-compose.yml` honours `ORRERY_IMAGE` so users can pin a specific release tag (e.g. `ORRERY_IMAGE=ghcr.io/bahalla/orrery:v0.1.7 docker compose --profile demo up -d`).
+- **Best-practices & scaling guide**: `docs/agent-design-patterns.md` gains three new sections — tool/agent sizing budgets (sweet 5–15 tools, 3–7 direct children, depth ≤3), framework/model-specific limits (Gemini/Claude/OpenAI/Ollama caps, ADK `LoopAgent.max_iterations` discipline, context-window budgeting), and a decision guide for when to reach for the A2A protocol (referencing [AEP-005](docs/enhancements/aep-005-a2a-protocol.md)) with a four-stage scaling playbook.
+
+### Changed
+- **Python 3.14 upgrade**: Bumped `requires-python` from `>=3.11` to `>=3.14` across the root and all nine workspace packages (`core`, `docker-agent`, `google-chat-bot`, `k8s-health`, `kafka-health`, `observability`, `ops-journal`, `orrery-assistant`, `slack-bot`). Ruff `target-version` updated to `py314`. Dockerfile base images switched to `ghcr.io/astral-sh/uv:python3.14-bookworm-slim` (builder) and `python:3.14-slim-bookworm` (runtime). CI and release workflows now install Python 3.14. `uv.lock` regenerated — all C-extension wheels (confluent-kafka, psycopg2-binary, asyncpg, pydantic-core, numpy, tiktoken) resolved to prebuilt 3.14 wheels with no source-build fallbacks. Full test suite (572 tests) passes on 3.14.
+- **Single production Dockerfile**: Merged `Dockerfile.prod` into `Dockerfile` so the repository ships one production-ready image. The consolidated Dockerfile adds `UV_COMPILE_BYTECODE=1`, `UV_LINK_MODE=copy`, `PYTHONUNBUFFERED=1`, `PYTHONDONTWRITEBYTECODE=1`, a BuildKit `--mount=type=cache` for uv, `--extra postgres` by default, and folds ownership into `COPY --chown=` to drop a redundant `chown -R` layer.
+- **Compose services pull by default**: `orrery-assistant` and `slack-bot` in `docker-compose.yml` now use `image: ${ORRERY_IMAGE:-ghcr.io/bahalla/orrery:latest}` with `build: .` retained as a local-dev fallback — first-run users no longer wait for a local build.
+- **CI/release type-check coverage**: `.github/workflows/ci.yml` and `.github/workflows/release.yml` now include `--extra-search-path agents/google-chat-bot` in the `ty` invocation so that agent is type-checked alongside the others (it was already shipping in the image and in runtime CI).
+- **Documentation refresh**: `SECURITY.md`, `docs/deployment.md`, `docs/troubleshooting.md`, `docs/enhancements/aep-011-deployment-hardening.md`, and `docs/enhancements/aep-014-supply-chain-security.md` updated to reference the single `Dockerfile` after the consolidation.
+
+### Fixed
+- **Broken `HEALTHCHECK` on the default image**: The Dockerfile `HEALTHCHECK` and the `orrery-assistant` compose healthcheck both probed `http://localhost:8080/healthz`, but `HealthServer` is only started by `run_persistent()` and the Pub/Sub worker — not by the default `adk web` CMD. Probes are now owned by the orchestrator (docker-compose / Helm values in `deploy/helm/orrery-assistant/values.yaml`) rather than baked into the image.
+- **Latent port conflict in compose**: `orrery-assistant` and `kafka-ui` both bound host port `8080`. The unused `8080:8080` mapping on `orrery-assistant` was removed (the healthz server doesn't run for that CMD anyway).
+
+### Removed
+- **`Dockerfile.prod`**: replaced by the consolidated, production-ready `Dockerfile`. The `release.yml` workflow now builds from `./Dockerfile`.
+
 ## [0.1.6] - 2026-04-19
 
 ### Added
@@ -151,7 +174,9 @@ First public release of the AI Agents for DevOps & SRE platform.
 - Guardrail confirmation bypass fixed with args-hash + TTL tracking
 - Server-side role enforcement prevents privilege escalation
 
-[Unreleased]: https://github.com/BAHALLA/orrery/compare/v0.1.5...HEAD
+[Unreleased]: https://github.com/BAHALLA/orrery/compare/v0.1.7...HEAD
+[0.1.7]: https://github.com/BAHALLA/orrery/compare/v0.1.6...v0.1.7
+[0.1.6]: https://github.com/BAHALLA/orrery/compare/v0.1.5...v0.1.6
 [0.1.5]: https://github.com/BAHALLA/orrery/compare/v0.1.4...v0.1.5
 [0.1.4]: https://github.com/BAHALLA/orrery/compare/v0.1.3...v0.1.4
 [0.1.3]: https://github.com/BAHALLA/orrery/compare/v0.1.2...v0.1.3

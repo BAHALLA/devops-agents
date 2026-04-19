@@ -66,7 +66,7 @@ The bot uses `auto_create_session=True`, so this shouldn't normally fire. If it 
 Usually one of:
 - Missing `GOOGLE_API_KEY` / `ANTHROPIC_API_KEY` — the LLM call fails and readiness times out.
 - `DATABASE_URL` points to a host the pod can't reach. Test from a debug pod: `kubectl run -it --rm psql --image=postgres:16 -- psql $DATABASE_URL`.
-- Missing Postgres driver — rebuild the image with `uv sync --extra postgres` (the provided `Dockerfile.prod` does this by default).
+- Missing Postgres driver — rebuild the image with `uv sync --extra postgres` (the provided `Dockerfile` does this by default).
 
 ### Readiness probe flaps
 The startup probe allows up to 60 seconds (12 × 5s). Slow cold starts usually come from LLM warm-up calls or blocking client initialization. Full guidance: [Deployment → Readiness probe flaps](deployment.md#readiness-probe-flaps).

@@ -3,7 +3,7 @@
 [![CI](https://github.com/BAHALLA/orrery/actions/workflows/ci.yml/badge.svg)](https://github.com/BAHALLA/orrery/actions/workflows/ci.yml)
 [![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-blue.svg)](https://bahalla.github.io/orrery/)
 [![License: MIT](https://img.shields.io/github/license/BAHALLA/orrery)](https://github.com/BAHALLA/orrery/blob/main/LICENSE)
-[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/release/python-3110/)
+[![Python 3.14+](https://img.shields.io/badge/python-3.14+-blue.svg)](https://www.python.org/downloads/release/python-3140/)
 [![uv](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v1.json)](https://docs.astral.sh/uv/)
 
 **Orrery** is an open-source platform for building **autonomous DevOps and SRE agents**. Built with [Google ADK](https://google.github.io/adk-docs/) and managed as a [uv workspace](https://docs.astral.sh/uv/concepts/workspaces/).
@@ -82,26 +82,41 @@ graph LR
 
 ## 🚀 Quick Start (Docker)
 
-The fastest way to try the platform is using Docker Compose.
+The fastest way to try Orrery is to pull the pre-built image from GHCR — no
+clone required.
 
 ### Prerequisites
-- [Docker](https://docs.docker.com/get-docker/) & Docker Compose
+- [Docker](https://docs.docker.com/get-docker/)
 - An API Key (Gemini, Claude, or OpenAI)
 
-### Start the Stack
+### Kick the tires (single container, ~30 seconds)
 ```bash
-# 1. Clone the repo
-git clone https://github.com/BAHALLA/orrery.git && cd orrery
+docker pull ghcr.io/bahalla/orrery:latest
 
-# 2. Start with Gemini (default)
-# This launches Kafka (KRaft), PostgreSQL, Prometheus stack, and the Agent.
+docker run --rm -p 8000:8000 \
+  -e GOOGLE_API_KEY=your-key \
+  ghcr.io/bahalla/orrery:latest
+
+# Open the web UI
+open http://localhost:8000
+```
+The web UI boots with in-memory session state and whichever LLM provider you
+configured. Tools that need Kafka, Postgres, or Prometheus (the full stack) are
+covered below.
+
+### Full stack (Kafka + Postgres + Prometheus + Grafana)
+```bash
+# 1. Grab the compose file (still no clone required)
+curl -O https://raw.githubusercontent.com/BAHALLA/orrery/main/docker-compose.yml
+
+# 2. Start the full stack — uses the pulled image by default
 GOOGLE_API_KEY=your-key docker compose --profile demo up -d
 
 # 3. Open the web UI
 open http://localhost:8000
 ```
 
-*For more setup options (Claude, OpenAI, Local models), see the [Configuration Guide](https://bahalla.github.io/orrery/config/general/).*
+*For more setup options (Claude, OpenAI, local models), see the [Configuration Guide](https://bahalla.github.io/orrery/config/general/).*
 
 ## 🤖 Available Agents
 

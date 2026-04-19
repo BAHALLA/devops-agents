@@ -42,7 +42,7 @@ CI publishes multi-arch images to GHCR automatically via
 ```bash
 docker buildx build \
   --platform linux/amd64,linux/arm64 \
-  -f Dockerfile.prod \
+  -f Dockerfile \
   -t ghcr.io/bahalla/orrery:v0.1.0 \
   --push .
 ```
@@ -215,7 +215,7 @@ Check the logs — the most common causes are:
   `kubectl run -it --rm psql --image=postgres:16 -- psql $DATABASE_URL`
 - `DatabaseSessionService` complains about missing driver: ensure the
   image was built with `uv sync --extra postgres` (the provided
-  `Dockerfile.prod` includes this by default).
+  `Dockerfile` includes this by default).
 
 ### Readiness probe flaps
 

@@ -4,36 +4,61 @@ Welcome! This guide will help you set up the AI Agents platform and perform your
 
 ## 📋 Prerequisites
 
-Before you begin, ensure you have the following installed:
+To try Orrery you only need:
 
-*   [Docker](https://docs.docker.com/get-docker/) & Docker Compose
-*   [Python 3.11+](https://www.python.org/downloads/) (for local development)
-*   [uv](https://docs.astral.sh/uv/) (Fast Python package manager)
+*   [Docker](https://docs.docker.com/get-docker/)
 *   An LLM API Key (Google Gemini is recommended for the best experience)
+
+For local development (modifying agents or the core library) you'll additionally want [Python 3.14+](https://www.python.org/downloads/) and [uv](https://docs.astral.sh/uv/) — see [Local Development Setup](#local-development-setup) below.
 
 ---
 
-## 🚀 Quick Start (Docker)
+## 🚀 Quick Start (Docker — no clone required)
 
-The fastest way to experience the platform is using the pre-configured Docker stack. This launches Kafka (KRaft), PostgreSQL, and the full observability suite alongside the Agent.
+Orrery publishes multi-arch images (`linux/amd64` and `linux/arm64`) to GitHub Container Registry. For a fast test drive, just pull and run.
 
-1.  **Clone the Repository**:
-    ```bash
-    git clone https://github.com/BAHALLA/orrery.git
-    cd orrery
-    ```
+### Option 1 — Single container (30 seconds)
 
-2.  **Start the Platform**:
-    Replace `your-api-key` with your [Google AI Studio](https://aistudio.google.com/apikey) key.
-    ```bash
-    GOOGLE_API_KEY=your-api-key docker compose --profile demo up -d
-    ```
+The quickest way to open the web UI and chat with the agent:
 
-3.  **Access the Dashboard**:
-    Open your browser and navigate to [http://localhost:8000](http://localhost:8000).
+```bash
+docker pull ghcr.io/bahalla/orrery:latest
+
+docker run --rm -p 8000:8000 \
+  -e GOOGLE_API_KEY=your-api-key \
+  ghcr.io/bahalla/orrery:latest
+```
+
+Then open [http://localhost:8000](http://localhost:8000).
+
+!!! info "What you get"
+    The UI boots with in-memory session state. Tools that need external systems
+    (Kafka, Kubernetes, Prometheus) will report that those systems aren't
+    reachable — use Option 2 for the full experience.
+
+### Option 2 — Full stack (Kafka + Postgres + Prometheus + Loki + Alertmanager)
+
+Download the compose file and start everything. Still no clone required:
+
+```bash
+curl -O https://raw.githubusercontent.com/BAHALLA/orrery/main/docker-compose.yml
+
+GOOGLE_API_KEY=your-api-key docker compose --profile demo up -d
+```
+
+The compose file pulls `ghcr.io/bahalla/orrery:latest` by default, so the agent container starts from the published image instead of rebuilding.
+
+Open [http://localhost:8000](http://localhost:8000).
 
 !!! success "Success"
     You now have a full autonomous DevOps stack running locally!
+
+!!! tip "Pinning a specific version"
+    Override the image tag to pin to a release (e.g. `v0.1.7`):
+    ```bash
+    ORRERY_IMAGE=ghcr.io/bahalla/orrery:v0.1.7 \
+      docker compose --profile demo up -d
+    ```
 
 ---
 

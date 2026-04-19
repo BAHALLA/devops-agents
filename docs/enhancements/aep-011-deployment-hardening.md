@@ -12,7 +12,7 @@
 
 ### Current Implementation
 The project has basic deployment support:
-- `Dockerfile` and `Dockerfile.prod` for container builds
+- `Dockerfile` for container builds
 - `docker-compose.yml` for local stack
 - `run_persistent.py` for CLI with SQLite persistence
 - `HealthServer` in `core/orrery_core/health.py`

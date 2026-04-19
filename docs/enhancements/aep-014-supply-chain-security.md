@@ -26,8 +26,8 @@ of what an enterprise procurement review will ask for:
 - **No vulnerability scan gate**: the CI pipeline has `bandit` for Python
   source but no scan of the final container image. A vulnerable base
   image or transitive package would ship unnoticed.
-- **Base image is pinned by tag, not digest**: `FROM python:3.11-slim-bookworm`
-  in `Dockerfile.prod` resolves to whatever tag `latest` points to at
+- **Base image is pinned by tag, not digest**: `FROM python:3.14-slim-bookworm`
+  in `Dockerfile` resolves to whatever tag `latest` points to at
   build time. Two builds on different days can produce different base
   images without any visible diff.
 - **No dependency review in CI**: new dependencies added via `uv add` are
@@ -62,9 +62,9 @@ tampering or a malicious PyPI release) would not be caught.
 ### Step 1: Pin the base image by digest
 
 ```dockerfile
-# Dockerfile.prod — pin by digest, not tag
-FROM ghcr.io/astral-sh/uv:python3.11-bookworm-slim@sha256:<digest> AS builder
-FROM python:3.11-slim-bookworm@sha256:<digest>
+# Dockerfile — pin by digest, not tag
+FROM ghcr.io/astral-sh/uv:python3.14-bookworm-slim@sha256:<digest> AS builder
+FROM python:3.14-slim-bookworm@sha256:<digest>
 ```
 
 Automate digest refresh with Renovate or Dependabot's `docker` ecosystem.
@@ -178,7 +178,7 @@ spec:
 
 | File | Change |
 |------|--------|
-| `Dockerfile.prod` | Pin base images by digest |
+| `Dockerfile` | Pin base images by digest |
 | `.github/workflows/docker-publish.yml` | Add SBOM generation, cosign signing, Trivy scan |
 | `.github/workflows/ci.yml` | Add `dependency-review` job |
 | `.github/dependabot.yml` | Enable `docker` ecosystem for base image updates |
@@ -187,7 +187,7 @@ spec:
 
 ## Acceptance Criteria
 
-- [ ] Base images pinned by digest in `Dockerfile.prod`
+- [ ] Base images pinned by digest in `Dockerfile`
 - [ ] Renovate/Dependabot open PRs for base image digest updates
 - [ ] CycloneDX Python SBOM generated on every CI build
 - [ ] SBOM attached to GitHub releases as a downloadable artifact

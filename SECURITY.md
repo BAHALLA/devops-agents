@@ -46,7 +46,7 @@ Please include as much of the following as you can:
 In scope:
 
 - The `core/` library and all agents under `agents/`.
-- The Docker images built from `Dockerfile` and `Dockerfile.prod`.
+- The Docker image built from `Dockerfile`.
 - CI/CD workflows under `.github/workflows/`.
 
 Out of scope:
