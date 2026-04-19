@@ -14,7 +14,7 @@ An open-source framework for building autonomous DevOps and SRE agents. Built wi
 
     Run the full stack locally in Docker in under 5 minutes — Kafka, Postgres, Prometheus, and the orchestrator ready to go.
 
-    [:octicons-arrow-right-24: Quick start with Docker](getting-started.md#quick-start-docker)
+    [:octicons-arrow-right-24: Quick start with Docker](getting-started.md#🚀-quick-start-docker--no-clone-required)
 
 -   :material-rocket-launch:{ .lg .middle } __I want to deploy it__
 

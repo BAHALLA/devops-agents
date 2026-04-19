@@ -178,8 +178,8 @@ Before opening a PR, run through:
 
 ```bash
 make install   # sync the workspace (`uv sync`)
-make test      # runs all 468 unit tests
-make eval      # 22 agent eval scenarios (requires LLM credentials)
+make test      # runs all unit tests
+make eval      # agent eval scenarios (requires LLM credentials)
 make lint      # ruff check + format check
 make fmt       # auto-fix linting and formatting
 ```
