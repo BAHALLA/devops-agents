@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.1.8] - 2026-04-23
 
 ### Added
 - **Elasticsearch Agent** (`agents/elasticsearch`): New specialist agent for Elasticsearch cluster operations, exposing **19 read-only REST tools** — cluster health/stats/nodes/pending tasks/settings, indices listing/stats/mappings/settings, shard allocation + `explain` diagnostics, `search` + `count`, index templates, aliases, ILM policies + `explain_ilm_status`, and snapshot repositories/snapshots. HTTP session is pooled as a module-level singleton with API-key / basic-auth / CA bundle support via `ELASTICSEARCH_*` env vars.
@@ -181,7 +181,8 @@ First public release of the AI Agents for DevOps & SRE platform.
 - Guardrail confirmation bypass fixed with args-hash + TTL tracking
 - Server-side role enforcement prevents privilege escalation
 
-[Unreleased]: https://github.com/BAHALLA/orrery/compare/v0.1.7...HEAD
+[Unreleased]: https://github.com/BAHALLA/orrery/compare/v0.1.8...HEAD
+[0.1.8]: https://github.com/BAHALLA/orrery/compare/v0.1.7...v0.1.8
 [0.1.7]: https://github.com/BAHALLA/orrery/compare/v0.1.6...v0.1.7
 [0.1.6]: https://github.com/BAHALLA/orrery/compare/v0.1.5...v0.1.6
 [0.1.5]: https://github.com/BAHALLA/orrery/compare/v0.1.4...v0.1.5
