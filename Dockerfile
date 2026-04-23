@@ -14,6 +14,7 @@ ENV UV_COMPILE_BYTECODE=1 \
 COPY pyproject.toml uv.lock ./
 COPY core/pyproject.toml core/pyproject.toml
 COPY agents/docker-agent/pyproject.toml agents/docker-agent/pyproject.toml
+COPY agents/elasticsearch/pyproject.toml agents/elasticsearch/pyproject.toml
 COPY agents/kafka-health/pyproject.toml agents/kafka-health/pyproject.toml
 COPY agents/k8s-health/pyproject.toml agents/k8s-health/pyproject.toml
 COPY agents/orrery-assistant/pyproject.toml agents/orrery-assistant/pyproject.toml
@@ -26,6 +27,7 @@ COPY agents/google-chat-bot/pyproject.toml agents/google-chat-bot/pyproject.toml
 # real source is copied in.
 RUN mkdir -p core/orrery_core && touch core/orrery_core/__init__.py && \
     mkdir -p agents/docker-agent/docker_agent && touch agents/docker-agent/docker_agent/__init__.py && \
+    mkdir -p agents/elasticsearch/elasticsearch_agent && touch agents/elasticsearch/elasticsearch_agent/__init__.py && \
     mkdir -p agents/kafka-health/kafka_health_agent && touch agents/kafka-health/kafka_health_agent/__init__.py && \
     mkdir -p agents/k8s-health/k8s_health_agent && touch agents/k8s-health/k8s_health_agent/__init__.py && \
     mkdir -p agents/orrery-assistant/orrery_assistant && touch agents/orrery-assistant/orrery_assistant/__init__.py && \
