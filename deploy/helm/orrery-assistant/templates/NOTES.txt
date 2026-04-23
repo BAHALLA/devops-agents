@@ -19,8 +19,10 @@ WARNING: You are using an in-chart Secret. For production, set
 Operator, Sealed Secrets, Vault) so API keys are not stored in values.yaml.
 {{- end }}
 
-{{- if contains "sqlite" (default "" .Values.secrets.DATABASE_URL) }}
+{{- if and .Values.secrets .Values.secrets.DATABASE_URL }}
+{{- if contains "sqlite" .Values.secrets.DATABASE_URL }}
 
 WARNING: DATABASE_URL appears to be SQLite. SQLite does not support
 concurrent writers — you MUST use PostgreSQL for multi-replica deployments.
+{{- end }}
 {{- end }}
