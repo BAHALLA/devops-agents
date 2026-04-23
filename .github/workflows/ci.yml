@@ -34,6 +34,7 @@ jobs:
           uv run ty check \
             --extra-search-path core \
             --extra-search-path agents/docker-agent \
+            --extra-search-path agents/elasticsearch \
             --extra-search-path agents/kafka-health \
             --extra-search-path agents/k8s-health \
             --extra-search-path agents/observability \
