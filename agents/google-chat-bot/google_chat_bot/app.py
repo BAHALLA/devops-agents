@@ -27,7 +27,7 @@ from orrery_core.plugins import default_plugins
 from .auth import verify_google_chat_token
 from .chat_client import ChatClient
 from .config import GoogleChatBotConfig
-from .confirmation import ConfirmationStore, google_chat_confirmation
+from .confirmation import ConfirmationStore, apply_chat_confirmation
 from .handler import GoogleChatHandler, wrap_for_addons
 
 # Initialize logging and load environment
@@ -97,21 +97,26 @@ async def build_handler(*, require_chat_client: bool = False) -> GoogleChatHandl
 
     # 3. Google Chat surface has its own approval flow via interactive cards,
     #    so skip the plugin-level confirmation gate. RBAC still runs via the
-    #    GuardrailsPlugin. Sub-agents keep their own require_confirmation()
-    #    callback as a fallback for guarded tools that don't go through the
-    #    root agent (LLM-driven confirmation via text messages).
+    #    GuardrailsPlugin.
     plugins = default_plugins(guardrail_mode="none", enable_memory=True)
 
-    # Wire the Google Chat confirmation callback on the root agent so any
-    # guarded root-level tool posts a card instead of blocking on stdin.
+    # Wire the Google Chat confirmation callback on every LlmAgent in the
+    # tree — root, nested sub-agents, and AgentTool-wrapped specialists
+    # alike — so guarded tools produce an interactive Card v2 no matter
+    # which sub-agent tries to invoke them. Without this, only root-level
+    # tools get the card flow; a ``restart_deployment`` called from the
+    # k8s_health_agent AgentTool would fall back to the CLI-oriented
+    # ``require_confirmation`` and ask the user to type "yes".
     #
-    # NOTE: ``root_agent`` is a module-level singleton imported from
-    # ``orrery_assistant.agent``. Assigning ``before_tool_callback`` here
-    # mutates that shared object for the lifetime of the Python process.
-    # That is safe in our deployment because the Google Chat bot owns its
-    # own process, but it would interfere with any hypothetical single
-    # process that also hosted another transport (e.g. Slack + Chat).
-    root_agent.before_tool_callback = google_chat_confirmation(_store)
+    # NOTE: ``root_agent`` and its sub-agents are module-level singletons
+    # imported from ``orrery_assistant.agent``. Assigning
+    # ``before_tool_callback`` here mutates those shared objects for the
+    # lifetime of the Python process. That is safe in our deployment
+    # because the Google Chat bot owns its own process, but it would
+    # interfere with any hypothetical single process that also hosted
+    # another transport (e.g. Slack + Chat).
+    wired = apply_chat_confirmation(root_agent, _store)
+    logger.info("Chat confirmation callback wired on %d LlmAgents", wired)
 
     agent_app = App(
         name="orrery_assistant_gchat",

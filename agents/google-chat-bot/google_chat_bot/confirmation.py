@@ -89,6 +89,55 @@ def _push_card(card: dict[str, Any]) -> bool:
     return True
 
 
+def apply_chat_confirmation(agent: Any, store: ConfirmationStore) -> int:
+    """Apply :func:`google_chat_confirmation` to every LlmAgent in the tree.
+
+    Walks ``agent``'s descendants — both ``sub_agents`` and ADK
+    :class:`AgentTool`-wrapped agents in ``tools`` — and overrides each
+    LlmAgent's ``before_tool_callback`` so guarded tools fire an
+    interactive Card v2 regardless of which sub-agent invokes them.
+
+    Without this, only the root agent's tools produce cards; tools on
+    sub-agents (``k8s_health_agent.restart_deployment``, etc.) fall back
+    to :func:`orrery_core.require_confirmation`, which asks the user to
+    confirm via plain text — a regression from the Chat UX.
+
+    Idempotent: replacing the callback on an already-wired agent is a
+    no-op in effect (the closure carries the same store).
+
+    Returns the number of agents that were wired, for logging.
+    """
+    callback = google_chat_confirmation(store)
+    seen: set[int] = set()
+    wired = 0
+
+    def visit(node: Any) -> None:
+        nonlocal wired
+        if node is None or id(node) in seen:
+            return
+        seen.add(id(node))
+
+        # Workflow agents (Sequential/Parallel/Loop) don't call tools
+        # directly — only LlmAgents do — so we gate on the presence of
+        # a ``tools`` attribute rather than a specific class check
+        # (keeps the walker decoupled from ADK internals).
+        tools = getattr(node, "tools", None)
+        if tools is not None:
+            node.before_tool_callback = callback
+            wired += 1
+
+        for sub in getattr(node, "sub_agents", None) or ():
+            visit(sub)
+
+        for tool in tools or ():
+            inner = getattr(tool, "agent", None)
+            if inner is not None:
+                visit(inner)
+
+    visit(agent)
+    return wired
+
+
 def google_chat_confirmation(store: ConfirmationStore) -> Callable:
     """Create a ``before_tool_callback`` that emits approval cards.
 

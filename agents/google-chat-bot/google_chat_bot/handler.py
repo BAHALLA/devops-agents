@@ -11,6 +11,7 @@ from google.genai import types
 
 from orrery_core import set_user_role
 
+from .cards import build_error_card, build_progress_card, build_triage_result_card
 from .chat_client import ChatClient
 from .config import GoogleChatBotConfig
 from .confirmation import (
@@ -18,6 +19,7 @@ from .confirmation import (
     end_request_buffer,
     start_request_buffer,
 )
+from .progress import ProgressTracker
 
 logger = logging.getLogger("google_chat_bot.handler")
 
@@ -110,11 +112,13 @@ class GoogleChatHandler:
 
         # Detect CARD_CLICKED. Add-ons payloads don't carry a top-level "type",
         # so we fall back to the invokedFunction name that we set on our own
-        # Approve/Deny buttons. We intentionally do NOT probe parameters here
-        # because their shape varies (list of {key,value} dicts vs mapping).
+        # Approve/Deny/Run-Remediation buttons. We intentionally do NOT probe
+        # parameters here because their shape varies (list of {key,value}
+        # dicts vs mapping).
         if event_type == "CARD_CLICKED" or common.get("invokedFunction") in (
             "confirm_action",
             "deny_action",
+            "run_remediation",
         ):
             logger.info("Detected CARD_CLICKED event")
             if self._should_defer("CARD_CLICKED"):
@@ -178,8 +182,15 @@ class GoogleChatHandler:
         space_name: str,
         thread_name: str | None,
         extra_state: dict[str, Any] | None = None,
+        tracker: ProgressTracker | None = None,
     ) -> dict[str, Any]:
-        """Drive a single agent turn and collect text + any buffered cards."""
+        """Drive a single agent turn and collect text + any buffered cards.
+
+        When ``tracker`` is provided, each runner event is fed to it so
+        the caller can render a progressive update card. The tracker
+        also accumulates the response text, so this method returns the
+        same-shape reply whether or not progress updates are enabled.
+        """
         logger.info("Starting agent run (session_id=%s, user_id=%s)", session_id, user_id)
         # NOTE: use ``set_user_role`` rather than a raw ``user_role`` write.
         # ``GuardrailsPlugin`` runs ``ensure_default_role()`` as a
@@ -207,10 +218,14 @@ class GoogleChatHandler:
                 new_message=message,
                 state_delta=state_delta,
             ):
-                if run_event.content and run_event.content.parts:
+                if tracker is not None:
+                    await tracker.consume(run_event)
+                elif run_event.content and run_event.content.parts:
                     for part in run_event.content.parts:
                         if part.text:
                             response_text += part.text
+            if tracker is not None:
+                response_text = tracker.collected_text
             logger.info("Agent run complete. Collected %d characters of text.", len(response_text))
         except Exception:
             logger.exception("Agent runner failed during turn")
@@ -255,14 +270,33 @@ class GoogleChatHandler:
         except Exception:
             logger.exception("Failed to post async reply to %s", space_name)
 
-    async def _post_async_error(self, space_name: str | None, thread_name: str | None) -> None:
-        """Best-effort error notification when a background run crashes."""
+    async def _post_async_error(
+        self,
+        space_name: str | None,
+        thread_name: str | None,
+        *,
+        message_name: str | None = None,
+    ) -> None:
+        """Best-effort error notification when a background run crashes.
+
+        If a progress card is already showing (``message_name``), replace
+        it in place with an error card so the user doesn't see a stuck
+        "Investigating…" frame.
+        """
         if self.chat_client is None or not space_name:
             return
+        error_text = "Sorry, I hit an unexpected error. Please try again."
         try:
+            if message_name is not None:
+                result = await self.chat_client.update_message(
+                    message_name,
+                    cards_v2=[build_error_card(error_text)],
+                )
+                if result is not None:
+                    return
             await self.chat_client.create_message(
                 space_name,
-                text="Sorry, I hit an unexpected error. Please try again.",
+                text=error_text,
                 thread_name=thread_name,
             )
         except Exception:
@@ -299,6 +333,7 @@ class GoogleChatHandler:
             user_email,
             space_name,
         )
+        progress_message_name: str | None = None
         try:
             if not user_text:
                 await self._post_async_reply(
@@ -309,20 +344,185 @@ class GoogleChatHandler:
                 return
 
             session_id = f"gchat:{thread_name or space_name}"
-            result = await self._run_agent(
-                session_id=session_id,
-                user_id=user_email,
-                user_text=user_text,
-                user_role=self.resolve_role(user_email),
+            user_role = self.resolve_role(user_email)
+
+            # 1. Post the initial "Investigating…" progress card. We
+            #    keep its resource name so subsequent PATCHes update the
+            #    same message in place instead of spamming the thread.
+            progress_message_name = await self._post_initial_progress(
+                space_name=space_name, thread_name=thread_name
+            )
+            tracker = self._make_tracker(progress_message_name)
+
+            try:
+                result = await self._run_agent(
+                    session_id=session_id,
+                    user_id=user_email,
+                    user_text=user_text,
+                    user_role=user_role,
+                    space_name=space_name,
+                    thread_name=thread_name,
+                    tracker=tracker,
+                )
+            finally:
+                # Flush one last progress frame so the user never sees a
+                # stale card if the run finishes between debounce ticks.
+                if tracker is not None:
+                    await tracker.flush_final()
+
+            await self._post_final_result(
                 space_name=space_name,
                 thread_name=thread_name,
-            )
-            await self._post_async_reply(
-                space_name=space_name, thread_name=thread_name, reply=result
+                progress_message_name=progress_message_name,
+                tracker=tracker,
+                reply=result,
+                user_role=user_role,
             )
         except Exception:
             logger.exception("Async message processing failed")
-            await self._post_async_error(space_name, thread_name)
+            await self._post_async_error(
+                space_name, thread_name, message_name=progress_message_name
+            )
+
+    async def _post_initial_progress(
+        self, *, space_name: str, thread_name: str | None
+    ) -> str | None:
+        """Post the initial progress card and return its resource name.
+
+        Returns ``None`` when the Chat client is unavailable or posting
+        fails — callers in that case fall back to the single-post path.
+        """
+        if self.chat_client is None or not space_name or space_name == "default":
+            return None
+        try:
+            card = build_progress_card(
+                current_agent=None,
+                current_tool=None,
+                subsystem_chips={},
+                remediation=None,
+                elapsed_seconds=0.0,
+            )
+            response = await self.chat_client.create_message(
+                space_name,
+                cards_v2=[card],
+                thread_name=thread_name,
+            )
+            name = response.get("name") if isinstance(response, dict) else None
+            if not name:
+                logger.warning("Chat API create_message returned no message name")
+            return name
+        except Exception:
+            logger.exception("Failed to post initial progress card to %s", space_name)
+            return None
+
+    def _make_tracker(self, message_name: str | None) -> ProgressTracker | None:
+        """Build a tracker that PATCHes ``message_name`` on each update."""
+        if self.chat_client is None or not message_name:
+            return None
+
+        chat_client = self.chat_client
+
+        async def on_update(t: ProgressTracker) -> None:
+            card = build_progress_card(
+                current_agent=t.current_agent,
+                current_tool=t.current_tool,
+                subsystem_chips=t.subsystem_chips,
+                remediation=t.remediation_state or None,
+                elapsed_seconds=t.elapsed_seconds,
+            )
+            await chat_client.update_message(message_name, cards_v2=[card])
+
+        return ProgressTracker(on_update=on_update)
+
+    async def _post_final_result(
+        self,
+        *,
+        space_name: str,
+        thread_name: str | None,
+        progress_message_name: str | None,
+        tracker: ProgressTracker | None,
+        reply: dict[str, Any],
+        user_role: str,
+    ) -> None:
+        """Replace the progress card with the final result, or post fresh.
+
+        If any subsystem chip landed during the run we render a
+        structured triage result card. Otherwise (a targeted query like
+        "what's the kafka lag?") we fall back to the reply's text + any
+        buffered confirmation cards.
+        """
+        has_triage_data = tracker is not None and (tracker.subsystem_chips or tracker.triage_report)
+
+        if has_triage_data and tracker is not None:
+            triage_card = build_triage_result_card(
+                subsystem_chips=tracker.subsystem_chips,
+                triage_report=tracker.triage_report or reply.get("text"),
+                user_role=user_role,
+            )
+            final_cards: list[dict[str, Any]] = [triage_card]
+            # Any buffered confirmation cards from guarded tools must
+            # still reach the user so they can approve/deny them.
+            if reply.get("cardsV2"):
+                final_cards.extend(reply["cardsV2"])
+            await self._update_or_post(
+                space_name=space_name,
+                thread_name=thread_name,
+                message_name=progress_message_name,
+                reply={"cardsV2": final_cards},
+            )
+            return
+
+        # Non-triage path: keep the original text+cards reply.
+        await self._update_or_post(
+            space_name=space_name,
+            thread_name=thread_name,
+            message_name=progress_message_name,
+            reply=reply,
+        )
+
+    async def _update_or_post(
+        self,
+        *,
+        space_name: str,
+        thread_name: str | None,
+        message_name: str | None,
+        reply: dict[str, Any],
+    ) -> None:
+        """Update the progress message in place, falling back to a new post.
+
+        When replacing a progress card with a plain-text final reply, we
+        must explicitly send ``cards_v2=[]`` so the Chat API clears the
+        previously-posted "Investigating…" card. Chat preserves any
+        field not listed in ``updateMask``, so omitting ``cardsV2`` would
+        leave the progress card rendered next to the new text.
+        """
+        if self.chat_client is None:
+            logger.error("Cannot post final reply: chat_client is not configured")
+            return
+
+        text = reply.get("text")
+        cards_v2 = reply.get("cardsV2")
+        if not text and not cards_v2:
+            text = "(no response)"
+
+        if message_name is not None:
+            try:
+                result = await self.chat_client.update_message(
+                    message_name,
+                    text=text if text is not None else "",
+                    cards_v2=cards_v2 if cards_v2 is not None else [],
+                )
+                if result is not None:
+                    return
+                logger.info("Progress message gone; posting final reply as a new message")
+            except Exception:
+                logger.exception("Failed to update progress card; falling back to a new message")
+
+        await self._post_async_reply(
+            space_name=space_name,
+            thread_name=thread_name,
+            reply={"text": text, "cardsV2": cards_v2} if cards_v2 else {"text": text},
+        )
 
     # ── CARD_CLICKED ──────────────────────────────────────────────────
 
@@ -366,8 +566,13 @@ class GoogleChatHandler:
         return None
 
     async def _handle_card_click(self, event: dict[str, Any]) -> dict[str, Any]:
-        """Handle Approve/Deny button clicks from confirmation cards."""
+        """Handle Approve/Deny/Run-Remediation button clicks."""
         action_id, method, display_name = self._parse_card_click_event(event)
+
+        # Run-Remediation is a standalone action — no pending-confirmation
+        # lookup needed because it just dispatches a new agent turn.
+        if method == "run_remediation":
+            return await self._handle_run_remediation_sync(event, display_name)
 
         if not action_id or not method:
             logger.warning("CARD_CLICKED missing action_id or method")
@@ -401,6 +606,11 @@ class GoogleChatHandler:
     async def _handle_card_click_async(self, event: dict[str, Any]) -> None:
         """Background-task counterpart to ``_handle_card_click``."""
         action_id, method, display_name = self._parse_card_click_event(event)
+
+        # Run-Remediation bypasses the pending-confirmation lookup.
+        if method == "run_remediation":
+            await self._handle_run_remediation_async(event, display_name)
+            return
 
         if not action_id or not method:
             logger.warning("CARD_CLICKED missing action_id or method")
@@ -464,3 +674,92 @@ class GoogleChatHandler:
         message = event.get("message") or {}
         thread = message.get("thread") or {}
         return thread.get("name")
+
+    # ── Run Remediation click ────────────────────────────────────────
+
+    _REMEDIATION_PROMPT = (
+        "Run the remediation_pipeline on the current incident. "
+        "Use the triage report in session state to decide which action "
+        "to take (restart, scale, or rollback). Report the outcome."
+    )
+
+    def _click_user_email(self, event: dict[str, Any]) -> str:
+        chat = event.get("chat") or {}
+        user = event.get("user") or chat.get("user") or {}
+        return (user.get("email") or "unknown").lower()
+
+    async def _handle_run_remediation_sync(
+        self, event: dict[str, Any], display_name: str
+    ) -> dict[str, Any]:
+        """Sync-path dispatch for Run-Remediation clicks."""
+        space_name = self._click_space(event) or "default"
+        thread_name = self._click_thread(event)
+        user_email = self._click_user_email(event)
+        user_role = self.resolve_role(user_email)
+        session_id = f"gchat:{thread_name or space_name}"
+
+        ack_text = f"*Remediation requested* by {display_name} — running pipeline…"
+        result = await self._run_agent(
+            session_id=session_id,
+            user_id=user_email,
+            user_text=self._REMEDIATION_PROMPT,
+            user_role=user_role,
+            space_name=space_name,
+            thread_name=thread_name,
+        )
+        combined_text = ack_text
+        if result.get("text"):
+            combined_text = f"{ack_text}\n\n{result['text']}"
+        return self._wrap_for_addons(combined_text, result.get("cardsV2"))
+
+    async def _handle_run_remediation_async(self, event: dict[str, Any], display_name: str) -> None:
+        """Async-path dispatch for Run-Remediation clicks.
+
+        Posts its own progress card in the thread — intentionally
+        separate from any prior triage card so operators keep both the
+        "what's wrong" and "what we're doing about it" context side by
+        side.
+        """
+        space_name = self._click_space(event) or "default"
+        thread_name = self._click_thread(event)
+        user_email = self._click_user_email(event)
+        user_role = self.resolve_role(user_email)
+        session_id = f"gchat:{thread_name or space_name}"
+
+        progress_message_name: str | None = None
+        try:
+            progress_message_name = await self._post_initial_progress(
+                space_name=space_name, thread_name=thread_name
+            )
+            tracker = self._make_tracker(progress_message_name)
+
+            try:
+                result = await self._run_agent(
+                    session_id=session_id,
+                    user_id=user_email,
+                    user_text=self._REMEDIATION_PROMPT,
+                    user_role=user_role,
+                    space_name=space_name,
+                    thread_name=thread_name,
+                    tracker=tracker,
+                )
+            finally:
+                if tracker is not None:
+                    await tracker.flush_final()
+
+            ack_prefix = f"*Remediation requested* by {display_name} — pipeline complete."
+            final_text = f"{ack_prefix}\n\n{result['text']}" if result.get("text") else ack_prefix
+            reply_with_ack: dict[str, Any] = {"text": final_text}
+            if result.get("cardsV2"):
+                reply_with_ack["cardsV2"] = result["cardsV2"]
+            await self._update_or_post(
+                space_name=space_name,
+                thread_name=thread_name,
+                message_name=progress_message_name,
+                reply=reply_with_ack,
+            )
+        except Exception:
+            logger.exception("Async run_remediation processing failed")
+            await self._post_async_error(
+                space_name, thread_name, message_name=progress_message_name
+            )

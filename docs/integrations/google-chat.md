@@ -45,11 +45,44 @@ Regardless of the transport you choose, the following concepts apply to all Goog
 
 Google Chat enforces a **~30 second synchronous budget** on webhook responses. If an agent run exceeds this budget, the UI will show an error. Orrery solves this with **Async Response Mode**:
 
-1.  **Immediate Ack**: The bot returns a `200 OK` (with a "Working..." card) immediately.
-2.  **Background Task**: The agent run continues in the background.
-3.  **REST API Post**: Once complete, the bot posts the reply via the Chat REST API.
+1.  **Immediate Ack**: The bot returns a `200 OK` (empty `hostAppDataAction`) immediately.
+2.  **Progress card posted**: A live "🔍 Investigating…" Card v2 is posted to the thread via the Chat REST API.
+3.  **Background run**: The agent run proceeds. As sub-agents report in, the bot **PATCHes the same card in place** (`spaces.messages.patch` with `updateMask=cardsV2`) — no thread spam.
+4.  **Final result**: On completion, the progress card is replaced with the final reply (see *Progressive Cards* below).
 
 This mode is enabled by default (`GOOGLE_CHAT_ASYNC_RESPONSE=true`).
+
+### Progressive Cards
+
+For long-running investigations (incident triage, remediation loops), the bot streams progress live by updating a single message in place. The user sees the run evolve instead of staring at a blank thread for 60–120s.
+
+**What the progress card shows:**
+
+-   **Current step** — the friendly label for the executing sub-agent (e.g. `Checking Kafka`, `Synthesizing findings`).
+-   **Tool breadcrumb** — the most recent tool call (`list_consumer_groups`, `get_pods`, …) so operators can see what the agent is doing right now.
+-   **Subsystem chips** — one row per health-check subsystem that has reported in, with a severity icon inferred from the status text:
+    -   ✅ `ok` · ⚠️ `warn` (yellow/degraded/lag) · ❌ `fail` (red/critical/crashloop) · ⏳ `pending`
+-   **Remediation panel** (when `remediation_pipeline` is running) — shows `remediation_action` → `verification_result` → `remediation_summary` as the `LoopAgent` iterates.
+-   **Elapsed seconds** — visible forward-progress signal.
+
+Card updates are **debounced at 800ms** and **force-flushed** on each subsystem status write to balance liveness against Chat's update quota.
+
+**Final result card (triage runs):**
+
+When the run writes `kafka_status` / `k8s_status` / `docker_status` / `observability_status` / `elasticsearch_status` / `triage_report` into session state (i.e. `incident_triage_agent` ran), the progress card is replaced with a structured **Triage Report** card:
+
+-   **Header** — overall severity badge: 🟢 *All systems healthy* / 🟡 *Degraded* / 🔴 *Critical*.
+-   **Subsystem sections** — one section per subsystem with an icon and short summary.
+-   **Summary** — the `triage_summarizer` output.
+-   **"Run Remediation" button** — fires the `remediation_pipeline` in the same session, reusing the triage report. Rendered **only** when overall severity is `warn` or `fail` **and** the clicker is an `operator` or `admin` (RBAC is still enforced server-side at tool time — the button is just a UI convenience).
+
+For non-triage queries (e.g. *"what's the Kafka lag?"*), no subsystem chips land, so the progress card falls back to a plain text/markdown final reply and the *Run Remediation* button is not shown.
+
+**Failure modes handled:**
+
+-   If `update_message` hits 404/410 (message deleted), subsequent updates are skipped silently.
+-   If a later update fails for another reason, the final reply falls back to a fresh `create_message` so the user still gets a result.
+-   If the agent run raises, the progress card is overwritten with an error card — never left stuck on "Investigating…".
 
 ### Authentication for Async Replies
 

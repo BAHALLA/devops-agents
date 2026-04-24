@@ -94,6 +94,8 @@ markers = [
 addopts = "-m 'not eval'"
 filterwarnings = [
     "ignore:\\[EXPERIMENTAL\\] feature.* is enabled:UserWarning:google.adk.features.*",
+    "ignore:.*_UnionGenericAlias.*:DeprecationWarning:google.genai.types",
+    "ignore:.*asyncio.iscoroutinefunction.*:DeprecationWarning:slowapi.extension",
 ]
 testpaths = [
     "core/tests",

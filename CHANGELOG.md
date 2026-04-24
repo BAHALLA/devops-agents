@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- **Progressive progress cards in Google Chat** (`agents/google-chat-bot`): The async response path now posts a live "🔍 Investigating…" Card v2 immediately and PATCHes it in place as the agent run progresses. Operators see the currently executing sub-agent (friendly label — *Checking Kafka*, *Synthesizing findings*, …), a tool-call breadcrumb, subsystem health chips (✅/⚠️/❌/⏳) derived from `state_delta` writes on `kafka_status` / `k8s_status` / `docker_status` / `observability_status` / `elasticsearch_status`, an optional remediation panel populated by `remediation_action` / `verification_result` / `remediation_summary`, and an elapsed-seconds footer. Updates are debounced at 800ms and force-flushed on status transitions.
+- **Structured triage result card**: When an `incident_triage_agent` run completes, the progress card is replaced with a structured **Triage Report** — severity badge (🟢 healthy / 🟡 degraded / 🔴 critical), one section per subsystem, the `triage_summarizer` output, and a role-gated **Run Remediation** button (operator/admin only, only shown when overall severity is not healthy). Clicking the button dispatches the `remediation_pipeline` in the same session so it reuses the triage report already in state.
+- **`ChatClient.update_message()`**: New async PATCH helper on the Chat REST client with dynamic `updateMask`. Tolerates 404/410 (message deleted) by returning `None` so the progressive-card loop can stop updating silently.
+- **`progress.ProgressTracker`**: New module that consumes ADK runner events (`author`, `state_delta`, function calls) and drives a debounced async update callback. Threaded through `_run_agent` via an optional `tracker=` kwarg so the sync path is unchanged.
+- **Tests**: +6 `test_chat_client.py` (create/update mask variants, 404 tolerance, 500 raises), +16 cases in `test_cards.py` (status classification, progress-card shape, remediation panel, result-card severity, role-gated button), +7 cases in `test_handler.py` (progress posted then updated, final card is triage result when chips landed, role-gated remediation button, update failure falls back to new message, runtime error replaces progress with error card, run_remediation click dispatches a new run). All 608 unit tests + lint + format clean.
+
+### Changed
+- **`handler._handle_message_async` rewired**: Posts the initial progress card before invoking the runner, attaches a tracker that PATCHes the same message on each significant event, and on completion replaces it with either the structured triage card (when chips landed) or the original reply. Non-triage queries retain the previous text + buffered-confirmation-card behavior.
+- **`_post_async_error`** now replaces an existing progress card with an error card (`build_error_card`) instead of appending a new message, so a crashed run never leaves operators staring at a stuck "Investigating…" frame.
+- **Card-click dispatch** recognizes a third `invokedFunction: "run_remediation"` alongside `confirm_action` / `deny_action`. The remediation branch bypasses the pending-confirmation store and spawns a new `_run_agent` turn with a remediation prompt.
+
 ## [0.1.8] - 2026-04-23
 
 ### Added
@@ -182,6 +196,7 @@ First public release of the AI Agents for DevOps & SRE platform.
 - Server-side role enforcement prevents privilege escalation
 
 [Unreleased]: https://github.com/BAHALLA/orrery/compare/v0.1.8...HEAD
+
 [0.1.8]: https://github.com/BAHALLA/orrery/compare/v0.1.7...v0.1.8
 [0.1.7]: https://github.com/BAHALLA/orrery/compare/v0.1.6...v0.1.7
 [0.1.6]: https://github.com/BAHALLA/orrery/compare/v0.1.5...v0.1.6

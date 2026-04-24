@@ -126,3 +126,60 @@ class ChatClient:
                 )
                 resp.raise_for_status()
             return resp.json()
+
+    async def update_message(
+        self,
+        message_name: str,
+        *,
+        text: str | None = None,
+        cards_v2: list[dict[str, Any]] | None = None,
+    ) -> dict[str, Any] | None:
+        """Patch an existing message in place.
+
+        Used by the progressive-card flow to refresh the "Investigating…"
+        card as sub-agents report in, without spamming the thread with
+        new messages.
+
+        Returns ``None`` when the target message is gone (404/410) so
+        callers can stop updating silently; any other failure raises.
+
+        Passing ``cards_v2=[]`` explicitly clears the existing cards on
+        the message — required when replacing a progress card with a
+        plain-text final reply, since Chat treats unlisted mask fields
+        as preserved.
+        """
+        if text is None and cards_v2 is None:
+            raise ValueError("update_message requires text or cards_v2")
+
+        body: dict[str, Any] = {}
+        mask_fields: list[str] = []
+        if text is not None:
+            body["text"] = text
+            mask_fields.append("text")
+        if cards_v2 is not None:
+            body["cardsV2"] = cards_v2
+            mask_fields.append("cardsV2")
+
+        url = f"{_BASE_URL}/{message_name}"
+        params = {"updateMask": ",".join(mask_fields)}
+
+        token = await self._get_token()
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+        }
+
+        async with httpx.AsyncClient(timeout=_REQUEST_TIMEOUT_SECONDS) as client:
+            resp = await client.patch(url, json=body, params=params, headers=headers)
+            if resp.status_code in (404, 410):
+                logger.info("Chat message %s no longer exists; skipping update", message_name)
+                return None
+            if resp.status_code >= 400:
+                logger.error(
+                    "Chat REST API error %s patching %s: %s",
+                    resp.status_code,
+                    message_name,
+                    resp.text,
+                )
+                resp.raise_for_status()
+            return resp.json()

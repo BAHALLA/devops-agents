@@ -1,6 +1,6 @@
 """Tests for the Google Chat bot handler."""
 
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from google.genai import types
@@ -367,3 +367,316 @@ class TestGoogleChatConfirmation:
         result = callback(tool=tool, args={}, tool_context=ctx)
         assert result is None
         assert ctx.state["_gchat_pending_my_tool"] is False
+
+
+# ── Progressive-card flow ────────────────────────────────────────────
+
+
+def _make_event(*, author: str, text: str = "", state_delta: dict | None = None) -> MagicMock:
+    """Build a fake ADK runner event with the fields the tracker reads."""
+    event = MagicMock()
+    event.author = author
+    if text:
+        event.content = types.Content(role="model", parts=[types.Part.from_text(text=text)])
+    else:
+        event.content = None
+    event.actions = MagicMock()
+    event.actions.state_delta = state_delta or {}
+    event.get_function_calls = lambda: []
+    return event
+
+
+def _make_tool_call_event(author: str, tool_name: str) -> MagicMock:
+    """Fake event that reports a function call breadcrumb."""
+    event = MagicMock()
+    event.author = author
+    event.content = None
+    event.actions = MagicMock()
+    event.actions.state_delta = {}
+    call = MagicMock()
+    call.name = tool_name
+    event.get_function_calls = lambda: [call]
+    return event
+
+
+@pytest.fixture
+def progressive_runner():
+    """Runner that emits triage events: agent-change → tool-call → status writes → summary."""
+    runner = MagicMock()
+
+    async def async_gen(*args, **kwargs):
+        yield _make_event(author="kafka_health_checker")
+        yield _make_tool_call_event("kafka_health_checker", "list_consumer_groups")
+        yield _make_event(
+            author="kafka_health_checker",
+            state_delta={"kafka_status": "Kafka cluster is green, all brokers up."},
+        )
+        yield _make_event(
+            author="k8s_health_checker",
+            state_delta={"k8s_status": "Pod api-7f in CrashLoopBackOff — failing."},
+        )
+        yield _make_event(
+            author="triage_summarizer",
+            text="Overall: degraded. K8s api is critical.",
+            state_delta={"triage_report": "Overall: degraded. K8s api is critical."},
+        )
+
+    runner.run_async.side_effect = async_gen
+    return runner
+
+
+@pytest.fixture
+def async_handler(config, store, progressive_runner):
+    """Handler wired with a mock ChatClient → triggers the deferred path."""
+    chat_client = MagicMock()
+    chat_client.create_message = AsyncMock(return_value={"name": "spaces/abc/messages/PROG-1"})
+    chat_client.update_message = AsyncMock(return_value={"name": "spaces/abc/messages/PROG-1"})
+    return GoogleChatHandler(
+        runner=progressive_runner,
+        config=config,
+        store=store,
+        chat_client=chat_client,
+    )
+
+
+class TestProgressiveUpdates:
+    @pytest.mark.asyncio
+    async def test_message_defers_to_background(self, async_handler):
+        event = {
+            "type": "MESSAGE",
+            "message": {"argumentText": "run triage"},
+            "user": {"email": "ops@example.com"},
+            "space": {"name": "spaces/abc"},
+        }
+        response = await async_handler.handle_event(event)
+        # Empty ack — the real reply goes out via the background task.
+        assert response == {"hostAppDataAction": {}}
+        # Drain the background task.
+        for task in list(async_handler._background_tasks):
+            await task
+
+    @pytest.mark.asyncio
+    async def test_progress_card_posted_then_updated(self, async_handler):
+        event = {
+            "type": "MESSAGE",
+            "message": {"argumentText": "run triage"},
+            "user": {"email": "ops@example.com"},
+            "space": {"name": "spaces/abc"},
+        }
+        await async_handler.handle_event(event)
+        for task in list(async_handler._background_tasks):
+            await task
+
+        # 1. Exactly one create_message — the initial progress card.
+        async_handler.chat_client.create_message.assert_awaited_once()
+        create_kwargs = async_handler.chat_client.create_message.call_args.kwargs
+        first_card = create_kwargs["cards_v2"][0]
+        assert first_card["cardId"] == "progress"
+        assert "Investigating" in first_card["card"]["header"]["title"]
+
+        # 2. At least one update_message was called along the way
+        #    (state_delta writes force-flush).
+        assert async_handler.chat_client.update_message.await_count >= 1
+
+    @pytest.mark.asyncio
+    async def test_final_card_is_triage_result_when_chips_landed(self, async_handler):
+        event = {
+            "type": "MESSAGE",
+            "message": {"argumentText": "triage"},
+            "user": {"email": "ops@example.com"},
+            "space": {"name": "spaces/abc"},
+        }
+        await async_handler.handle_event(event)
+        for task in list(async_handler._background_tasks):
+            await task
+
+        # Inspect the *last* update_message call — that's the final
+        # result card (triage report with chips).
+        last_call = async_handler.chat_client.update_message.await_args_list[-1]
+        cards = last_call.kwargs["cards_v2"]
+        assert cards[0]["cardId"] == "triage_result"
+        subtitle = cards[0]["card"]["header"]["subtitle"]
+        # k8s_status had "failing" → overall should be Critical.
+        assert subtitle == "Critical"
+
+    @pytest.mark.asyncio
+    async def test_remediation_button_gated_by_role(self, config, store, progressive_runner):
+        """Viewer role must not see the Run-Remediation button."""
+        chat_client = MagicMock()
+        chat_client.create_message = AsyncMock(return_value={"name": "spaces/abc/messages/PROG-2"})
+        chat_client.update_message = AsyncMock(return_value={})
+        handler = GoogleChatHandler(
+            runner=progressive_runner,
+            config=config,
+            store=store,
+            chat_client=chat_client,
+        )
+        event = {
+            "type": "MESSAGE",
+            "message": {"argumentText": "triage"},
+            "user": {"email": "viewer@example.com"},  # not in admin/operator lists
+            "space": {"name": "spaces/abc"},
+        }
+        await handler.handle_event(event)
+        for task in list(handler._background_tasks):
+            await task
+
+        last_call = chat_client.update_message.await_args_list[-1]
+        final_card = last_call.kwargs["cards_v2"][0]
+        # Walk the card and confirm no Run-Remediation button.
+        buttons = []
+        for section in final_card["card"].get("sections", []):
+            for widget in section.get("widgets", []):
+                bl = widget.get("buttonList")
+                if bl:
+                    buttons.extend(bl.get("buttons", []))
+        assert not any(b.get("text") == "Run Remediation" for b in buttons)
+
+    @pytest.mark.asyncio
+    async def test_update_failure_falls_back_to_new_message(
+        self, config, store, progressive_runner
+    ):
+        """If the final update PATCH fails, post a fresh message instead."""
+        chat_client = MagicMock()
+        chat_client.create_message = AsyncMock(return_value={"name": "spaces/abc/messages/PROG-3"})
+
+        # First few updates succeed (progress card live refreshes); the
+        # FINAL update (with the triage_result card) raises, and the
+        # handler should fall back to create_message.
+        update_calls = {"count": 0}
+
+        async def update_side_effect(*args, **kwargs):
+            update_calls["count"] += 1
+            cards = kwargs.get("cards_v2") or []
+            if cards and cards[0]["cardId"] == "triage_result":
+                raise RuntimeError("simulated API failure")
+            return {"name": "spaces/abc/messages/PROG-3"}
+
+        chat_client.update_message = AsyncMock(side_effect=update_side_effect)
+        handler = GoogleChatHandler(
+            runner=progressive_runner,
+            config=config,
+            store=store,
+            chat_client=chat_client,
+        )
+        event = {
+            "type": "MESSAGE",
+            "message": {"argumentText": "triage"},
+            "user": {"email": "ops@example.com"},
+            "space": {"name": "spaces/abc"},
+        }
+        await handler.handle_event(event)
+        for task in list(handler._background_tasks):
+            await task
+
+        # create_message was called twice: once for the progress card,
+        # once for the fallback after PATCH failure.
+        assert chat_client.create_message.await_count == 2
+
+    @pytest.mark.asyncio
+    async def test_runtime_error_replaces_progress_with_error_card(self, config, store):
+        """An exception during the run must overwrite the progress card."""
+        runner = MagicMock()
+
+        async def boom(*args, **kwargs):
+            raise RuntimeError("boom")
+            yield  # pragma: no cover — unreachable, keeps this an async gen
+
+        runner.run_async.side_effect = boom
+
+        chat_client = MagicMock()
+        chat_client.create_message = AsyncMock(return_value={"name": "spaces/abc/messages/PROG-4"})
+        chat_client.update_message = AsyncMock(return_value={})
+        handler = GoogleChatHandler(
+            runner=runner, config=config, store=store, chat_client=chat_client
+        )
+        event = {
+            "type": "MESSAGE",
+            "message": {"argumentText": "triage"},
+            "user": {"email": "ops@example.com"},
+            "space": {"name": "spaces/abc"},
+        }
+        await handler.handle_event(event)
+        for task in list(handler._background_tasks):
+            await task
+
+        # Final update_message must have been called with the error card.
+        all_calls = chat_client.update_message.await_args_list
+        assert any(
+            (c.kwargs.get("cards_v2") or [{}])[0].get("cardId") == "error" for c in all_calls
+        )
+
+    @pytest.mark.asyncio
+    async def test_non_triage_final_update_clears_progress_card(self, config, store):
+        """Regression: final PATCH must include cardsV2 in the updateMask
+        to clear the progress card, otherwise Chat renders both the new
+        text AND the stale 'Investigating…' card on the same message.
+        """
+        runner = MagicMock()
+
+        async def plain_text_run(*args, **kwargs):
+            event = MagicMock()
+            event.author = "orrery_assistant"
+            event.content = types.Content(
+                role="model",
+                parts=[types.Part.from_text(text="Found 2 deployments in gatekeeper-system.")],
+            )
+            event.actions = MagicMock()
+            event.actions.state_delta = {}
+            event.get_function_calls = lambda: []
+            yield event
+
+        runner.run_async.side_effect = plain_text_run
+
+        chat_client = MagicMock()
+        chat_client.create_message = AsyncMock(return_value={"name": "spaces/abc/messages/PROG-X"})
+        chat_client.update_message = AsyncMock(return_value={"name": "spaces/abc/messages/PROG-X"})
+        handler = GoogleChatHandler(
+            runner=runner, config=config, store=store, chat_client=chat_client
+        )
+        event = {
+            "type": "MESSAGE",
+            "message": {"argumentText": "list deployments"},
+            "user": {"email": "ops@example.com"},
+            "space": {"name": "spaces/abc"},
+        }
+        await handler.handle_event(event)
+        for task in list(handler._background_tasks):
+            await task
+
+        last_call = chat_client.update_message.await_args_list[-1]
+        # cards_v2 must be explicitly passed (even empty) so the mask
+        # includes "cardsV2" and Chat drops the progress card.
+        assert "cards_v2" in last_call.kwargs
+        assert last_call.kwargs["cards_v2"] == []
+        assert "Found 2 deployments" in last_call.kwargs["text"]
+
+    @pytest.mark.asyncio
+    async def test_run_remediation_click_dispatches_new_run(
+        self, config, store, progressive_runner
+    ):
+        chat_client = MagicMock()
+        chat_client.create_message = AsyncMock(return_value={"name": "spaces/abc/messages/REM-1"})
+        chat_client.update_message = AsyncMock(return_value={})
+        handler = GoogleChatHandler(
+            runner=progressive_runner,
+            config=config,
+            store=store,
+            chat_client=chat_client,
+        )
+        event = {
+            "type": "CARD_CLICKED",
+            "common": {"invokedFunction": "run_remediation", "parameters": []},
+            "user": {"email": "ops@example.com", "displayName": "Ops User"},
+            "space": {"name": "spaces/abc"},
+            "message": {"thread": {"name": "threads/42"}},
+        }
+        await handler.handle_event(event)
+        for task in list(handler._background_tasks):
+            await task
+
+        # Runner was invoked with the remediation prompt in the right session.
+        progressive_runner.run_async.assert_called_once()
+        call_kwargs = progressive_runner.run_async.call_args.kwargs
+        assert call_kwargs["session_id"] == "gchat:threads/42"
+        assert "remediation_pipeline" in call_kwargs["new_message"].parts[0].text
