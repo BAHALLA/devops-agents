@@ -19,6 +19,8 @@ from .tools import (
     list_deployments,
     list_namespaces,
     list_pods,
+    patch_deployment,
+    patch_statefulset,
     restart_deployment,
     rollback_deployment,
     scale_deployment,
@@ -40,13 +42,14 @@ root_agent = create_agent(
         "You can perform ONLY these mutating actions, each via a dedicated tool:\n"
         "- **scale_deployment** — change replica count\n"
         "- **restart_deployment** — trigger a rolling restart\n"
-        "- **rollback_deployment** — roll back to the previous revision\n\n"
-        "You CANNOT: patch manifests, edit resource requests/limits, apply YAML, "
-        "run kubectl commands, modify ConfigMaps/Secrets, change images, or alter "
-        "any other field on any resource. If the user asks for something outside "
-        "the list above, say so plainly and offer the closest supported action "
-        "(e.g. \"I can't edit memory limits, but I can restart the deployment or "
-        'roll it back to the previous revision"). Never promise or imply a '
+        "- **rollback_deployment** — roll back to the previous revision\n"
+        "- **patch_deployment** — apply a Strategic Merge Patch to a deployment\n"
+        "- **patch_statefulset** — apply a Strategic Merge Patch to a statefulset\n\n"
+        "You CANNOT: apply YAML, run kubectl commands, modify ConfigMaps/Secrets, "
+        "or alter any other field on any resource except via the tools above. "
+        "If the user asks for something outside the list above, say so plainly and "
+        "offer the closest supported action (e.g. \"I can't edit ConfigMaps, but I "
+        'can patch the deployment or restart it"). Never promise or imply a '
         "capability you don't have.\n\n"
         "## Diagnostic workflow\n"
         "1. Start with get_cluster_info and get_nodes for an overview\n"
@@ -67,8 +70,8 @@ root_agent = create_agent(
         "kinds — great for spotting reconciliation errors.\n\n"
         "## Confirmation\n"
         "When a tool returns a 'confirmation_required' status, you MUST ask the user "
-        "to confirm before calling the tool again. Never scale, restart, or rollback "
-        "without explicit user approval."
+        "to confirm before calling the tool again. Never scale, restart, rollback, "
+        "or patch without explicit user approval."
     ),
     tools=[
         get_cluster_info,
@@ -82,6 +85,8 @@ root_agent = create_agent(
         scale_deployment,
         restart_deployment,
         rollback_deployment,
+        patch_deployment,
+        patch_statefulset,
         get_events,
         detect_operators,
         list_custom_resources,

@@ -552,6 +552,72 @@ async def rollback_deployment(name: str, namespace: str = "default") -> dict[str
         return {"status": "error", "message": f"Failed to rollback '{name}': {e.reason}"}
 
 
+@destructive("patches a deployment manifest, which can change any aspect of the workload")
+async def patch_deployment(
+    name: str, patch: dict[str, Any], namespace: str = "default"
+) -> dict[str, Any]:
+    """Patches a deployment manifest (e.g., to update image tags or resource limits).
+
+    Args:
+        name: Deployment name.
+        patch: The patch to apply as a dictionary (Strategic Merge Patch).
+        namespace: Kubernetes namespace.
+
+    Returns:
+        A dictionary with the operation result.
+    """
+    if err := validate_string(name, "name", pattern=K8S_NAME_PATTERN):
+        return err
+    if err := _validate_namespace(namespace):
+        return err
+    if not isinstance(patch, dict):
+        return {"status": "error", "message": "Patch must be a dictionary."}
+
+    try:
+        apps = _apps_api()
+        await asyncio.to_thread(apps.patch_namespaced_deployment, name, namespace, patch)
+        return {
+            "status": "success",
+            "message": f"Deployment '{name}' patched successfully.",
+        }
+    except ApiException as e:
+        logger.exception("Failed to patch deployment '%s'", name)
+        return {"status": "error", "message": f"Failed to patch '{name}': {e.reason}"}
+
+
+@destructive("patches a statefulset manifest, which can change any aspect of the workload")
+async def patch_statefulset(
+    name: str, patch: dict[str, Any], namespace: str = "default"
+) -> dict[str, Any]:
+    """Patches a statefulset manifest.
+
+    Args:
+        name: StatefulSet name.
+        patch: The patch to apply as a dictionary (Strategic Merge Patch).
+        namespace: Kubernetes namespace.
+
+    Returns:
+        A dictionary with the operation result.
+    """
+    if err := validate_string(name, "name", pattern=K8S_NAME_PATTERN):
+        return err
+    if err := _validate_namespace(namespace):
+        return err
+    if not isinstance(patch, dict):
+        return {"status": "error", "message": "Patch must be a dictionary."}
+
+    try:
+        apps = _apps_api()
+        await asyncio.to_thread(apps.patch_namespaced_stateful_set, name, namespace, patch)
+        return {
+            "status": "success",
+            "message": f"StatefulSet '{name}' patched successfully.",
+        }
+    except ApiException as e:
+        logger.exception("Failed to patch statefulset '%s'", name)
+        return {"status": "error", "message": f"Failed to patch '{name}': {e.reason}"}
+
+
 # ── Events ─────────────────────────────────────────────────────────────
 
 

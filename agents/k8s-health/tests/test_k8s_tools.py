@@ -20,6 +20,8 @@ from k8s_health_agent.tools import (
     list_deployments,
     list_namespaces,
     list_pods,
+    patch_deployment,
+    patch_statefulset,
     restart_deployment,
     rollback_deployment,
     scale_deployment,
@@ -496,6 +498,71 @@ async def test_rollback_deployment_rejects_invalid_name():
     result = await rollback_deployment("INVALID!")
     assert result["status"] == "error"
     assert "name" in result["message"]
+
+
+# ── Patch Deployment ──────────────────────────────────────────────────
+
+
+@pytest.mark.asyncio
+@patch("k8s_health_agent.tools._apps_api")
+async def test_patch_deployment_success(mock_api):
+    patch_body = {"spec": {"template": {"spec": {"containers": [{"name": "app", "image": "v2"}]}}}}
+    result = await patch_deployment("web", patch=patch_body)
+    assert result["status"] == "success"
+    assert "patched successfully" in result["message"]
+    mock_api.return_value.patch_namespaced_deployment.assert_called_once_with(
+        "web", "default", patch_body
+    )
+
+
+@pytest.mark.asyncio
+@patch("k8s_health_agent.tools._apps_api")
+async def test_patch_deployment_api_error(mock_api):
+    mock_api.return_value.patch_namespaced_deployment.side_effect = _api_exception("Forbidden", 403)
+    result = await patch_deployment("web", patch={})
+    assert result["status"] == "error"
+
+
+def test_patch_deployment_has_destructive_guardrail():
+    assert patch_deployment._guardrail_level == "destructive"
+    assert hasattr(patch_deployment, "_guardrail_reason")
+
+
+@pytest.mark.asyncio
+async def test_patch_deployment_rejects_non_dict_patch():
+    result = await patch_deployment("web", patch="not-a-dict")
+    assert result["status"] == "error"
+    assert "must be a dictionary" in result["message"]
+
+
+# ── Patch StatefulSet ─────────────────────────────────────────────────
+
+
+@pytest.mark.asyncio
+@patch("k8s_health_agent.tools._apps_api")
+async def test_patch_statefulset_success(mock_api):
+    patch_body = {"spec": {"replicas": 5}}
+    result = await patch_statefulset("db", patch=patch_body)
+    assert result["status"] == "success"
+    assert "patched successfully" in result["message"]
+    mock_api.return_value.patch_namespaced_stateful_set.assert_called_once_with(
+        "db", "default", patch_body
+    )
+
+
+@pytest.mark.asyncio
+@patch("k8s_health_agent.tools._apps_api")
+async def test_patch_statefulset_api_error(mock_api):
+    mock_api.return_value.patch_namespaced_stateful_set.side_effect = _api_exception(
+        "Not Found", 404
+    )
+    result = await patch_statefulset("missing", patch={})
+    assert result["status"] == "error"
+
+
+def test_patch_statefulset_has_destructive_guardrail():
+    assert patch_statefulset._guardrail_level == "destructive"
+    assert hasattr(patch_statefulset, "_guardrail_reason")
 
 
 # ── Events ────────────────────────────────────────────────────────────
