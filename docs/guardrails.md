@@ -109,12 +109,12 @@ async def list_audit_log() -> dict:
 
 ### Slack and Google Chat bots
 
-Both bots replace text-based confirmation with **interactive buttons** (Slack Blocks / Google Chat Card v2). The bot's handler sets `guardrail_mode="none"` on `default_plugins()` to skip the plugin's confirmation gate, then wires a custom `before_tool_callback` that emits a card instead:
+Both bots replace text-based confirmation with an interactive surface. The handlers set `guardrail_mode="none"` on `default_plugins()` to skip the plugin's confirmation gate, then wire a custom `before_tool_callback` that emits the platform-native UI instead:
 
-- Slack: `agents/slack-bot/slack_bot/confirmation.py`
-- Google Chat: `agents/google-chat-bot/google_chat_bot/confirmation.py`
+- **Slack** (`agents/slack-bot/slack_bot/confirmation.py`) — Block Kit Approve/Deny buttons. The retry handshake uses an in-state `_guardrail_pending_<tool>` flag scoped to the channel/thread session.
+- **Google Chat** (`agents/google-chat-bot/google_chat_bot/confirmation.py`) — Card v2 prompting the user to send the **Approve** or **Deny** Quick Command. The retry handshake lives on the bot's `ConfirmationStore`, keyed by `(thread_or_space, tool_name, args_hash)` rather than per-context state. This is load-bearing: many guarded tools live on `AgentTool`-wrapped specialist agents whose ADK sub-sessions are ephemeral and don't propagate state writes back to the gchat parent session, so an in-state retry flag would be lost. The store entry the click handler marks `approved=True` is consumed on the LLM's retry within a 120s validity window.
 
-Sub-agents keep their per-agent `require_confirmation()` as a fallback for guarded tools reached without going through the root.
+Sub-agents keep their per-agent `require_confirmation()` as a fallback for guarded tools reached without going through the root. `apply_chat_confirmation()` walks the agent tree and overrides every LlmAgent's `before_tool_callback` so guarded tools on sub-agents post a Card v2 too instead of falling back to the text prompt.
 
 ### Dry-run mode
 

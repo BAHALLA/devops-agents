@@ -1,5 +1,6 @@
 """Tests for the Google Chat bot handler."""
 
+import time
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -70,7 +71,7 @@ class TestHandleEvent:
     async def test_added_to_space(self, handler):
         event = {"type": "ADDED_TO_SPACE"}
         response = await handler.handle_event(event)
-        # Verify Workspace Add-on DataAction structure
+        # Verify Workspace Add-on structure
         message = response["hostAppDataAction"]["chatDataAction"]["createMessageAction"]["message"]
         assert "Thanks for adding me" in message["text"]
 
@@ -108,8 +109,6 @@ class TestHandleEvent:
         assert call_kwargs["user_id"] == "user@example.com"
         assert call_kwargs["session_id"] == "gchat:threads/123"
         assert call_kwargs["state_delta"]["user_role"] == "viewer"
-        # Server-trusted lock flag must be set so ensure_default_role()
-        # doesn't reset the role on before_agent_callback.
         assert call_kwargs["state_delta"]["_role_set_by_server"] is True
         assert call_kwargs["state_delta"]["gchat_space"] == "spaces/abc"
 
@@ -128,15 +127,13 @@ class TestHandleEvent:
         assert state_delta["user_role"] == "admin"
         assert state_delta["_role_set_by_server"] is True
 
-        # End-to-end: simulate ensure_default_role() running on the
-        # resulting state. With the lock flag set, it must be a no-op.
         from orrery_core import ensure_default_role
 
         callback = ensure_default_role()
         fake_ctx = MagicMock()
         fake_ctx.state = dict(state_delta)
         callback(fake_ctx)
-        assert fake_ctx.state["user_role"] == "admin"  # not downgraded to viewer
+        assert fake_ctx.state["user_role"] == "admin"
 
     @pytest.mark.asyncio
     async def test_message_session_id_fallback_to_space(self, handler, mock_runner):
@@ -149,6 +146,101 @@ class TestHandleEvent:
         await handler.handle_event(event)
         call_kwargs = mock_runner.run_async.call_args.kwargs
         assert call_kwargs["session_id"] == "gchat:spaces/abc"
+
+
+class TestHandleAppCommand:
+    @pytest.mark.asyncio
+    async def test_approve_command_runs_agent(self, handler, store, mock_runner):
+        store.add(
+            PendingConfirmation(
+                action_id="abc",
+                tool_name="restart",
+                user_id="user@example.com",
+                session_id="gchat:threads/1",
+                space_name="spaces/xyz",
+                thread_name="threads/1",
+                level="destructive",
+                args={"name": "frontend", "namespace": "default"},
+                args_hash="cafebabe",
+            )
+        )
+        event = {
+            "chat": {
+                "appCommandPayload": {
+                    "appCommandMetadata": {"appCommandId": 1},
+                    "appCommandType": "QUICK_COMMAND",
+                },
+                "user": {"email": "ops@example.com", "displayName": "Ops User"},
+                "space": {"name": "spaces/xyz"},
+            },
+            "message": {"thread": {"name": "threads/1"}},
+        }
+        response = await handler.handle_event(event)
+        message = response["hostAppDataAction"]["chatDataAction"]["createMessageAction"]["message"]
+        assert "Approved" in message["text"]
+        assert "Hello from agent" in message["text"]
+
+        call_kwargs = mock_runner.run_async.call_args.kwargs
+        synthetic_text = call_kwargs["new_message"].parts[0].text
+        assert "approved" in synthetic_text.lower()
+        # Args must be embedded so the LLM can re-issue the call without
+        # reconstructing them from chat history.
+        assert "name='frontend'" in synthetic_text
+        assert "namespace='default'" in synthetic_text
+
+        # The pending must have been marked approved (not popped) so the
+        # before_tool callback can consume it on the LLM's retry.
+        approved = next(iter(store._pending.values()))
+        assert approved.approved is True
+        assert approved.approved_at is not None
+
+    @pytest.mark.asyncio
+    async def test_deny_command_runs_agent(self, handler, store, mock_runner):
+        store.add(
+            PendingConfirmation(
+                action_id="def",
+                tool_name="drop",
+                user_id="user@example.com",
+                session_id="gchat:threads/2",
+                space_name="spaces/xyz",
+                thread_name="threads/2",
+                level="destructive",
+                args={"topic": "events"},
+                args_hash="deadbeef",
+            )
+        )
+        event = {
+            "chat": {
+                "appCommandPayload": {
+                    "appCommandMetadata": {"appCommandId": 2},
+                    "appCommandType": "QUICK_COMMAND",
+                },
+                "user": {"email": "ops@example.com"},
+            },
+            "message": {"thread": {"name": "threads/2"}},
+        }
+        response = await handler.handle_event(event)
+        message = response["hostAppDataAction"]["chatDataAction"]["createMessageAction"]["message"]
+        assert "Denied" in message["text"]
+        call_kwargs = mock_runner.run_async.call_args.kwargs
+        synthetic_text = call_kwargs["new_message"].parts[0].text
+        assert "denied" in synthetic_text.lower()
+        # Deny removes the pending entirely.
+        assert len(store._pending) == 0
+
+    @pytest.mark.asyncio
+    async def test_app_command_no_pending(self, handler):
+        event = {
+            "chat": {
+                "appCommandPayload": {
+                    "appCommandMetadata": {"appCommandId": 1},
+                },
+                "space": {"name": "spaces/empty"},
+            }
+        }
+        response = await handler.handle_event(event)
+        message = response["hostAppDataAction"]["chatDataAction"]["createMessageAction"]["message"]
+        assert "No pending action" in message["text"]
 
 
 class TestHandleCardClick:
@@ -188,6 +280,8 @@ class TestHandleCardClick:
                 space_name="spaces/xyz",
                 thread_name="threads/1",
                 level="destructive",
+                args={"name": "api", "namespace": "prod"},
+                args_hash="abcd1234",
             )
         )
         event = {
@@ -206,11 +300,16 @@ class TestHandleCardClick:
         assert "Hello from agent" in text
 
         call_kwargs = mock_runner.run_async.call_args.kwargs
-        assert call_kwargs["user_id"] == "user@example.com"  # original requester
+        assert call_kwargs["user_id"] == "user@example.com"
         assert call_kwargs["session_id"] == "gchat:threads/1"
-        # Synthetic message replays the approval.
-        new_msg = call_kwargs["new_message"]
-        assert "Yes, proceed" in new_msg.parts[0].text
+        synthetic = call_kwargs["new_message"].parts[0].text
+        assert "approved" in synthetic.lower()
+        assert "name='api'" in synthetic
+
+        # Confirm marks the entry approved without popping it.
+        approved = store.get("abc123")
+        assert approved is not None
+        assert approved.approved is True
 
     @pytest.mark.asyncio
     async def test_deny_action_clears_pending(self, handler, store, mock_runner):
@@ -223,6 +322,8 @@ class TestHandleCardClick:
                 space_name="spaces/xyz",
                 thread_name="threads/2",
                 level="destructive",
+                args={"topic": "events"},
+                args_hash="d34db33f",
             )
         )
         event = {
@@ -240,10 +341,8 @@ class TestHandleCardClick:
         assert "Denied" in text
         assert "Hello from agent" in text
 
-        call_kwargs = mock_runner.run_async.call_args.kwargs
-        # Deny should clear the pending flag in state_delta to prevent a
-        # silent bypass if the LLM retries the same tool.
-        assert call_kwargs["state_delta"]["_gchat_pending_drop_topic"] is False
+        # Deny pops the pending entirely.
+        assert store.get("xyz") is None
 
     @pytest.mark.asyncio
     async def test_addons_card_click_without_top_level_type(self, handler, store):
@@ -257,10 +356,11 @@ class TestHandleCardClick:
                 space_name="spaces/abc",
                 thread_name=None,
                 level="confirm",
+                args={"replicas": 3},
+                args_hash="aaaa1111",
             )
         )
         event = {
-            # No "type" field — mimics the Workspace Add-ons envelope.
             "commonEventObject": {
                 "invokedFunction": "confirm_action",
                 "parameters": [{"key": "action_id", "value": "addon1"}],
@@ -270,6 +370,39 @@ class TestHandleCardClick:
         response = await handler.handle_event(event)
         message = response["hostAppDataAction"]["chatDataAction"]["createMessageAction"]["message"]
         assert "Approved" in message["text"]
+
+    @pytest.mark.asyncio
+    async def test_addons_card_click_with_space_in_payload(self, handler, store):
+        """Real add-on click payloads include chat.space — must NOT be
+        misclassified as ADDED_TO_SPACE.
+        """
+        store.add(
+            PendingConfirmation(
+                action_id="space1",
+                tool_name="restart_deployment",
+                user_id="user@example.com",
+                session_id="gchat:spaces/abc",
+                space_name="spaces/abc",
+                thread_name=None,
+                level="destructive",
+                args={"name": "api", "namespace": "prod"},
+                args_hash="bbbb2222",
+            )
+        )
+        event = {
+            "commonEventObject": {
+                "invokedFunction": "confirm_action",
+                "parameters": [{"key": "action_id", "value": "space1"}],
+            },
+            "chat": {
+                "user": {"email": "ops@example.com", "displayName": "Ops User"},
+                "space": {"name": "spaces/abc", "type": "DM"},
+            },
+        }
+        response = await handler.handle_event(event)
+        message = response["hostAppDataAction"]["chatDataAction"]["createMessageAction"]["message"]
+        assert "Approved" in message["text"]
+        assert "Thanks for adding me" not in message["text"]
 
     @pytest.mark.asyncio
     async def test_legacy_action_method_name_format(self, handler, store):
@@ -283,6 +416,8 @@ class TestHandleCardClick:
                 space_name="spaces/abc",
                 thread_name=None,
                 level="destructive",
+                args={"target": "api"},
+                args_hash="cccc3333",
             )
         )
         event = {
@@ -299,12 +434,15 @@ class TestHandleCardClick:
 
 
 class TestGoogleChatConfirmation:
-    def _ctx(self):
+    def _ctx(self, *, space="spaces/abc", thread="threads/1"):
         ctx = MagicMock()
-        ctx.state = {}
+        ctx.state = {"gchat_space": space, "gchat_thread": thread}
         ctx.user_id = "user@example.com"
         session = MagicMock()
-        session.id = "gchat:threads/1"
+        # tool_context.session.id reflects the inner ADK session — for an
+        # AgentTool sub-agent that's an ephemeral id, NOT the gchat
+        # parent runner session. The callback must NOT trust this.
+        session.id = "ephemeral-inner-session"
         ctx.session = session
         return ctx
 
@@ -314,7 +452,7 @@ class TestGoogleChatConfirmation:
         tool.func = lambda x: x
         assert callback(tool=tool, args={}, tool_context=self._ctx()) is None
 
-    def test_guarded_emits_card(self, store):
+    def test_guarded_emits_card_and_records_parent_session(self, store):
         from orrery_core import confirm
 
         callback = google_chat_confirmation(store)
@@ -327,9 +465,7 @@ class TestGoogleChatConfirmation:
         tool.func = my_tool
         tool.name = "my_tool"
 
-        ctx = self._ctx()
-        ctx.state["gchat_space"] = "spaces/abc"
-        ctx.state["gchat_thread"] = "threads/1"
+        ctx = self._ctx(space="spaces/abc", thread="threads/1")
 
         buf, token = start_request_buffer()
         try:
@@ -339,16 +475,25 @@ class TestGoogleChatConfirmation:
 
         assert result is not None
         assert result["status"] == "confirmation_required"
-        assert ctx.state["_gchat_pending_my_tool"] is True
         assert len(buf) == 1
         assert buf[0]["card"]["header"]["title"].startswith("\U0001f535")
-        # A pending confirmation must be in the store for card click lookup.
         assert len(store._pending) == 1
         pending = next(iter(store._pending.values()))
         assert pending.tool_name == "my_tool"
         assert pending.space_name == "spaces/abc"
+        assert pending.thread_name == "threads/1"
+        # The parent gchat session id must be reconstructed from state,
+        # not borrowed from tool_context.session.id (which is the inner
+        # AgentTool session and would lose conversation history on retry).
+        assert pending.session_id == "gchat:threads/1"
+        assert pending.args == {"a": 1}
+        assert pending.args_hash != ""
+        assert pending.approved is False
 
-    def test_already_confirmed_proceeds(self, store):
+    def test_approved_pending_in_store_proceeds(self, store):
+        """Click handler marks an entry approved → callback consumes it."""
+        from google_chat_bot.confirmation import _hash_args
+
         from orrery_core import confirm
 
         callback = google_chat_confirmation(store)
@@ -361,12 +506,126 @@ class TestGoogleChatConfirmation:
         tool.func = my_tool
         tool.name = "my_tool"
 
-        ctx = self._ctx()
-        ctx.state["_gchat_pending_my_tool"] = True
+        # Simulate the handler's pre-approval bookkeeping: a pending was
+        # created on the first call and the click handler marked it
+        # approved.
+        args = {"name": "A"}
+        store.add(
+            PendingConfirmation(
+                action_id="ab",
+                tool_name="my_tool",
+                user_id="user@example.com",
+                session_id="gchat:threads/1",
+                space_name="spaces/abc",
+                thread_name="threads/1",
+                level="confirm",
+                args=args,
+                args_hash=_hash_args(args),
+                approved=True,
+                approved_at=time.time(),
+            )
+        )
 
-        result = callback(tool=tool, args={}, tool_context=ctx)
-        assert result is None
-        assert ctx.state["_gchat_pending_my_tool"] is False
+        ctx = self._ctx(space="spaces/abc", thread="threads/1")
+        result = callback(tool=tool, args=args, tool_context=ctx)
+        assert result is None  # tool proceeds
+        # Approval is one-shot: the entry is consumed.
+        assert len(store._pending) == 0
+
+    def test_stale_approval_does_not_proceed(self, store):
+        """Approvals beyond the validity window must re-prompt."""
+        from google_chat_bot.confirmation import _APPROVAL_VALIDITY, _hash_args
+
+        from orrery_core import confirm
+
+        callback = google_chat_confirmation(store)
+
+        @confirm("testing")
+        def my_tool():
+            return "ok"
+
+        tool = MagicMock()
+        tool.func = my_tool
+        tool.name = "my_tool"
+
+        args = {"name": "A"}
+        store.add(
+            PendingConfirmation(
+                action_id="stale",
+                tool_name="my_tool",
+                user_id="user@example.com",
+                session_id="gchat:threads/1",
+                space_name="spaces/abc",
+                thread_name="threads/1",
+                level="confirm",
+                args=args,
+                args_hash=_hash_args(args),
+                approved=True,
+                approved_at=time.time() - _APPROVAL_VALIDITY - 1,
+            )
+        )
+
+        ctx = self._ctx(space="spaces/abc", thread="threads/1")
+        buf, token = start_request_buffer()
+        try:
+            result = callback(tool=tool, args=args, tool_context=ctx)
+        finally:
+            end_request_buffer(token)
+        assert result is not None
+        assert result["status"] == "confirmation_required"
+
+    def test_different_args_blocks_with_separate_card(self, store):
+        from orrery_core import destructive
+
+        callback = google_chat_confirmation(store)
+
+        @destructive("destructive op")
+        def my_tool():
+            return "ok"
+
+        tool = MagicMock()
+        tool.func = my_tool
+        tool.name = "my_tool"
+
+        ctx = self._ctx()
+
+        buf, token = start_request_buffer()
+        try:
+            r1 = callback(tool=tool, args={"name": "A"}, tool_context=ctx)
+            r2 = callback(tool=tool, args={"name": "B"}, tool_context=ctx)
+        finally:
+            end_request_buffer(token)
+
+        assert r1 is not None and r1["status"] == "confirmation_required"
+        assert r2 is not None and r2["status"] == "confirmation_required"
+        assert len(buf) == 2
+
+    def test_unapproved_pending_blocks(self, store):
+        """A pending that exists but isn't approved must still block."""
+        from orrery_core import destructive
+
+        callback = google_chat_confirmation(store)
+
+        @destructive("destructive op")
+        def my_tool():
+            return "ok"
+
+        tool = MagicMock()
+        tool.func = my_tool
+        tool.name = "my_tool"
+
+        ctx = self._ctx()
+        buf, token = start_request_buffer()
+        try:
+            r1 = callback(tool=tool, args={"name": "A"}, tool_context=ctx)
+            # An LLM auto-retry inside the same turn must not slip
+            # through just because a (non-approved) pending exists.
+            r2 = callback(tool=tool, args={"name": "A"}, tool_context=ctx)
+        finally:
+            end_request_buffer(token)
+
+        assert r1["status"] == "confirmation_required"
+        assert r2["status"] == "confirmation_required"
 
 
 # ── Progressive-card flow ────────────────────────────────────────────
@@ -449,8 +708,9 @@ class TestProgressiveUpdates:
             "space": {"name": "spaces/abc"},
         }
         response = await async_handler.handle_event(event)
-        # Empty ack — the real reply goes out via the background task.
-        assert response == {"hostAppDataAction": {}}
+        # Verify the hostAppDataAction ACK structure required for Workspace Add-ons.
+        assert response["hostAppDataAction"]["chatDataAction"]["actionStatus"]["statusCode"] == "OK"
+
         # Drain the background task.
         for task in list(async_handler._background_tasks):
             await task
@@ -467,15 +727,12 @@ class TestProgressiveUpdates:
         for task in list(async_handler._background_tasks):
             await task
 
-        # 1. Exactly one create_message — the initial progress card.
         async_handler.chat_client.create_message.assert_awaited_once()
         create_kwargs = async_handler.chat_client.create_message.call_args.kwargs
         first_card = create_kwargs["cards_v2"][0]
         assert first_card["cardId"] == "progress"
         assert "Investigating" in first_card["card"]["header"]["title"]
 
-        # 2. At least one update_message was called along the way
-        #    (state_delta writes force-flush).
         assert async_handler.chat_client.update_message.await_count >= 1
 
     @pytest.mark.asyncio
@@ -490,13 +747,10 @@ class TestProgressiveUpdates:
         for task in list(async_handler._background_tasks):
             await task
 
-        # Inspect the *last* update_message call — that's the final
-        # result card (triage report with chips).
         last_call = async_handler.chat_client.update_message.await_args_list[-1]
         cards = last_call.kwargs["cards_v2"]
         assert cards[0]["cardId"] == "triage_result"
         subtitle = cards[0]["card"]["header"]["subtitle"]
-        # k8s_status had "failing" → overall should be Critical.
         assert subtitle == "Critical"
 
     @pytest.mark.asyncio
@@ -514,7 +768,7 @@ class TestProgressiveUpdates:
         event = {
             "type": "MESSAGE",
             "message": {"argumentText": "triage"},
-            "user": {"email": "viewer@example.com"},  # not in admin/operator lists
+            "user": {"email": "viewer@example.com"},
             "space": {"name": "spaces/abc"},
         }
         await handler.handle_event(event)
@@ -523,7 +777,6 @@ class TestProgressiveUpdates:
 
         last_call = chat_client.update_message.await_args_list[-1]
         final_card = last_call.kwargs["cards_v2"][0]
-        # Walk the card and confirm no Run-Remediation button.
         buttons = []
         for section in final_card["card"].get("sections", []):
             for widget in section.get("widgets", []):
@@ -540,9 +793,6 @@ class TestProgressiveUpdates:
         chat_client = MagicMock()
         chat_client.create_message = AsyncMock(return_value={"name": "spaces/abc/messages/PROG-3"})
 
-        # First few updates succeed (progress card live refreshes); the
-        # FINAL update (with the triage_result card) raises, and the
-        # handler should fall back to create_message.
         update_calls = {"count": 0}
 
         async def update_side_effect(*args, **kwargs):
@@ -569,8 +819,6 @@ class TestProgressiveUpdates:
         for task in list(handler._background_tasks):
             await task
 
-        # create_message was called twice: once for the progress card,
-        # once for the fallback after PATCH failure.
         assert chat_client.create_message.await_count == 2
 
     @pytest.mark.asyncio
@@ -580,7 +828,7 @@ class TestProgressiveUpdates:
 
         async def boom(*args, **kwargs):
             raise RuntimeError("boom")
-            yield  # pragma: no cover — unreachable, keeps this an async gen
+            yield
 
         runner.run_async.side_effect = boom
 
@@ -600,7 +848,6 @@ class TestProgressiveUpdates:
         for task in list(handler._background_tasks):
             await task
 
-        # Final update_message must have been called with the error card.
         all_calls = chat_client.update_message.await_args_list
         assert any(
             (c.kwargs.get("cards_v2") or [{}])[0].get("cardId") == "error" for c in all_calls
@@ -608,10 +855,6 @@ class TestProgressiveUpdates:
 
     @pytest.mark.asyncio
     async def test_non_triage_final_update_clears_progress_card(self, config, store):
-        """Regression: final PATCH must include cardsV2 in the updateMask
-        to clear the progress card, otherwise Chat renders both the new
-        text AND the stale 'Investigating…' card on the same message.
-        """
         runner = MagicMock()
 
         async def plain_text_run(*args, **kwargs):
@@ -645,8 +888,6 @@ class TestProgressiveUpdates:
             await task
 
         last_call = chat_client.update_message.await_args_list[-1]
-        # cards_v2 must be explicitly passed (even empty) so the mask
-        # includes "cardsV2" and Chat drops the progress card.
         assert "cards_v2" in last_call.kwargs
         assert last_call.kwargs["cards_v2"] == []
         assert "Found 2 deployments" in last_call.kwargs["text"]
@@ -675,7 +916,6 @@ class TestProgressiveUpdates:
         for task in list(handler._background_tasks):
             await task
 
-        # Runner was invoked with the remediation prompt in the right session.
         progressive_runner.run_async.assert_called_once()
         call_kwargs = progressive_runner.run_async.call_args.kwargs
         assert call_kwargs["session_id"] == "gchat:threads/42"

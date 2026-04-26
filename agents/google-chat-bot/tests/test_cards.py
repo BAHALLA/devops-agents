@@ -37,14 +37,13 @@ def test_confirmation_card_structure():
     assert "name=api" in args_widget["textParagraph"]["text"]
     assert "ns=prod" in args_widget["textParagraph"]["text"]
 
-    buttons = next(w for w in widgets if "buttonList" in w)["buttonList"]["buttons"]
-    names = {b["text"]: b for b in buttons}
-    assert set(names) == {"Approve", "Deny"}
-
-    approve_params = names["Approve"]["onClick"]["action"]["parameters"]
-    assert {"key": "action_id", "value": "abc123"} in approve_params
-    assert names["Approve"]["onClick"]["action"]["function"] == "confirm_action"
-    assert names["Deny"]["onClick"]["action"]["function"] == "deny_action"
+    # Verify quick command instructions are present
+    instruction_widget = next(
+        w
+        for w in widgets
+        if "Send the <b>Approve</b> quick command" in w.get("textParagraph", {}).get("text", "")
+    )
+    assert instruction_widget is not None
 
 
 def test_destructive_card_uses_warning_emoji():
@@ -186,25 +185,25 @@ class TestTriageResultCard:
         )
         assert "healthy" in card["card"]["header"]["subtitle"].lower()
 
-    def test_remediate_button_visible_for_operator_on_fail(self):
+    def test_remediate_instruction_visible_for_operator_on_fail(self):
         card = build_triage_result_card(
             subsystem_chips=self._chips(),
             triage_report="bad",
             user_role="operator",
         )
-        buttons = _collect_buttons(card)
-        assert any(b["text"] == "Run Remediation" for b in buttons)
+        text = _all_widget_text(card)
+        assert "<b>Remediate</b> quick command" in text
 
-    def test_remediate_button_hidden_for_viewer(self):
+    def test_remediate_instruction_hidden_for_viewer(self):
         card = build_triage_result_card(
             subsystem_chips=self._chips(),
             triage_report="bad",
             user_role="viewer",
         )
-        buttons = _collect_buttons(card)
-        assert not any(b["text"] == "Run Remediation" for b in buttons)
+        text = _all_widget_text(card)
+        assert "<b>Remediate</b> quick command" not in text
 
-    def test_remediate_button_hidden_when_healthy(self):
+    def test_remediate_instruction_hidden_when_healthy(self):
         chips = {
             "kafka_status": {"status": "ok", "summary": "ok"},
             "k8s_status": {"status": "ok", "summary": "ok"},
@@ -212,8 +211,8 @@ class TestTriageResultCard:
         card = build_triage_result_card(
             subsystem_chips=chips, triage_report="fine", user_role="admin"
         )
-        buttons = _collect_buttons(card)
-        assert not any(b["text"] == "Run Remediation" for b in buttons)
+        text = _all_widget_text(card)
+        assert "<b>Remediate</b> quick command" not in text
 
     def test_subsystem_sections_present(self):
         card = build_triage_result_card(
@@ -226,16 +225,6 @@ class TestTriageResultCard:
         assert "Kubernetes" in text
         assert "Elasticsearch" in text
         assert "full summary" in text
-
-
-def _collect_buttons(card: dict) -> list[dict]:
-    buttons: list[dict] = []
-    for section in card["card"].get("sections", []):
-        for widget in section.get("widgets", []):
-            bl = widget.get("buttonList")
-            if bl:
-                buttons.extend(bl.get("buttons", []))
-    return buttons
 
 
 def test_error_card_shape():

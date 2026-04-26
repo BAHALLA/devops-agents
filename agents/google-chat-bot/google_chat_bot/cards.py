@@ -67,31 +67,18 @@ def build_confirmation_card(
     if reason:
         widgets.append({"textParagraph": {"text": f"<b>Reason:</b> {reason}"}})
     widgets.append({"textParagraph": {"text": f"<b>Arguments:</b> {args_text}"}})
+
+    # Quick commands reuse the regular MESSAGE delivery path, so we
+    # instruct the operator to send the ``Approve`` / ``Deny`` quick
+    # command and resolve the action_id by picking the latest pending
+    # confirmation in this thread. This avoids issues with invokedFunction
+    # buttons in some configurations.
     widgets.append(
         {
-            "buttonList": {
-                "buttons": [
-                    {
-                        "text": "Approve",
-                        "onClick": {
-                            "action": {
-                                "function": "confirm_action",
-                                "parameters": [{"key": "action_id", "value": action_id}],
-                            }
-                        },
-                        "color": {"red": 0.1, "green": 0.6, "blue": 0.1},
-                    },
-                    {
-                        "text": "Deny",
-                        "onClick": {
-                            "action": {
-                                "function": "deny_action",
-                                "parameters": [{"key": "action_id", "value": action_id}],
-                            }
-                        },
-                        "color": {"red": 0.8, "green": 0.1, "blue": 0.1},
-                    },
-                ]
+            "textParagraph": {
+                "text": (
+                    "👉 Send the <b>Approve</b> quick command to proceed, or <b>Deny</b> to cancel."
+                )
             }
         }
     )
@@ -270,7 +257,7 @@ def build_triage_result_card(
 ) -> dict[str, Any]:
     """Render the final incident triage report as a structured card.
 
-    Includes a "Run Remediation" button when overall status is not
+    Includes instructions to run remediation when overall status is not
     healthy and the user has operator+ permissions.
     """
     overall = _overall_status(subsystem_chips)
@@ -312,29 +299,14 @@ def build_triage_result_card(
             }
         )
 
-    # Remediation button, operator+ only, only when something is wrong.
+    # Remediation instruction, operator+ only, only when something is wrong.
     if overall in ("warn", "fail") and user_role in ("operator", "admin"):
         sections.append(
             {
                 "widgets": [
                     {
-                        "buttonList": {
-                            "buttons": [
-                                {
-                                    "text": "Run Remediation",
-                                    "onClick": {
-                                        "action": {
-                                            "function": "run_remediation",
-                                            "parameters": [],
-                                        }
-                                    },
-                                    "color": {
-                                        "red": 0.1,
-                                        "green": 0.4,
-                                        "blue": 0.8,
-                                    },
-                                }
-                            ]
+                        "textParagraph": {
+                            "text": "👉 To remediate this incident, use the <b>Remediate</b> quick command."
                         }
                     }
                 ]

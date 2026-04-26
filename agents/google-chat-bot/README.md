@@ -65,12 +65,21 @@ Google Chat enforces a ~30 s synchronous budget. The bot returns `200 OK` immedi
 
 ### Confirmation Cards
 
-When the agent invokes a tool marked `@confirm` or `@destructive`, a Card v2 is posted to the thread:
+When the agent invokes a tool marked `@confirm` or `@destructive`, a Card v2 is posted to the thread describing the action (level, reason, exact arguments). The card asks the operator to send one of two **Quick Commands** configured in the Chat API console:
 
-1. **Approve** → agent re-invokes the tool (now allowed through)
-2. **Deny** → agent skips the operation
+1. **Approve** (`appCommandId=1`) → bot marks the pending action approved, re-runs the agent in the same gchat session with a synthetic prompt that embeds the original arguments, and the LLM re-issues the tool call. The `before_tool_callback` consults the `ConfirmationStore`, sees the matching `(thread, tool_name, args_hash)` flagged `approved=True`, consumes it (one-shot), and lets the call through.
+2. **Deny** (`appCommandId=2`) → bot pops the pending entry and re-runs with a synthetic *do-not-proceed* prompt; the agent acknowledges and stops.
 
-Destructive tools show a warning banner; confirm tools show an info banner.
+Destructive tools render with a warning banner; confirm tools render with an info banner. Approvals are valid for **120 seconds** after the click, after which the bot re-prompts with a fresh card; pending entries themselves expire after 300 s. If the LLM retries with arguments that differ from those shown on the card (different `args_hash`), the bot re-prompts — operators authorize specific arguments, not just a tool name.
+
+The handshake lives on the bot's `ConfirmationStore` rather than per-context session state so it survives across `AgentTool` sub-agents (whose ADK sub-sessions are ephemeral and don't propagate state writes back to the gchat parent session). See [`google_chat_bot/confirmation.py`](google_chat_bot/confirmation.py) for the full callback.
+
+**Console setup (one-time).** Add the two Quick Commands under *App Configuration → Commands* in the Chat API console:
+
+| Command ID | Type          | Name      |
+|------------|---------------|-----------|
+| `1`        | Quick command | `Approve` |
+| `2`        | Quick command | `Deny`    |
 
 ### Session Management
 
