@@ -51,7 +51,12 @@ def _build_session() -> requests.Session:
         s.headers["Authorization"] = f"ApiKey {_config.elasticsearch_api_key}"
     elif _config.elasticsearch_username and _config.elasticsearch_password:
         s.auth = (_config.elasticsearch_username, _config.elasticsearch_password)
-    s.verify = _config.elasticsearch_ca_certs or _config.elasticsearch_verify_certs
+    # `requests.Session.verify` accepts `bool | str | None` at runtime (a str
+    # path is treated as a CA bundle path), but the type stub narrows it to
+    # bool. Suppress the false positive rather than rewrite the runtime.
+    s.verify = (  # ty: ignore[invalid-assignment]
+        _config.elasticsearch_ca_certs or _config.elasticsearch_verify_certs
+    )
     s.headers.setdefault("Accept", "application/json")
     return s
 

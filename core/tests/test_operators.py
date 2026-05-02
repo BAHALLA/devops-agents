@@ -71,9 +71,11 @@ class TestRegistry:
         reg = OperatorRegistry()
 
         class FakeStrimzi:
-            name = "fake-strimzi"
-            crd_groups = ("kafka.strimzi.io",)
-            watched = (CRDRef("kafka.strimzi.io", "v1beta2", "kafkas", "Kafka"),)
+            name: str = "fake-strimzi"
+            crd_groups: tuple[str, ...] = ("kafka.strimzi.io",)
+            watched: tuple[CRDRef, ...] = (
+                CRDRef("kafka.strimzi.io", "v1beta2", "kafkas", "Kafka"),
+            )
 
             def interpret_status(self, kind, cr):  # pragma: no cover - unused
                 return OperatorStatus(healthy=True, summary="")

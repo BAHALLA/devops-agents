@@ -87,6 +87,28 @@ Cache hit/miss events are exposed as the `orrery_context_cache_events_total` Pro
 
 ---
 
+## Planning
+
+The reasoning-heavy agents in `orrery-assistant` (the root orchestrator, `triage_summarizer`, and `remediation_actor`) accept an optional [ADK planner](https://adk.dev/agents/llm-agents/) that injects an explicit reasoning step before tool calls. Planning is **opt-in** and **off by default** — setting `ORRERY_PLANNER` is the only knob you need.
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `ORRERY_PLANNER` | `none` | Planner choice: `none`, `plan_react`, or `builtin`. |
+| `ORRERY_PLANNER_THINKING_BUDGET` | unset | Integer token budget for `builtin` (Gemini-only). |
+| `ORRERY_PLANNER_INCLUDE_THOUGHTS` | `true` | Whether `builtin` surfaces the model's thoughts. |
+
+**Choosing a planner:**
+
+- `plan_react` is **provider-agnostic** — works with every backend `MODEL_PROVIDER` supports (Gemini, Claude, OpenAI, Ollama via LiteLLM). The model output is structured into `/*PLANNING*/`, `/*ACTION*/`, `/*REASONING*/`, and `/*FINAL_ANSWER*/` phases. Use this if you run on anything other than Gemini, or if you want plan steps you can surface in a UI (the Google Chat progress card already keys off `state_delta` writes, so the additional structure shows up naturally).
+- `builtin` uses **Gemini's native thinking tokens** via `BuiltInPlanner(ThinkingConfig(...))`. Cheaper and lower-latency than `plan_react` on Gemini, with no output-shape change. Falls back to no planner (with a warning) when `MODEL_PROVIDER != gemini`, since LiteLLM-routed models do not consume the ADK thinking config.
+
+**Tradeoffs to be aware of:**
+
+- `plan_react` makes responses noticeably more verbose and adds an extra reasoning round-trip per turn — A/B-test before flipping it on for latency-sensitive surfaces.
+- Planners are intentionally **not** attached to per-system health checkers, the remediation verifier, or the journal writer. Those agents execute one short tool sequence per turn; planning would add latency without changing the output.
+
+---
+
 ## Infrastructure
 
 The included `docker-compose.yml` starts the local diagnostic stack.

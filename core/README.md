@@ -132,10 +132,44 @@ root_agent = create_agent(
 | `instruction` | System prompt for the agent |
 | `tools` | List of async tool functions |
 | `model` | Override model — can be a string (Gemini) or `BaseLlm` instance (LiteLlm). When `None`, resolved from `MODEL_PROVIDER`/`MODEL_NAME` env vars via `resolve_model()` |
+| `planner` | Optional ADK planner attached to this agent. Use `resolve_planner()` to read the choice from env. Reserve for orchestration / reasoning agents — tool-leaf agents do not benefit |
 | `sub_agents` | List of child agents for orchestrators |
 | `output_key` | Session state key to store this agent's output |
 
 Agent-level callback parameters (`before_tool_callback`, `after_tool_callback`, etc.) are still supported for agent-specific logic but are not needed for standard cross-cutting concerns.
+
+### `resolve_planner()`
+
+Returns an ADK `BasePlanner` (or `None`) based on the `ORRERY_PLANNER` env var. Planning adds an explicit reasoning step before tool calls — useful for orchestration agents that route across specialists, less useful for narrow tool-leaf agents.
+
+```python
+from orrery_core import create_agent, resolve_planner
+
+_planner = resolve_planner()  # read once at import time
+
+root_agent = create_agent(
+    name="orchestrator",
+    description="Routes across specialist agents.",
+    instruction="…",
+    tools=[…],
+    planner=_planner,  # opt-in per agent
+)
+```
+
+| `ORRERY_PLANNER` | Behavior |
+|------------------|----------|
+| `none` (default) | No planner attached; identical to pre-planner behavior. |
+| `plan_react` | `PlanReActPlanner` — provider-agnostic; structures output into `/*PLANNING*/`, `/*ACTION*/`, `/*REASONING*/`, `/*FINAL_ANSWER*/` phases. Works with Gemini, Claude, OpenAI, and Ollama via the existing LiteLLM integration. |
+| `builtin` | `BuiltInPlanner` — uses Gemini's native thinking tokens. Falls back to `None` with a warning when `MODEL_PROVIDER != gemini`, since LiteLLM-routed models do not consume the ADK thinking config. |
+
+Builtin-only knobs (consulted only when `ORRERY_PLANNER=builtin`):
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `ORRERY_PLANNER_THINKING_BUDGET` | unset | Integer token budget for Gemini thinking. |
+| `ORRERY_PLANNER_INCLUDE_THOUGHTS` | `true` | Whether to surface the model's thoughts in the response stream. |
+
+**Where it's wired in `orrery-assistant`:** the root orchestrator, the `triage_summarizer`, and the `remediation_actor`. All three are reasoning-heavy. Tool-leaf agents (per-system health checkers, the verifier, etc.) intentionally skip the planner — they would only add latency without improving output quality.
 
 ### `create_sequential_agent()` / `create_parallel_agent()`
 

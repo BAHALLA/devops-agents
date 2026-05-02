@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 from google.adk.agents import Agent, LoopAgent, ParallelAgent, SequentialAgent
 from google.adk.agents.base_agent import BaseAgent
 from google.adk.models.base_llm import BaseLlm
+from google.adk.planners import BasePlanner
 from google.adk.tools.base_tool import BaseTool
 
 from .log import setup_logging
@@ -80,6 +81,69 @@ def resolve_model() -> str | BaseLlm:
     return LiteLlm(model=model_name)
 
 
+def resolve_planner() -> BasePlanner | None:
+    """Resolve an ADK planner from environment variables.
+
+    Read ``ORRERY_PLANNER`` to select the planner attached to opted-in agents
+    (typically the root orchestrator). Planning adds an explicit reasoning
+    step before tool calls — useful for orchestration agents that route
+    across multiple specialists, less useful for narrow tool-leaf agents.
+
+    Values:
+        ``none`` (default): no planner.
+        ``plan_react``: ``PlanReActPlanner`` — provider-agnostic; structures
+            the model output into PLANNING / ACTION / REASONING / FINAL_ANSWER
+            phases. Works with all providers supported by ``resolve_model``.
+        ``builtin``: ``BuiltInPlanner`` — uses Gemini's native thinking
+            tokens. Falls back to ``None`` with a warning when
+            ``MODEL_PROVIDER`` is not ``gemini``, since LiteLLM-routed models
+            do not consume the ADK thinking config.
+
+    Additional env vars (only consulted when ``ORRERY_PLANNER=builtin``):
+        ``ORRERY_PLANNER_THINKING_BUDGET``: int token budget for thinking.
+        ``ORRERY_PLANNER_INCLUDE_THOUGHTS``: bool (default ``true``) — include
+            the model's thoughts in the response stream.
+
+    Returns:
+        A ``BasePlanner`` instance or ``None`` to skip planning.
+    """
+    choice = os.getenv("ORRERY_PLANNER", "none").lower().strip()
+
+    if choice in ("", "none"):
+        return None
+
+    if choice == "plan_react":
+        from google.adk.planners import PlanReActPlanner
+
+        logger.info("Using PlanReActPlanner")
+        return PlanReActPlanner()
+
+    if choice == "builtin":
+        provider = os.getenv("MODEL_PROVIDER", "gemini").lower()
+        if provider != "gemini":
+            logger.warning(
+                "ORRERY_PLANNER=builtin requires MODEL_PROVIDER=gemini "
+                "(current: %s); falling back to no planner.",
+                provider,
+            )
+            return None
+
+        from google.adk.planners import BuiltInPlanner
+        from google.genai import types
+
+        thinking_kwargs: dict[str, Any] = {}
+        if budget := os.getenv("ORRERY_PLANNER_THINKING_BUDGET"):
+            thinking_kwargs["thinking_budget"] = int(budget)
+        include = os.getenv("ORRERY_PLANNER_INCLUDE_THOUGHTS", "true").lower()
+        thinking_kwargs["include_thoughts"] = include in ("1", "true", "yes")
+
+        logger.info("Using BuiltInPlanner with thinking_config=%s", thinking_kwargs)
+        return BuiltInPlanner(thinking_config=types.ThinkingConfig(**thinking_kwargs))
+
+    logger.warning("Unknown ORRERY_PLANNER value %r; using no planner.", choice)
+    return None
+
+
 def create_agent(
     *,
     name: str,
@@ -87,6 +151,7 @@ def create_agent(
     instruction: str,
     tools: Sequence[Callable[..., Any] | BaseTool],
     model: str | BaseLlm | None = None,
+    planner: BasePlanner | None = None,
     sub_agents: Sequence[BaseAgent] | None = None,
     before_tool_callback: Callable | list[Callable] | None = None,
     after_tool_callback: Callable | list[Callable] | None = None,
@@ -103,6 +168,10 @@ def create_agent(
     Args:
         model: Explicit model override. Can be a Gemini model string or a
             BaseLlm instance (e.g., LiteLlm). When None, resolved from env.
+        planner: Optional ADK planner attached to this agent (e.g.,
+            ``PlanReActPlanner`` or ``BuiltInPlanner``). Use
+            ``resolve_planner()`` to read the choice from env. Reserve this
+            for orchestration agents — tool-leaf agents do not benefit.
         before_tool_callback: Called before each tool execution. Return a dict
             to skip the tool (e.g., for guardrails), or None to proceed.
             Use guardrails.require_confirmation() or guardrails.dry_run().
@@ -129,6 +198,8 @@ def create_agent(
         "tools": list(tools),
     }
 
+    if planner is not None:
+        kwargs["planner"] = planner
     if sub_agents:
         kwargs["sub_agents"] = list(sub_agents)
     if before_tool_callback:

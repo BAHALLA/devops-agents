@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- **Opt-in ADK planners on reasoning-heavy agents** (`core/orrery_core/base.py`, `agents/orrery-assistant`): New `resolve_planner()` helper reads `ORRERY_PLANNER` (`none` | `plan_react` | `builtin`) and `create_agent()` accepts a `planner=` kwarg. Three agents in `orrery-assistant` opt in — the root orchestrator, the `triage_summarizer`, and the `remediation_actor` — sharing a single planner instance resolved once at import time. `plan_react` works across Gemini/Claude/OpenAI/Ollama via the existing LiteLLM integration; `builtin` consumes Gemini's native thinking tokens (`ORRERY_PLANNER_THINKING_BUDGET`, `ORRERY_PLANNER_INCLUDE_THOUGHTS`) and falls back to no planner with a warning when `MODEL_PROVIDER != gemini`. Default `ORRERY_PLANNER=none` is a no-op — zero behavior change for existing deployments. Per-system health checkers, the remediation verifier, and the journal writer intentionally skip the planner; they execute one short tool sequence per turn so an extra reasoning pass would only add latency. Tool-leaf agents (e.g., `kafka_health_checker`, `k8s_health_checker`) remain planner-free.
+- **Tests**: 10 new cases in `core/tests/test_base.py::TestResolvePlanner` covering default-off, both planner choices, the Gemini-only fallback for `builtin`, the `ORRERY_PLANNER_THINKING_BUDGET` / `ORRERY_PLANNER_INCLUDE_THOUGHTS` knobs, unknown-value warning, and case-insensitivity. Plus 5 deterministic wiring tests in `agents/orrery-assistant/tests/test_planner_wiring.py` that reload the agent module across env-var permutations to assert (a) which three agents pick up the planner under `plan_react` / `builtin`, (b) that all seven tool-leaf agents — the five health checkers, the journal writer, and the remediation verifier — stay planner-free, and (c) that `builtin` falls back to no planner under non-Gemini providers. Suite at **633 unit tests** (was 618), lint + format clean.
+- **Agent-level eval scaffolding for the planner-enabled root** (`agents/orrery-assistant/tests/evals/planner_routing.test.json`, `agents/orrery-assistant/tests/test_orrery_eval.py`): Two routing scenarios — narrow Kafka query and narrow Elasticsearch query — that exercise the full `ORRERY_PLANNER=plan_react` → root → `AgentTool` → mocked client path against a real LLM. Gated behind `make eval`; skips when no Gemini credentials are present. Mocks `kafka_health_agent.tools._get_admin_client` and `elasticsearch_agent.tools._get_session` at the same layer the per-specialist evals use. The accompanying `test_config.json` ships with smoke-test thresholds (0.0) because the AgentTool injects an LLM-generated `request` arg that defeats strict `tool_trajectory_avg_score` matching — the eval still proves the agent loads with the planner, the LLM picks a specialist, and the full path runs without errors. Tighten thresholds once an arg-matching strategy is adopted.
+
+### Changed
+- **Type hints / lint hygiene** to clear `make ty` after the `ty>=0.0.34` bump: `agents/elasticsearch/elasticsearch_agent/tools.py` adds a `# ty: ignore[invalid-assignment]` on `requests.Session.verify` (the type stub narrows it to `bool`, but at runtime the attribute accepts `bool | str | None` — a string is treated as a CA bundle path); `core/tests/test_operators.py` annotates the `FakeStrimzi` test double with explicit `tuple[str, ...]` / `tuple[CRDRef, ...]` types so it satisfies the `OperatorDetector` protocol; `core/tests/test_base.py::TestResolvePlanner.test_builtin_include_thoughts_false` narrows via `isinstance(result, BuiltInPlanner)` before reading `thinking_config`.
+
+### Documentation
+- **`docs/config/general.md` — Planning section**: Env-var matrix and decision guide for `plan_react` vs. `builtin`, including the latency tradeoff and the rationale for keeping tool-leaf agents planner-free.
+- **`docs/agent-design-patterns.md` — Planning paragraph** under *Iterative & Feedback Patterns* with the list of opted-in agents and a link to the config reference.
+- **`core/README.md` — `resolve_planner()` reference** alongside the existing `create_agent()` table; `planner=` is now a documented kwarg.
+- **`README.md` — feature bullet** in *Intelligence & Orchestration* announcing opt-in planning with the env-var on-ramp.
+- **`.env.example` — Planning block** documenting `ORRERY_PLANNER`, `ORRERY_PLANNER_THINKING_BUDGET`, `ORRERY_PLANNER_INCLUDE_THOUGHTS` with inline guidance on when to use each value.
+
 ## [0.1.9] - 2026-04-26
 
 ### Added
@@ -205,6 +222,7 @@ First public release of the AI Agents for DevOps & SRE platform.
 - Server-side role enforcement prevents privilege escalation
 
 [Unreleased]: https://github.com/BAHALLA/orrery/compare/v0.1.9...HEAD
+
 
 [0.1.9]: https://github.com/BAHALLA/orrery/compare/v0.1.8...v0.1.9
 [0.1.8]: https://github.com/BAHALLA/orrery/compare/v0.1.7...v0.1.8

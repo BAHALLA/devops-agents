@@ -69,6 +69,7 @@ graph LR
 
 ### 🧩 Intelligence & Orchestration
 - **Multi-agent coordination** — A root orchestrator delegates to specialists (Kafka, K8s, etc.) via dynamic routing or deterministic pipelines.
+- **Opt-in planning** — Set `ORRERY_PLANNER=plan_react` (provider-agnostic) or `builtin` (Gemini thinking tokens) to attach an ADK planner to the root orchestrator, triage summarizer, and remediation actor — explicit reasoning before destructive ops.
 - **Self-healing (LoopAgent)** — Closed-loop remediation: **Act** (restart/scale) → **Verify** → **Retry** (up to 3 times).
 - **Cross-session memory** — Agents recall past incidents, investigations, and team preferences across sessions.
 

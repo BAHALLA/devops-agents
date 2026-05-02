@@ -50,9 +50,15 @@ from orrery_core import (
     create_sequential_agent,
     default_plugins,
     load_agent_env,
+    resolve_planner,
 )
 
 load_agent_env(__file__)
+
+# Resolve once at import time so root + triage_summarizer share an instance.
+# Planning is opt-in: set ORRERY_PLANNER=plan_react (or builtin for Gemini)
+# to attach. Default is None — no behavior change.
+_planner = resolve_planner()
 
 # ── Incident triage: structured parallel health checks ────────────────
 
@@ -133,6 +139,7 @@ health_check_agent = create_parallel_agent(
 triage_summarizer = create_agent(
     name="triage_summarizer",
     description="Synthesizes health check results into an incident triage report.",
+    planner=_planner,
     instruction=(
         "You receive health check results from five systems stored in session state: "
         "kafka_status, k8s_status, docker_status, observability_status, and "
@@ -175,6 +182,7 @@ incident_triage_agent = create_sequential_agent(
 root_agent = create_agent(
     name="orrery_assistant",
     description="DevOps orchestrator that delegates to specialized agents.",
+    planner=_planner,
     instruction=(
         "You are a DevOps assistant that coordinates specialized agents. "
         "You have two delegation modes:\n\n"

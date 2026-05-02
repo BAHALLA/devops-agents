@@ -70,6 +70,8 @@ Every individual agent in the project follows the **ReAct (Reason and Act)** pat
 
 The `remediation_pipeline` is exposed as an `AgentTool` on the root orchestrator, so the user can trigger it after a triage with "fix it" or "auto-remediate".
 
+**Planning (opt-in).** Reasoning-heavy agents — the root orchestrator, the `triage_summarizer`, and the `remediation_actor` — accept an optional ADK planner via `create_agent(planner=…)`. Set `ORRERY_PLANNER=plan_react` to attach a provider-agnostic [`PlanReActPlanner`](https://adk.dev/agents/llm-agents/) (works with Gemini, Claude, OpenAI, and Ollama via LiteLLM); set `ORRERY_PLANNER=builtin` to use Gemini's native thinking tokens (`BuiltInPlanner`). The planner is resolved once at import time and shared across the opted-in agents in `orrery-assistant`. Tool-leaf agents — per-system health checkers, the remediation verifier, the journal writer — intentionally skip the planner: they execute one short tool sequence per turn, so an extra reasoning pass would add latency without changing the output. Default is **no planner** (zero behavior change). See [Configuration → LLM Provider](config/general.md#planning) for the env-var matrix.
+
 ### 3. Specialized Patterns
 
 The platform implements a robust **Human-in-the-Loop** pattern via the `GuardrailsPlugin`. 

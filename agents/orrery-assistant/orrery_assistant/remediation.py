@@ -27,7 +27,13 @@ from orrery_core import (
     create_agent,
     create_loop_agent,
     create_sequential_agent,
+    resolve_planner,
 )
+
+# Reading the planner choice once: the actor benefits most (must reason about
+# blast radius before each destructive call), the verifier is a straight
+# diagnostic readout where planning adds latency without adding signal.
+_planner = resolve_planner()
 
 # ── Exit loop tool ────────────────────────────────────────────────────
 
@@ -55,6 +61,7 @@ async def exit_loop(
 remediation_actor = create_agent(
     name="remediation_actor",
     description="Takes remediation actions based on the triage diagnosis.",
+    planner=_planner,
     instruction=(
         "You are a DevOps remediation agent. Read the triage report from "
         "session state (triage_report) and the previous verification result "
