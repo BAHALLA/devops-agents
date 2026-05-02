@@ -94,6 +94,7 @@ class TestPlannerWiring:
         planner with a warning so LiteLLM-routed deployments are silent."""
         monkeypatch.setenv("ORRERY_PLANNER", "builtin")
         monkeypatch.setenv("MODEL_PROVIDER", "anthropic")
+        monkeypatch.setenv("MODEL_NAME", "anthropic/claude-sonnet-4-20250514")
         with caplog.at_level("WARNING", logger="orrery.base"):
             agent_mod, rem_mod = _reload_agent()
         assert agent_mod.root_agent.planner is None
